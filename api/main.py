@@ -16,7 +16,7 @@ app = FastAPI(
 # --- 2. Data Source URLs and Keys ---
 # NOAA/NASA data is free for commercial use, but requires a NASA API key.
 # Get your own key at api.nasa.gov.
-NASA_API_KEY = os.getenv("NASA_API_KEY", "DEMO_KEY")
+NASA_API_KEY = os.getenv("NASA_API_KEY")
 
 # Verified NOAA/NASA Data Endpoints (Free and Commercially Available)
 NOAA_KP_URL = "https://services.swpc.noaa.gov/json/planetary_k_index_data.json" # Real-time Kp index
