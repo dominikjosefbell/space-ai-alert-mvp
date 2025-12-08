@@ -25,7 +25,7 @@ NASA_CME_URL = "https://api.nasa.gov/DONKI/CME" # Coronal Mass Ejection (CME) Al
 
 # Apertus Inference Endpoint (Placeholder - You must replace this!)
 # NOTE: Apertus is open-source, but you need an *inference provider's* endpoint (e.g., Swisscom/Public AI/your own deployed instance).
-APERTUS_INFERENCE_URL = "YOUR_APERTUS_INFERENCE_ENDPOINT_GOES_HERE" 
+APERTUS_INFERENCE_URL = https://api-inference.huggingface.co/models/swiss-ai/Apertus-8B-Instruct-2509
 APERTUS_API_KEY = os.getenv("APERTUS_API_KEY")
 
 
