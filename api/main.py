@@ -19,7 +19,7 @@ app = FastAPI(
 NASA_API_KEY = os.getenv("NASA_API_KEY")
 
 # Verified NOAA/NASA Data Endpoints (Free and Commercially Available)
-NOAA_KP_URL = "https://services.swpc.noaa.gov/json/planetary_k_index_data.json" # Real-time Kp index
+NOAA_KP_URL = "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json" # Real-time Kp index
 NASA_GST_URL = "https://api.nasa.gov/DONKI/GST" # Geomagnetic Storm (GST) Alerts
 NASA_CME_URL = "https://api.nasa.gov/DONKI/CME" # Coronal Mass Ejection (CME) Alerts
 
