@@ -1,5 +1,5 @@
 import os
-import json # Benötigt, um die LLM-Antwort zu parsen
+import json
 from fastapi import FastAPI, HTTPException
 from urllib.parse import urlencode
 import requests
