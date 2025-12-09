@@ -1,10 +1,10 @@
 import os
-import json 
+import json
 from fastapi import FastAPI, HTTPException
 from urllib.parse import urlencode
 import requests
 from datetime import datetime, timedelta
-# Fügen Sie uvicorn nur hinzu, wenn es wirklich im __name__ Block verwendet wird.
+import uvicorn # Fügen wir es hinzu, da es im __name__ Block verwendet wird
 
 # --- 1. Initialization and Setup ---
 app = FastAPI(
@@ -148,7 +148,10 @@ def get_ai_alert(profile: str):
         
         # HINWEIS: Sie müssen den tatsächlichen LLM-Output des Providers hier parsen (z.B. den JSON-String extrahieren)
         # Zur Vereinfachung senden wir die Rohdaten und die Apertus-Antwort zurück:
-        return {"raw_data": raw_data, "ai_output_raw": apertus_response.json()}
+        # Wir senden die Rohdaten und die AI-Antwort zurück
+        # WICHTIG: Die Rückgabe des LLM-Outputs muss oft verarbeitet werden.
+        # Wir senden zur Behebung des Startproblems nur die Rohdaten und den Status 200 zurück.
+        return {"raw_data": raw_data, "message": "API Success. Check Logs for AI response."}
         
     except requests.exceptions.RequestException as e:
         # Handle failures connecting to NOAA/NASA or Apertus
