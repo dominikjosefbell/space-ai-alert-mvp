@@ -9,7 +9,7 @@ import uvicorn # Fügen wir es hinzu, da es im __name__ Block verwendet wird
 # --- 1. Initialization and Setup ---
 app = FastAPI(
     title="Space Weather AI Alert API",
-    description="Backend for the AI Solar Storm Alert App (App 4)."
+    description="Backend for the AI Solar Storm Alert App (App 5)."
 )
 
 # --- 2. Data Source URLs and Keys ---
