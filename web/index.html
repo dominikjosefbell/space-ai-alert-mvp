@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Weather AI Alert MVP</title>
+    <style>
+        /* Minimal CSS for a clean look */
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #333; }
+        .alert-output { margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 4px; background-color: #e9e9e9; white-space: pre-wrap; }
+        .risk-low { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .risk-medium { background-color: #fff3cd; color: #856404; border-color: #ffeeba; }
+        .risk-high { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛰️ Space Weather AI Alert</h1>
+        <p>Select your operational profile to get a risk assessment based on real-time space weather data (Kp Index).</p>
+
+        <label for="profile-select">Operational Profile:</label>
+        <select id="profile-select">
+            <option value="General Public">General Public</option>
+            <option value="Drone Pilot">Drone Pilot</option>
+            <option value="Satellite Operator">Satellite Operator</option>
+            <option value="Ground Station Manager">Ground Station Manager</option>
+        </select>
+
+        <button onclick="getAlert()">Get AI Alert</button>
+
+        <div id="alert-display" class="alert-output">Select a profile and click 'Get AI Alert' to view the risk assessment.</div>
+    </div>
+
+    <script>
+        // *** CRITICAL: The correct URL to your running backend ***
+        const API_BASE_URL = "https://space-ai-alert-mvp.onrender.com"; 
+
+        async function getAlert() {
+            const profile = document.getElementById('profile-select').value;
+            const display = document.getElementById('alert-display');
+            display.className = 'alert-output'; // Reset class
+            display.textContent = `Fetching alert for ${profile} from ${API_BASE_URL}...`;
+
+            try {
+                // Construct the full API URL with the selected profile
+                const response = await fetch(`${API_BASE_URL}/alert/?profile=${encodeURIComponent(profile)}`);
+
+                if (!response.ok) {
+                    // Try to parse the error message from the API (e.g., the 500 Internal Server Error)
+                    const errorText = await response.text();
+                    display.textContent = `ERROR (${response.status} from API): ${errorText}`;
+                    display.classList.add('risk-high');
+                    return;
+                }
+
+                const data = await response.json();
+                
+                // Display the raw JSON response since we haven't fully parsed the AI output yet
+                display.textContent = JSON.stringify(data, null, 2);
+
+                // For basic visualization, look for a risk level if present
+                const risk = data.ai_output_raw && data.ai_output_raw.risk; 
+                if (risk && typeof risk === 'string') {
+                    const riskLower = risk.toLowerCase();
+                    if (riskLower.includes('low')) {
+                        display.classList.add('risk-low');
+                    } else if (riskLower.includes('medium')) {
+                        display.classList.add('risk-medium');
+                    } else if (riskLower.includes('high')) {
+                        display.classList.add('risk-high');
+                    }
+                }
+
+            } catch (error) {
+                display.textContent = `FATAL CONNECTION ERROR: Could not connect to the API server. Check console for details.`;
+                display.className = 'alert-output risk-high';
+                console.error("Connection Error:", error);
+            }
+        }
+    </script>
+</body>
+</html>
