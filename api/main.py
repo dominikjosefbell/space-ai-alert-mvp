@@ -35,9 +35,9 @@ def fetch_space_weather_data():
         kp_response.raise_for_status()
         kp_data = kp_response.json()
         
-        # KORREKTUR: Die neue API gibt eine Liste zurück. Wir nehmen das letzte Element.
-        # Wir müssen sicherstellen, dass die Liste nicht leer ist und die Schlüssel vorhanden sind.
+        # KORREKTUR: Wir stellen sicher, dass kp_data eine nicht leere Liste ist und nehmen das letzte Element.
         if kp_data and isinstance(kp_data, list):
+            # Wir verwenden .get() für sicheren Zugriff
             latest_kp = kp_data[-1].get('kp', 'N/A')
         else:
             latest_kp = "N/A (Data empty)"
@@ -47,6 +47,7 @@ def fetch_space_weather_data():
     
     
     # GST Alerts (NASA DONKI)
+    # ... (Rest des GST-Codes bleibt gleich)
     today = datetime.now()
     seven_days_ago = today - timedelta(days=7)
     
@@ -71,7 +72,7 @@ def fetch_space_weather_data():
     except requests.exceptions.RequestException:
         alert_summary = "Alert data unavailable."
 
-    # KORREKTUR: Der Key "" wurde durch "kp_index" ersetzt.
+    # KORREKTUR: Der Key "" wurde durch "kp_index" ersetzt (wichtig für den Aufruf in get_ai_alert)
     return {
         "kp_index": latest_kp,
         "alert_summary": alert_summary,
