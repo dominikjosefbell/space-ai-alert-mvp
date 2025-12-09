@@ -1,9 +1,10 @@
 import os
-import json
+import json 
 from fastapi import FastAPI, HTTPException
 from urllib.parse import urlencode
 import requests
 from datetime import datetime, timedelta
+# Fügen Sie uvicorn nur hinzu, wenn es wirklich im __name__ Block verwendet wird.
 
 # --- 1. Initialization and Setup ---
 app = FastAPI(
