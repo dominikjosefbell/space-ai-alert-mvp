@@ -1,18 +1,12 @@
 """
-Space Weather & Environmental Monitoring API v7.0
-With Apertus AI Integration for Personalized Recommendations
+Space Weather & Environmental Monitoring API v7.1
+With Apertus AI Chat Interface & Full Multilingual Support
 
-Data Sources:
-- NOAA SWPC: Space Weather (Kp, Solar Wind, X-Ray, Protons, Aurora)
-- NASA EONET: Natural Events (Wildfires, Volcanoes, Storms)
-- USGS: Earthquakes worldwide
-- NWS: US Weather Alerts
-- Open-Meteo: Weather, Air Quality, UV, Pollen, Floods, Marine
-
-AI Integration:
-- Swiss AI Apertus (via Hugging Face / Public AI) for personalized recommendations
-- Multilingual support (DE, EN, FR, IT)
-- Profile-specific advice generation
+Features:
+- Chat interface for conversational AI recommendations
+- Full multilingual support (DE, EN, FR, IT)
+- Improved fallback recommendations
+- Profile-specific advice
 """
 
 import os
@@ -26,9 +20,9 @@ from typing import Optional, List
 # === 1. INITIALIZATION ===
 
 app = FastAPI(
-    title="Space Weather & Environmental Monitoring API",
-    description="Complete environmental monitoring with AI-powered recommendations",
-    version="7.0.0"
+    title="Environmental Monitor API",
+    description="AI-powered environmental monitoring with chat interface",
+    version="7.1.0"
 )
 
 app.add_middleware(
@@ -43,19 +37,242 @@ app.add_middleware(
 
 NASA_API_KEY = os.getenv("NASA_API_KEY", "DEMO_KEY")
 OPEN_METEO_API_KEY = os.getenv("OPEN_METEO_API_KEY")
-
-# Apertus AI Configuration
 HF_API_KEY = os.getenv("HF_API_KEY") or os.getenv("APERTUS_API_KEY")
-APERTUS_MODEL = "swiss-ai/Apertus-8B-Instruct-2509"
-HF_INFERENCE_URL = "https://router.huggingface.co/hf-inference/models"
 
-# Fallback model if Apertus unavailable
-FALLBACK_MODEL = "HuggingFaceH4/zephyr-7b-beta"
-
-DEFAULT_LAT = 47.3769  # Zurich
+DEFAULT_LAT = 47.3769
 DEFAULT_LON = 8.5417
 
-# === 3. API ENDPOINTS ===
+# === 3. TRANSLATIONS ===
+
+TRANSLATIONS = {
+    "de": {
+        "good_morning": "Guten Morgen",
+        "good_day": "Guten Tag", 
+        "good_evening": "Guten Abend",
+        "weather": "Wetter",
+        "temperature": "Temperatur",
+        "feels_like": "gefühlt",
+        "humidity": "Luftfeuchtigkeit",
+        "wind": "Wind",
+        "air_quality": "Luftqualität",
+        "excellent": "Ausgezeichnet",
+        "good": "Gut",
+        "moderate": "Mässig",
+        "poor": "Schlecht",
+        "very_poor": "Sehr schlecht",
+        "hazardous": "Gefährlich",
+        "uv_index": "UV-Index",
+        "low": "Niedrig",
+        "high": "Hoch",
+        "very_high": "Sehr hoch",
+        "extreme": "Extrem",
+        "sunscreen_needed": "Sonnencreme empfohlen",
+        "sunscreen_required": "Sonnencreme erforderlich (SPF 30+)",
+        "avoid_sun": "Mittagssonne meiden, SPF 50+",
+        "stay_inside": "Draussen-Aktivitäten einschränken",
+        "perfect_outdoor": "Perfekt für Outdoor-Aktivitäten",
+        "good_outdoor": "Gut für Outdoor-Aktivitäten",
+        "limit_outdoor": "Intensive Aktivitäten einschränken",
+        "avoid_outdoor": "Outdoor-Sport vermeiden",
+        "warm_clothes": "Warme Kleidung empfohlen",
+        "light_jacket": "Leichte Jacke reicht",
+        "light_clothes": "Leichte Kleidung, viel trinken",
+        "stay_hydrated": "Viel trinken!",
+        "pollen_high": "Hohe Pollenbelastung",
+        "take_inhaler": "Inhalator mitnehmen",
+        "take_antihistamine": "Antihistaminikum empfohlen",
+        "earthquake_warning": "Erdbeben in der Nähe",
+        "flood_risk": "Hochwasser-Risiko",
+        "aurora_possible": "Nordlichter möglich",
+        "aurora_unlikely": "Nordlichter unwahrscheinlich",
+        "hf_radio_disruption": "HF-Funk möglicherweise gestört",
+        "gps_issues": "GPS-Genauigkeit reduziert",
+        "rough_sea": "Rauer Seegang",
+        "calm_sea": "Ruhige See",
+        "no_concerns": "Keine besonderen Hinweise",
+        "enjoy_day": "Geniessen Sie den Tag!",
+        "have_fun": "Viel Spass!",
+        "stay_safe": "Passen Sie auf sich auf!",
+        "overcast": "Bewölkt",
+        "clear": "Klar",
+        "rain": "Regen",
+        "snow": "Schnee",
+        "fog": "Nebel",
+        "thunderstorm": "Gewitter",
+    },
+    "en": {
+        "good_morning": "Good morning",
+        "good_day": "Hello",
+        "good_evening": "Good evening",
+        "weather": "Weather",
+        "temperature": "Temperature",
+        "feels_like": "feels like",
+        "humidity": "Humidity",
+        "wind": "Wind",
+        "air_quality": "Air quality",
+        "excellent": "Excellent",
+        "good": "Good",
+        "moderate": "Moderate",
+        "poor": "Poor",
+        "very_poor": "Very poor",
+        "hazardous": "Hazardous",
+        "uv_index": "UV index",
+        "low": "Low",
+        "high": "High",
+        "very_high": "Very high",
+        "extreme": "Extreme",
+        "sunscreen_needed": "Sunscreen recommended",
+        "sunscreen_required": "Sunscreen required (SPF 30+)",
+        "avoid_sun": "Avoid midday sun, use SPF 50+",
+        "stay_inside": "Limit outdoor activities",
+        "perfect_outdoor": "Perfect for outdoor activities",
+        "good_outdoor": "Good for outdoor activities",
+        "limit_outdoor": "Limit intense activities",
+        "avoid_outdoor": "Avoid outdoor sports",
+        "warm_clothes": "Warm clothes recommended",
+        "light_jacket": "Light jacket is enough",
+        "light_clothes": "Light clothes, stay hydrated",
+        "stay_hydrated": "Stay hydrated!",
+        "pollen_high": "High pollen levels",
+        "take_inhaler": "Bring your inhaler",
+        "take_antihistamine": "Antihistamine recommended",
+        "earthquake_warning": "Earthquake nearby",
+        "flood_risk": "Flood risk",
+        "aurora_possible": "Aurora possible",
+        "aurora_unlikely": "Aurora unlikely",
+        "hf_radio_disruption": "HF radio may be disrupted",
+        "gps_issues": "GPS accuracy reduced",
+        "rough_sea": "Rough sea conditions",
+        "calm_sea": "Calm sea",
+        "no_concerns": "No special concerns",
+        "enjoy_day": "Enjoy your day!",
+        "have_fun": "Have fun!",
+        "stay_safe": "Stay safe!",
+        "overcast": "Overcast",
+        "clear": "Clear",
+        "rain": "Rain",
+        "snow": "Snow",
+        "fog": "Fog",
+        "thunderstorm": "Thunderstorm",
+    },
+    "fr": {
+        "good_morning": "Bonjour",
+        "good_day": "Bonjour",
+        "good_evening": "Bonsoir",
+        "weather": "Météo",
+        "temperature": "Température",
+        "feels_like": "ressenti",
+        "humidity": "Humidité",
+        "wind": "Vent",
+        "air_quality": "Qualité de l'air",
+        "excellent": "Excellente",
+        "good": "Bonne",
+        "moderate": "Modérée",
+        "poor": "Mauvaise",
+        "very_poor": "Très mauvaise",
+        "hazardous": "Dangereuse",
+        "uv_index": "Indice UV",
+        "low": "Faible",
+        "high": "Élevé",
+        "very_high": "Très élevé",
+        "extreme": "Extrême",
+        "sunscreen_needed": "Crème solaire recommandée",
+        "sunscreen_required": "Crème solaire nécessaire (SPF 30+)",
+        "avoid_sun": "Évitez le soleil de midi, SPF 50+",
+        "stay_inside": "Limitez les activités extérieures",
+        "perfect_outdoor": "Parfait pour les activités extérieures",
+        "good_outdoor": "Bon pour les activités extérieures",
+        "limit_outdoor": "Limitez les activités intenses",
+        "avoid_outdoor": "Évitez le sport en extérieur",
+        "warm_clothes": "Vêtements chauds recommandés",
+        "light_jacket": "Une veste légère suffit",
+        "light_clothes": "Vêtements légers, buvez beaucoup",
+        "stay_hydrated": "Restez hydraté!",
+        "pollen_high": "Taux de pollen élevé",
+        "take_inhaler": "Prenez votre inhalateur",
+        "take_antihistamine": "Antihistaminique recommandé",
+        "earthquake_warning": "Séisme à proximité",
+        "flood_risk": "Risque d'inondation",
+        "aurora_possible": "Aurores possibles",
+        "aurora_unlikely": "Aurores improbables",
+        "hf_radio_disruption": "Radio HF peut être perturbée",
+        "gps_issues": "Précision GPS réduite",
+        "rough_sea": "Mer agitée",
+        "calm_sea": "Mer calme",
+        "no_concerns": "Pas de préoccupations particulières",
+        "enjoy_day": "Profitez de votre journée!",
+        "have_fun": "Amusez-vous bien!",
+        "stay_safe": "Prenez soin de vous!",
+        "overcast": "Nuageux",
+        "clear": "Dégagé",
+        "rain": "Pluie",
+        "snow": "Neige",
+        "fog": "Brouillard",
+        "thunderstorm": "Orage",
+    },
+    "it": {
+        "good_morning": "Buongiorno",
+        "good_day": "Buongiorno",
+        "good_evening": "Buonasera",
+        "weather": "Meteo",
+        "temperature": "Temperatura",
+        "feels_like": "percepita",
+        "humidity": "Umidità",
+        "wind": "Vento",
+        "air_quality": "Qualità dell'aria",
+        "excellent": "Eccellente",
+        "good": "Buona",
+        "moderate": "Moderata",
+        "poor": "Scarsa",
+        "very_poor": "Molto scarsa",
+        "hazardous": "Pericolosa",
+        "uv_index": "Indice UV",
+        "low": "Basso",
+        "high": "Alto",
+        "very_high": "Molto alto",
+        "extreme": "Estremo",
+        "sunscreen_needed": "Crema solare consigliata",
+        "sunscreen_required": "Crema solare necessaria (SPF 30+)",
+        "avoid_sun": "Evitare il sole di mezzogiorno, SPF 50+",
+        "stay_inside": "Limitare le attività all'aperto",
+        "perfect_outdoor": "Perfetto per attività all'aperto",
+        "good_outdoor": "Buono per attività all'aperto",
+        "limit_outdoor": "Limitare attività intense",
+        "avoid_outdoor": "Evitare sport all'aperto",
+        "warm_clothes": "Vestiti caldi consigliati",
+        "light_jacket": "Una giacca leggera è sufficiente",
+        "light_clothes": "Vestiti leggeri, bere molto",
+        "stay_hydrated": "Rimanere idratati!",
+        "pollen_high": "Livelli di polline alti",
+        "take_inhaler": "Portare l'inalatore",
+        "take_antihistamine": "Antistaminico consigliato",
+        "earthquake_warning": "Terremoto nelle vicinanze",
+        "flood_risk": "Rischio alluvione",
+        "aurora_possible": "Aurora possibile",
+        "aurora_unlikely": "Aurora improbabile",
+        "hf_radio_disruption": "Radio HF potrebbe essere disturbata",
+        "gps_issues": "Precisione GPS ridotta",
+        "rough_sea": "Mare mosso",
+        "calm_sea": "Mare calmo",
+        "no_concerns": "Nessuna preoccupazione particolare",
+        "enjoy_day": "Buona giornata!",
+        "have_fun": "Buon divertimento!",
+        "stay_safe": "Stai attento!",
+        "overcast": "Nuvoloso",
+        "clear": "Sereno",
+        "rain": "Pioggia",
+        "snow": "Neve",
+        "fog": "Nebbia",
+        "thunderstorm": "Temporale",
+    }
+}
+
+def t(key: str, lang: str = "de") -> str:
+    """Get translation"""
+    return TRANSLATIONS.get(lang, TRANSLATIONS["de"]).get(key, TRANSLATIONS["de"].get(key, key))
+
+
+# === 4. API ENDPOINTS ===
 
 NOAA_URLS = {
     "kp_index": "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json",
@@ -63,17 +280,11 @@ NOAA_URLS = {
     "solar_wind_mag": "https://services.swpc.noaa.gov/products/solar-wind/mag-2-hour.json",
     "xray_flux": "https://services.swpc.noaa.gov/json/goes/primary/xrays-6-hour.json",
     "proton_flux": "https://services.swpc.noaa.gov/json/goes/primary/integral-protons-6-hour.json",
-    "xray_flares": "https://services.swpc.noaa.gov/json/goes/primary/xray-flares-7-day.json",
     "aurora": "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json",
-}
-
-NASA_URLS = {
-    "eonet_events": "https://eonet.gsfc.nasa.gov/api/v3/events",
 }
 
 USGS_URLS = {
     "earthquakes_day": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson",
-    "earthquakes_significant": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_month.geojson",
 }
 
 OPEN_METEO_URLS = {
@@ -84,23 +295,20 @@ OPEN_METEO_URLS = {
 }
 
 
-# === 4. UTILITY FUNCTIONS ===
+# === 5. UTILITY FUNCTIONS ===
 
-def safe_fetch(url: str, params: dict = None, timeout: int = 10, headers: dict = None) -> Optional[dict | list]:
-    """Safely fetch JSON from URL"""
+def safe_fetch(url: str, params: dict = None, timeout: int = 10) -> Optional[dict | list]:
     try:
-        h = headers or {}
-        h.setdefault("User-Agent", "EnvironmentalMonitor/7.0")
-        response = requests.get(url, params=params, timeout=timeout, headers=h)
+        response = requests.get(url, params=params, timeout=timeout, 
+                               headers={"User-Agent": "EnvironmentalMonitor/7.1"})
         response.raise_for_status()
         return response.json()
     except Exception as e:
-        print(f"Fetch error for {url}: {e}")
+        print(f"Fetch error: {e}")
         return None
 
 
 def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """Calculate distance in km between two points"""
     from math import radians, sin, cos, sqrt, atan2
     R = 6371
     lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
@@ -109,43 +317,34 @@ def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     return R * 2 * atan2(sqrt(a), sqrt(1-a))
 
 
-# === 5. DATA FETCHING FUNCTIONS ===
+# === 6. DATA FETCHING ===
 
 def fetch_kp_index() -> dict:
     data = safe_fetch(NOAA_URLS["kp_index"])
-    if data and isinstance(data, list) and len(data) > 1:
+    if data and len(data) > 1:
         latest = data[-1]
         kp = float(latest[1]) if latest[1] else None
-        if kp is not None:
-            if kp >= 8: level = "Extreme Storm (G4-G5)"
-            elif kp >= 7: level = "Severe Storm (G3)"
-            elif kp >= 6: level = "Strong Storm (G2)"
-            elif kp >= 5: level = "Moderate Storm (G1)"
-            elif kp >= 4: level = "Active"
-            else: level = "Quiet"
-        else:
-            level = "Unknown"
-        return {"value": kp, "level": level, "time": latest[0], "status": "ok"}
+        levels = {8: "Extreme Storm", 7: "Severe Storm", 6: "Strong Storm", 
+                  5: "Moderate Storm", 4: "Active", 0: "Quiet"}
+        level = next((v for k, v in sorted(levels.items(), reverse=True) if kp and kp >= k), "Quiet")
+        return {"value": kp, "level": level, "status": "ok"}
     return {"value": None, "level": "Unknown", "status": "error"}
 
 
 def fetch_solar_wind() -> dict:
     plasma = safe_fetch(NOAA_URLS["solar_wind_plasma"])
     mag = safe_fetch(NOAA_URLS["solar_wind_mag"])
-    result = {"speed": None, "density": None, "bz": None, "bt": None, "status": "error"}
+    result = {"speed": None, "density": None, "bz": None, "status": "ok"}
     
-    if plasma and isinstance(plasma, list) and len(plasma) > 1:
+    if plasma and len(plasma) > 1:
         latest = plasma[-1]
-        if len(latest) >= 4:
-            result["speed"] = float(latest[2]) if latest[2] else None
-            result["density"] = float(latest[1]) if latest[1] else None
-            result["status"] = "ok"
+        result["speed"] = float(latest[2]) if len(latest) > 2 and latest[2] else None
+        result["density"] = float(latest[1]) if len(latest) > 1 and latest[1] else None
     
-    if mag and isinstance(mag, list) and len(mag) > 1:
+    if mag and len(mag) > 1:
         latest = mag[-1]
-        if len(latest) >= 5:
-            result["bz"] = float(latest[3]) if latest[3] else None
-            result["bt"] = float(latest[4]) if latest[4] else None
+        result["bz"] = float(latest[3]) if len(latest) > 3 and latest[3] else None
+    
     return result
 
 
@@ -163,46 +362,24 @@ def fetch_xray_flux() -> dict:
     return {"flux": None, "level": None, "status": "error"}
 
 
-def fetch_proton_flux() -> dict:
-    data = safe_fetch(NOAA_URLS["proton_flux"])
-    if data:
-        for entry in reversed(data):
-            if isinstance(entry, dict) and entry.get("energy") == ">=10 MeV":
-                flux = float(entry.get("flux", 0))
-                if flux >= 10000: level = "S4-Severe"
-                elif flux >= 1000: level = "S3-Strong"
-                elif flux >= 100: level = "S2-Moderate"
-                elif flux >= 10: level = "S1-Minor"
-                else: level = "S0-None"
-                return {"flux": flux, "level": level, "status": "ok"}
-    return {"flux": None, "level": "S0-None", "status": "error"}
-
-
 def fetch_aurora_forecast(lat: float, lon: float) -> dict:
     data = safe_fetch(NOAA_URLS["aurora"], timeout=15)
-    if not data:
+    if not data or "coordinates" not in data:
         return {"status": "error", "probability": 0}
     
-    result = {"status": "ok", "probability": 0, "forecast_time": data.get("Forecast Time")}
+    coords = data["coordinates"]
+    lon_check = lon + 360 if lon < 0 else lon
+    min_dist, prob = float('inf'), 0
     
-    if "coordinates" in data:
-        coords = data["coordinates"]
-        min_dist = float('inf')
-        lon_check = lon + 360 if lon < 0 else lon
-        
-        for point in coords:
-            if len(point) >= 3:
-                dist = abs(point[1] - lat) + abs(point[0] - lon_check)
-                if dist < min_dist:
-                    min_dist = dist
-                    result["probability"] = point[2]
-        
-        if result["probability"] >= 50: result["visibility"] = "Excellent"
-        elif result["probability"] >= 30: result["visibility"] = "Good"
-        elif result["probability"] >= 10: result["visibility"] = "Fair"
-        else: result["visibility"] = "Low"
+    for point in coords:
+        if len(point) >= 3:
+            dist = abs(point[1] - lat) + abs(point[0] - lon_check)
+            if dist < min_dist:
+                min_dist = dist
+                prob = point[2]
     
-    return result
+    visibility = "Excellent" if prob >= 50 else "Good" if prob >= 30 else "Fair" if prob >= 10 else "Low"
+    return {"status": "ok", "probability": prob, "visibility": visibility}
 
 
 def fetch_earthquakes_nearby(lat: float, lon: float, radius_km: float = 500) -> dict:
@@ -214,57 +391,26 @@ def fetch_earthquakes_nearby(lat: float, lon: float, radius_km: float = 500) -> 
     for eq in data.get("features", []):
         props = eq.get("properties", {})
         coords = eq.get("geometry", {}).get("coordinates", [0, 0, 0])
-        
         dist = calculate_distance(lat, lon, coords[1], coords[0])
+        
         if dist <= radius_km:
             nearby.append({
                 "magnitude": props.get("mag"),
                 "location": props.get("place"),
                 "depth_km": coords[2],
                 "distance_km": round(dist, 1),
-                "time": props.get("time"),
-                "tsunami": props.get("tsunami", 0) == 1
             })
     
     nearby.sort(key=lambda x: x.get("distance_km", 9999))
     max_mag = max((eq["magnitude"] for eq in nearby if eq.get("magnitude")), default=None)
     
-    return {
-        "status": "ok",
-        "count": len(nearby),
-        "max_magnitude": max_mag,
-        "earthquakes": nearby[:10]
-    }
-
-
-def fetch_natural_events_nearby(lat: float, lon: float, radius_km: float = 500) -> dict:
-    data = safe_fetch(NASA_URLS["eonet_events"], params={"status": "open", "limit": 50}, timeout=15)
-    if not data:
-        return {"status": "error", "count": 0, "events": []}
-    
-    nearby = []
-    for event in data.get("events", []):
-        geometry = event.get("geometry", [{}])[-1] if event.get("geometry") else {}
-        coords = geometry.get("coordinates")
-        
-        if coords and len(coords) >= 2:
-            dist = calculate_distance(lat, lon, coords[1], coords[0])
-            if dist <= radius_km:
-                nearby.append({
-                    "title": event.get("title"),
-                    "category": event.get("categories", [{}])[0].get("title") if event.get("categories") else None,
-                    "distance_km": round(dist, 1),
-                    "date": geometry.get("date")
-                })
-    
-    nearby.sort(key=lambda x: x.get("distance_km", 9999))
-    return {"status": "ok", "count": len(nearby), "events": nearby[:10]}
+    return {"status": "ok", "count": len(nearby), "max_magnitude": max_mag, "earthquakes": nearby[:5]}
 
 
 def fetch_weather(lat: float, lon: float) -> dict:
     params = {
         "latitude": lat, "longitude": lon,
-        "current": "temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_gusts_10m",
+        "current": "temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_gusts_10m",
         "timezone": "auto"
     }
     if OPEN_METEO_API_KEY:
@@ -275,9 +421,9 @@ def fetch_weather(lat: float, lon: float) -> dict:
         return {"status": "error"}
     
     current = data.get("current", {})
-    codes = {0: "Clear", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast", 45: "Fog",
-             51: "Light drizzle", 61: "Light rain", 63: "Rain", 65: "Heavy rain",
-             71: "Light snow", 73: "Snow", 75: "Heavy snow", 80: "Rain showers", 95: "Thunderstorm"}
+    codes = {0: "Clear", 1: "Clear", 2: "Partly cloudy", 3: "Overcast", 45: "Fog", 48: "Fog",
+             51: "Drizzle", 61: "Rain", 63: "Rain", 65: "Heavy rain",
+             71: "Snow", 73: "Snow", 75: "Heavy snow", 80: "Showers", 95: "Thunderstorm"}
     
     return {
         "status": "ok",
@@ -287,7 +433,6 @@ def fetch_weather(lat: float, lon: float) -> dict:
         "precipitation": current.get("precipitation"),
         "weather": codes.get(current.get("weather_code", 0), "Unknown"),
         "weather_code": current.get("weather_code"),
-        "cloud_cover": current.get("cloud_cover"),
         "wind_speed": current.get("wind_speed_10m"),
         "wind_gusts": current.get("wind_gusts_10m"),
     }
@@ -309,12 +454,9 @@ def fetch_air_quality(lat: float, lon: float) -> dict:
     current = data.get("current", {})
     eu_aqi = current.get("european_aqi", 0) or 0
     
-    if eu_aqi <= 20: category = "Excellent"
-    elif eu_aqi <= 40: category = "Good"
-    elif eu_aqi <= 60: category = "Moderate"
-    elif eu_aqi <= 80: category = "Poor"
-    elif eu_aqi <= 100: category = "Very Poor"
-    else: category = "Hazardous"
+    categories = [(20, "excellent"), (40, "good"), (60, "moderate"), 
+                  (80, "poor"), (100, "very_poor")]
+    category = next((c for th, c in categories if eu_aqi <= th), "hazardous")
     
     return {
         "status": "ok",
@@ -340,15 +482,15 @@ def fetch_pollen(lat: float, lon: float) -> dict:
     
     data = safe_fetch(OPEN_METEO_URLS["air_quality"], params=params)
     if not data:
-        return {"status": "error"}
+        return {"status": "error", "pollen": {}, "high_pollen": []}
     
     current = data.get("current", {})
     
     def level(v):
-        if v is None or v < 10: return "Low"
-        elif v < 50: return "Moderate"
-        elif v < 100: return "High"
-        return "Very High"
+        if v is None or v < 10: return "low"
+        elif v < 50: return "moderate"
+        elif v < 100: return "high"
+        return "very_high"
     
     pollen = {
         "grass": {"value": current.get("grass_pollen"), "level": level(current.get("grass_pollen"))},
@@ -357,7 +499,7 @@ def fetch_pollen(lat: float, lon: float) -> dict:
         "ragweed": {"value": current.get("ragweed_pollen"), "level": level(current.get("ragweed_pollen"))},
     }
     
-    high_pollen = [k for k, v in pollen.items() if v["level"] in ["High", "Very High"]]
+    high_pollen = [k for k, v in pollen.items() if v["level"] in ["high", "very_high"]]
     
     return {"status": "ok", "pollen": pollen, "high_pollen": high_pollen}
 
@@ -369,323 +511,392 @@ def fetch_flood_risk(lat: float, lon: float) -> dict:
     
     data = safe_fetch(OPEN_METEO_URLS["flood"], params=params, timeout=15)
     if not data:
-        return {"status": "error", "risk": "Unknown"}
+        return {"status": "error", "risk": "unknown"}
     
     discharge = data.get("daily", {}).get("river_discharge", [])
     valid = [d for d in discharge if d is not None]
     
     if not valid:
-        return {"status": "no_river", "risk": "N/A"}
+        return {"status": "no_river", "risk": "none"}
     
     max_d, avg_d = max(valid), sum(valid) / len(valid)
     
-    if max_d > avg_d * 3: risk = "High"
-    elif max_d > avg_d * 2: risk = "Moderate"
-    elif max_d > avg_d * 1.5: risk = "Low"
-    else: risk = "None"
+    if max_d > avg_d * 3: risk = "high"
+    elif max_d > avg_d * 2: risk = "moderate"
+    elif max_d > avg_d * 1.5: risk = "low"
+    else: risk = "none"
     
-    return {"status": "ok", "risk": risk, "current_discharge": valid[0] if valid else None}
+    return {"status": "ok", "risk": risk}
 
 
 def fetch_marine(lat: float, lon: float) -> dict:
-    params = {"latitude": lat, "longitude": lon, "current": "wave_height,wave_period,swell_wave_height"}
+    params = {"latitude": lat, "longitude": lon, "current": "wave_height,wave_period"}
     if OPEN_METEO_API_KEY:
         params["apikey"] = OPEN_METEO_API_KEY
     
     data = safe_fetch(OPEN_METEO_URLS["marine"], params=params, timeout=15)
     if not data or not data.get("current", {}).get("wave_height"):
-        return {"status": "no_coast", "conditions": "N/A"}
+        return {"status": "no_coast", "conditions": "none"}
     
-    current = data.get("current", {})
-    wave_h = current.get("wave_height", 0)
+    wave_h = data.get("current", {}).get("wave_height", 0)
     
-    if wave_h > 4: cond = "Dangerous"
-    elif wave_h > 2.5: cond = "Rough"
-    elif wave_h > 1: cond = "Moderate"
-    else: cond = "Calm"
+    if wave_h > 4: cond = "dangerous"
+    elif wave_h > 2.5: cond = "rough"
+    elif wave_h > 1: cond = "moderate"
+    else: cond = "calm"
     
     return {"status": "ok", "wave_height": wave_h, "conditions": cond}
 
 
-# === 6. APERTUS AI INTEGRATION ===
+# === 7. AI INTEGRATION ===
 
-def build_ai_prompt(data: dict, profile: str, language: str = "de") -> str:
-    """Build a prompt for Apertus to generate personalized recommendations"""
+def build_ai_prompt(data: dict, profile: str, language: str, user_question: str = None) -> str:
+    """Build prompt for AI"""
     
-    # Language-specific instructions
-    lang_instructions = {
-        "de": "Antworte auf Deutsch. Sei freundlich und gib konkrete, praktische Empfehlungen.",
-        "en": "Answer in English. Be friendly and give concrete, practical recommendations.",
-        "fr": "Réponds en français. Sois amical et donne des recommandations concrètes et pratiques.",
-        "it": "Rispondi in italiano. Sii amichevole e dai raccomandazioni concrete e pratiche."
+    lang_names = {"de": "German", "en": "English", "fr": "French", "it": "Italian"}
+    lang_name = lang_names.get(language, "German")
+    
+    profile_descriptions = {
+        "de": {
+            "General Public": "eine normale Person im Alltag",
+            "Outdoor/Sports": "jemanden der draussen Sport treiben möchte (Joggen, Wandern, Radfahren)",
+            "Asthma/Respiratory": "jemanden mit Asthma oder Atemwegserkrankungen",
+            "Allergy": "jemanden mit Pollenallergie",
+            "Pilot/Aviation": "einen Piloten (Fokus auf Funkstörungen, GPS)",
+            "Aurora Hunter": "jemanden der Nordlichter beobachten möchte",
+            "Marine/Sailing": "jemanden der segeln oder Boot fahren möchte",
+        },
+        "en": {
+            "General Public": "a regular person going about their day",
+            "Outdoor/Sports": "someone who wants to exercise outdoors (jogging, hiking, cycling)",
+            "Asthma/Respiratory": "someone with asthma or respiratory conditions",
+            "Allergy": "someone with pollen allergies",
+            "Pilot/Aviation": "a pilot (focus on radio disruptions, GPS)",
+            "Aurora Hunter": "someone who wants to see the northern lights",
+            "Marine/Sailing": "someone who wants to sail or go boating",
+        }
     }
     
-    # Profile-specific context
-    profile_context = {
-        "General Public": "für eine normale Person im Alltag",
-        "Outdoor/Sports": "für jemanden der heute draussen Sport treiben möchte (Joggen, Wandern, Radfahren)",
-        "Asthma/Respiratory": "für jemanden mit Asthma oder Atemwegserkrankungen (achte besonders auf Luftqualität und Pollen)",
-        "Pilot/Aviation": "für einen Piloten (achte auf Weltraumwetter, GPS-Störungen, Funkstörungen)",
-        "Aurora Hunter": "für jemanden der Nordlichter beobachten möchte",
-        "Marine/Sailing": "für jemanden der segeln oder Boot fahren möchte",
-        "Allergy": "für jemanden mit Pollenallergie",
-    }
+    profile_desc = profile_descriptions.get(language, profile_descriptions["de"]).get(profile, profile)
     
-    context = profile_context.get(profile, profile_context["General Public"])
-    
-    # Build data summary
     weather = data.get("weather", {})
     air = data.get("air_quality", {})
     space = data.get("space", {})
     eq = data.get("earthquakes", {})
-    events = data.get("natural_events", {})
     pollen = data.get("pollen", {})
-    flood = data.get("flood", {})
-    marine = data.get("marine", {})
     
     data_summary = f"""
-AKTUELLE UMWELTDATEN:
+CURRENT ENVIRONMENTAL DATA:
 
-Wetter:
-- Temperatur: {weather.get('temperature', 'N/A')}°C (gefühlt {weather.get('feels_like', 'N/A')}°C)
-- Bedingungen: {weather.get('weather', 'N/A')}
-- Luftfeuchtigkeit: {weather.get('humidity', 'N/A')}%
-- Wind: {weather.get('wind_speed', 'N/A')} km/h (Böen: {weather.get('wind_gusts', 'N/A')} km/h)
+Weather:
+- Temperature: {weather.get('temperature', 'N/A')}°C (feels like {weather.get('feels_like', 'N/A')}°C)
+- Conditions: {weather.get('weather', 'N/A')}
+- Humidity: {weather.get('humidity', 'N/A')}%
+- Wind: {weather.get('wind_speed', 'N/A')} km/h
 
-Luftqualität:
+Air Quality:
 - EU AQI: {air.get('eu_aqi', 'N/A')} ({air.get('category', 'N/A')})
 - PM2.5: {air.get('pm2_5', 'N/A')} μg/m³
-- UV-Index: {air.get('uv_index', 'N/A')}
+- UV Index: {air.get('uv_index', 'N/A')}
 
-Pollen:
-- Gräser: {pollen.get('pollen', {}).get('grass', {}).get('level', 'N/A')}
-- Birke: {pollen.get('pollen', {}).get('birch', {}).get('level', 'N/A')}
-- Hohe Pollenbelastung: {', '.join(pollen.get('high_pollen', [])) or 'Keine'}
+Pollen: High levels of: {', '.join(pollen.get('high_pollen', [])) or 'None'}
 
-Weltraumwetter:
-- Kp-Index: {space.get('kp', {}).get('value', 'N/A')} ({space.get('kp', {}).get('level', 'N/A')})
-- Aurora-Wahrscheinlichkeit: {space.get('aurora', {}).get('probability', 0)}%
-- Sonnenaktivität (X-Ray): {space.get('xray', {}).get('level', 'N/A')}
+Space Weather:
+- Kp Index: {space.get('kp', {}).get('value', 'N/A')}
+- Aurora probability: {space.get('aurora', {}).get('probability', 0)}%
 
-Gefahren:
-- Erdbeben in der Nähe (500km): {eq.get('count', 0)} (Max Magnitude: {eq.get('max_magnitude', 'N/A')})
-- Naturereignisse in der Nähe: {events.get('count', 0)}
-- Hochwasser-Risiko: {flood.get('risk', 'N/A')}
-- Seebedingungen: {marine.get('conditions', 'N/A')}
+Hazards:
+- Earthquakes nearby (500km): {eq.get('count', 0)}
+- Max magnitude: {eq.get('max_magnitude', 'N/A')}
 """
 
-    prompt = f"""Du bist ein freundlicher Umwelt-Assistent. Basierend auf den aktuellen Umweltdaten, gib eine kurze, praktische Empfehlung {context}.
+    if user_question:
+        instruction = f"""You are a friendly environmental advisor. Answer the user's question based on the current data.
+
+User profile: {profile_desc}
+User's question: {user_question}
 
 {data_summary}
 
-{lang_instructions.get(language, lang_instructions['de'])}
+IMPORTANT: 
+- Answer in {lang_name} only
+- Be concise (2-4 sentences)
+- Give practical, actionable advice
+- Use appropriate emojis
+- If the question is unrelated to weather/environment, politely redirect
 
-Wichtig:
-- Maximal 3-4 Sätze
-- Konkrete Handlungsempfehlungen (z.B. "Nimm Sonnencreme mit", "Ideal zum Joggen", "Bleib heute lieber drinnen")
-- Verwende passende Emojis
-- Erwähne nur relevante Informationen für das Profil
-- Bei Gefahren (Erdbeben, schlechte Luft, Sturm) warne deutlich
+Your answer:"""
+    else:
+        instruction = f"""You are a friendly environmental advisor. Give a brief, personalized recommendation for {profile_desc}.
 
-Deine Empfehlung:"""
+{data_summary}
 
-    return prompt
+IMPORTANT:
+- Answer in {lang_name} only
+- Maximum 3-4 sentences
+- Give concrete recommendations (e.g., "bring sunscreen", "perfect for jogging", "stay indoors")
+- Use appropriate emojis
+- Only mention what's relevant for this profile
+- Warn clearly about any hazards
+
+Your recommendation:"""
+
+    return instruction
 
 
-def call_apertus_api(prompt: str) -> Optional[str]:
-    """Call Apertus via Hugging Face Inference API"""
-    if not HF_API_KEY:
-        return None
+def call_ai_api(prompt: str, debug: bool = False) -> tuple[Optional[str], dict]:
+    """Call Apertus or fallback AI. Returns (response, debug_info)"""
+    debug_info = {"api_key_set": bool(HF_API_KEY), "api_key_prefix": HF_API_KEY[:10] + "..." if HF_API_KEY else None, "attempts": []}
     
-    # Try Apertus first, then fallback
-    models_to_try = [
-        ("swiss-ai/Apertus-8B-Instruct-2509", "https://router.huggingface.co/hf-inference/models/swiss-ai/Apertus-8B-Instruct-2509/v1/chat/completions"),
-        ("HuggingFaceH4/zephyr-7b-beta", "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta"),
+    if not HF_API_KEY:
+        debug_info["error"] = "No API key found (checked HF_API_KEY and APERTUS_API_KEY)"
+        return None, debug_info
+    
+    # Try multiple endpoints
+    endpoints = [
+        # Apertus via HF Inference (Public AI)
+        {
+            "name": "Apertus-PublicAI",
+            "url": "https://router.huggingface.co/hf-inference/models/swiss-ai/Apertus-8B-Instruct-2509/v1/chat/completions",
+            "format": "openai"
+        },
+        # Standard HF Inference API for Apertus
+        {
+            "name": "Apertus-HF-Direct",
+            "url": "https://api-inference.huggingface.co/models/swiss-ai/Apertus-8B-Instruct-2509",
+            "format": "hf"
+        },
+        # Fallback: Zephyr (reliable)
+        {
+            "name": "Zephyr-Fallback",
+            "url": "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta",
+            "format": "hf"
+        },
+        # Fallback: Mistral
+        {
+            "name": "Mistral-Fallback",
+            "url": "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
+            "format": "hf"
+        }
     ]
     
-    headers = {
-        "Authorization": f"Bearer {HF_API_KEY}",
-        "Content-Type": "application/json"
-    }
+    headers = {"Authorization": f"Bearer {HF_API_KEY}", "Content-Type": "application/json"}
     
-    for model_name, url in models_to_try:
+    for endpoint in endpoints:
+        attempt = {"name": endpoint["name"], "url": endpoint["url"]}
         try:
-            if "chat/completions" in url:
-                # OpenAI-compatible format for Apertus
+            if endpoint["format"] == "openai":
                 payload = {
-                    "model": model_name,
-                    "messages": [
-                        {"role": "user", "content": prompt}
-                    ],
+                    "model": "swiss-ai/Apertus-8B-Instruct-2509",
+                    "messages": [{"role": "user", "content": prompt}],
                     "max_tokens": 300,
                     "temperature": 0.7
                 }
             else:
-                # Standard HF Inference format
                 payload = {
                     "inputs": prompt,
-                    "parameters": {
-                        "max_new_tokens": 300,
-                        "temperature": 0.7,
-                        "do_sample": True
-                    }
+                    "parameters": {"max_new_tokens": 300, "temperature": 0.7, "do_sample": True}
                 }
             
-            response = requests.post(url, headers=headers, json=payload, timeout=30)
+            response = requests.post(endpoint["url"], headers=headers, json=payload, timeout=30)
+            attempt["status_code"] = response.status_code
             
             if response.status_code == 200:
                 result = response.json()
+                attempt["response_keys"] = list(result.keys()) if isinstance(result, dict) else f"list[{len(result)}]"
                 
-                # Parse response based on format
                 if "choices" in result:
-                    # OpenAI format
                     text = result["choices"][0]["message"]["content"]
-                elif isinstance(result, list) and len(result) > 0:
-                    # HF format
+                elif isinstance(result, list) and result:
                     text = result[0].get("generated_text", "")
-                    # Remove the prompt from response
                     if prompt in text:
                         text = text.split(prompt)[-1]
                 else:
+                    attempt["error"] = "Unknown response format"
+                    debug_info["attempts"].append(attempt)
                     continue
                 
-                # Clean up
                 text = text.strip()
-                if text:
-                    return text
+                if text and len(text) > 20:
+                    attempt["success"] = True
+                    attempt["response_length"] = len(text)
+                    debug_info["attempts"].append(attempt)
+                    debug_info["success_model"] = endpoint["name"]
+                    return text, debug_info
+                else:
+                    attempt["error"] = f"Response too short ({len(text)} chars)"
+            else:
+                attempt["error"] = f"HTTP {response.status_code}"
+                try:
+                    attempt["error_detail"] = response.json()
+                except:
+                    attempt["error_detail"] = response.text[:200]
                     
         except Exception as e:
-            print(f"AI API error ({model_name}): {e}")
-            continue
+            attempt["error"] = str(e)
+        
+        debug_info["attempts"].append(attempt)
     
-    return None
+    return None, debug_info
 
 
-def generate_fallback_recommendation(data: dict, profile: str, language: str = "de") -> str:
-    """Generate rule-based recommendations when AI is unavailable"""
+def generate_recommendation(data: dict, profile: str, language: str) -> str:
+    """Generate rule-based recommendation in the correct language"""
     
     weather = data.get("weather", {})
     air = data.get("air_quality", {})
     space = data.get("space", {})
     eq = data.get("earthquakes", {})
     pollen = data.get("pollen", {})
+    flood = data.get("flood", {})
+    marine = data.get("marine", {})
     
-    recommendations = []
+    tips = []
     warnings = []
     
     temp = weather.get("temperature")
     uv = air.get("uv_index", 0) or 0
     aqi = air.get("eu_aqi", 0) or 0
     kp = space.get("kp", {}).get("value", 0) or 0
-    eq_count = eq.get("count", 0)
     high_pollen = pollen.get("high_pollen", [])
     
-    # Temperature-based
+    # Weather conditions
+    weather_desc = weather.get("weather", "")
+    
+    # Temperature advice
     if temp is not None:
         if temp < 5:
-            recommendations.append("🧥 Warme Kleidung empfohlen")
-        elif temp > 25:
-            recommendations.append("💧 Viel trinken, leichte Kleidung")
+            tips.append(f"🧥 {t('warm_clothes', language)}")
+        elif temp < 15:
+            tips.append(f"🧥 {t('light_jacket', language)}")
+        elif temp > 28:
+            tips.append(f"💧 {t('light_clothes', language)}")
     
-    # UV-based
+    # UV advice
     if uv >= 8:
-        warnings.append(f"☀️ Sehr hoher UV-Index ({uv}) - Sonnencreme SPF50+ und Schatten suchen!")
+        warnings.append(f"☀️ {t('avoid_sun', language)}")
     elif uv >= 6:
-        recommendations.append(f"🧴 Sonnencreme empfohlen (UV {uv})")
+        tips.append(f"🧴 {t('sunscreen_required', language)}")
     elif uv >= 3:
-        recommendations.append("☀️ Leichter Sonnenschutz sinnvoll")
+        tips.append(f"🧴 {t('sunscreen_needed', language)}")
     
     # Air quality
     if aqi > 80:
-        warnings.append(f"😷 Schlechte Luftqualität (AQI {aqi}) - Outdoor-Aktivitäten reduzieren!")
+        warnings.append(f"😷 {t('air_quality', language)}: {t('poor', language)} - {t('limit_outdoor', language)}")
     elif aqi > 60:
-        recommendations.append(f"💨 Mäßige Luftqualität (AQI {aqi})")
-    else:
-        recommendations.append("✅ Gute Luftqualität")
+        tips.append(f"💨 {t('air_quality', language)}: {t('moderate', language)}")
+    elif aqi <= 40:
+        tips.append(f"✅ {t('air_quality', language)}: {t('good', language)}")
     
     # Profile-specific
-    if "Asthma" in profile or "Allergy" in profile:
+    if "Asthma" in profile or "Respiratory" in profile:
         if high_pollen:
-            warnings.append(f"🌸 Hohe Pollenbelastung: {', '.join(high_pollen)}")
+            warnings.append(f"🌸 {t('pollen_high', language)}: {', '.join(high_pollen)}")
         if aqi > 40:
-            recommendations.append("Inhalator mitnehmen empfohlen")
+            tips.append(f"💊 {t('take_inhaler', language)}")
+    
+    if "Allergy" in profile:
+        if high_pollen:
+            warnings.append(f"🌸 {t('pollen_high', language)}: {', '.join(high_pollen)}")
+            tips.append(f"💊 {t('take_antihistamine', language)}")
     
     if "Aurora" in profile:
         aurora_prob = space.get("aurora", {}).get("probability", 0)
-        if kp >= 5:
-            recommendations.append(f"🌌 Gute Chancen auf Nordlichter! Kp={kp}, {aurora_prob}% Wahrscheinlichkeit")
+        if kp >= 5 or aurora_prob >= 20:
+            tips.append(f"🌌 {t('aurora_possible', language)}! Kp={kp}, {aurora_prob}%")
         else:
-            recommendations.append(f"Aurora unwahrscheinlich heute (Kp={kp})")
+            tips.append(f"🌌 {t('aurora_unlikely', language)} (Kp={kp})")
     
     if "Pilot" in profile or "Aviation" in profile:
         if kp >= 5:
-            warnings.append(f"⚠️ Geomagnetischer Sturm (Kp={kp}) - HF-Funk möglicherweise gestört")
+            warnings.append(f"⚠️ {t('hf_radio_disruption', language)} (Kp={kp})")
         xray = space.get("xray", {}).get("level", "")
-        if xray.startswith("M") or xray.startswith("X"):
-            warnings.append(f"☀️ Sonneneruption ({xray}) - mögliche Funkstörungen")
+        if xray and (xray.startswith("M") or xray.startswith("X")):
+            warnings.append(f"☀️ {t('gps_issues', language)}")
     
     if "Marine" in profile or "Sailing" in profile:
-        marine_cond = data.get("marine", {}).get("conditions", "")
-        if marine_cond in ["Dangerous", "Rough"]:
-            warnings.append(f"🌊 {marine_cond} - Seegang nicht empfohlen!")
+        cond = marine.get("conditions", "")
+        if cond in ["dangerous", "rough"]:
+            warnings.append(f"🌊 {t('rough_sea', language)}")
+        elif cond == "calm":
+            tips.append(f"🌊 {t('calm_sea', language)}")
+    
+    if "Outdoor" in profile or "Sports" in profile:
+        if aqi <= 40 and uv < 8 and not warnings:
+            tips.insert(0, f"🏃 {t('perfect_outdoor', language)}")
+        elif aqi <= 60 and uv < 6:
+            tips.insert(0, f"👍 {t('good_outdoor', language)}")
     
     # Earthquakes
-    if eq_count > 0:
+    if eq.get("count", 0) > 0:
         max_mag = eq.get("max_magnitude")
-        if max_mag and max_mag >= 5:
-            warnings.append(f"🌍 Signifikante seismische Aktivität (M{max_mag}) in der Region")
+        if max_mag and max_mag >= 4:
+            warnings.append(f"🌍 {t('earthquake_warning', language)} (M{max_mag})")
     
-    # Combine
-    weather_desc = f"{weather.get('weather', 'Unbekannt')}, {temp}°C" if temp else weather.get('weather', '')
+    # Flood
+    if flood.get("risk") in ["high", "moderate"]:
+        warnings.append(f"🌊 {t('flood_risk', language)}: {flood.get('risk')}")
     
-    result = f"🌤️ {weather_desc}. "
+    # Build response
+    greeting = t("good_day", language)
+    weather_summary = f"{weather_desc}, {temp}°C" if temp else weather_desc
+    
+    response_parts = [f"🌤️ {greeting}! {weather_summary}."]
     
     if warnings:
-        result += " ".join(warnings) + " "
+        response_parts.extend(warnings)
     
-    if recommendations:
-        result += " ".join(recommendations[:3])
+    if tips:
+        response_parts.extend(tips[:3])
     
-    if not warnings and not recommendations:
-        result += "Gute Bedingungen für Outdoor-Aktivitäten! ✅"
+    if not warnings and not tips:
+        response_parts.append(f"{t('no_concerns', language)} {t('enjoy_day', language)}")
+    elif not warnings:
+        response_parts.append(f"{t('have_fun', language)}")
     
-    return result
+    return " ".join(response_parts)
 
 
-# === 7. MAIN API ENDPOINTS ===
+# === 8. API ENDPOINTS ===
 
 @app.get("/")
 def root():
     return {
         "status": "online",
-        "version": "7.0.0 - AI-Powered Environmental Monitor",
-        "ai_model": "Swiss AI Apertus-8B",
-        "features": [
-            "Real-time environmental data from 6+ sources",
-            "AI-powered personalized recommendations",
-            "Multilingual support (DE, EN, FR, IT)",
-            "Profile-specific advice"
-        ],
+        "version": "7.1.0",
+        "ai_enabled": bool(HF_API_KEY),
+        "ai_key_prefix": HF_API_KEY[:10] + "..." if HF_API_KEY else None,
         "endpoints": {
-            "/alert/": "Get AI-powered environmental alert",
+            "/alert/": "Get environmental alert with AI recommendation",
+            "/chat/": "Chat with AI about environmental conditions",
             "/data/": "Get raw environmental data",
-            "/health/": "API health check"
+            "/debug/ai/": "Test AI connection",
         }
     }
 
 
-@app.get("/health/")
-def health():
+@app.get("/debug/ai/")
+def debug_ai():
+    """Test AI API connection and see detailed error info"""
+    test_prompt = "Say 'Hello, I am working!' in exactly those words."
+    
+    response, debug_info = call_ai_api(test_prompt, debug=True)
+    
     return {
-        "status": "healthy",
-        "ai_available": bool(HF_API_KEY),
-        "timestamp": datetime.utcnow().isoformat()
+        "status": "success" if response else "failed",
+        "ai_response": response,
+        "debug_info": debug_info,
+        "config": {
+            "HF_API_KEY_set": bool(os.getenv("HF_API_KEY")),
+            "APERTUS_API_KEY_set": bool(os.getenv("APERTUS_API_KEY")),
+            "key_used_prefix": HF_API_KEY[:15] + "..." if HF_API_KEY else None,
+        }
     }
 
 
 @app.get("/data/")
 def get_data(lat: float = Query(DEFAULT_LAT), lon: float = Query(DEFAULT_LON)):
-    """Get raw environmental data without AI recommendations"""
+    """Get raw environmental data"""
     return {
         "timestamp": datetime.utcnow().isoformat() + "Z",
         "location": {"lat": lat, "lon": lon},
@@ -699,7 +910,6 @@ def get_data(lat: float = Query(DEFAULT_LAT), lon: float = Query(DEFAULT_LON)):
             "aurora": fetch_aurora_forecast(lat, lon),
         },
         "earthquakes": fetch_earthquakes_nearby(lat, lon),
-        "natural_events": fetch_natural_events_nearby(lat, lon),
         "flood": fetch_flood_risk(lat, lon),
         "marine": fetch_marine(lat, lon),
     }
@@ -710,9 +920,13 @@ def get_alert(
     lat: float = Query(DEFAULT_LAT),
     lon: float = Query(DEFAULT_LON),
     profile: str = Query("General Public"),
-    language: str = Query("de", description="de, en, fr, it")
+    language: str = Query("de")
 ):
-    """Get AI-powered environmental alert with personalized recommendations"""
+    """Get AI-powered environmental alert"""
+    
+    # Validate language
+    if language not in TRANSLATIONS:
+        language = "de"
     
     # Fetch all data
     data = {
@@ -723,73 +937,50 @@ def get_alert(
             "kp": fetch_kp_index(),
             "solar_wind": fetch_solar_wind(),
             "xray": fetch_xray_flux(),
-            "protons": fetch_proton_flux(),
             "aurora": fetch_aurora_forecast(lat, lon),
         },
         "earthquakes": fetch_earthquakes_nearby(lat, lon),
-        "natural_events": fetch_natural_events_nearby(lat, lon),
         "flood": fetch_flood_risk(lat, lon),
         "marine": fetch_marine(lat, lon),
     }
     
-    # Generate AI recommendation
-    ai_source = "none"
+    # Try AI first
+    ai_source = "rule-based"
+    ai_debug = None
     
     if HF_API_KEY:
         prompt = build_ai_prompt(data, profile, language)
-        ai_recommendation = call_apertus_api(prompt)
+        ai_response, ai_debug = call_ai_api(prompt)
         
-        if ai_recommendation:
-            ai_source = "apertus"
-            recommendation = ai_recommendation
+        if ai_response:
+            ai_source = ai_debug.get("success_model", "apertus")
+            recommendation = ai_response
         else:
-            ai_source = "fallback"
-            recommendation = generate_fallback_recommendation(data, profile, language)
+            recommendation = generate_recommendation(data, profile, language)
     else:
-        ai_source = "fallback"
-        recommendation = generate_fallback_recommendation(data, profile, language)
+        recommendation = generate_recommendation(data, profile, language)
     
-    # Calculate risk level
+    # Calculate risk
     risk_score = 0
     risk_factors = []
     
     kp = data["space"]["kp"].get("value", 0) or 0
-    if kp >= 7: risk_score += 3; risk_factors.append(f"Severe geomagnetic storm (Kp={kp})")
+    if kp >= 7: risk_score += 3; risk_factors.append(f"Severe storm (Kp={kp})")
     elif kp >= 5: risk_score += 2; risk_factors.append(f"Geomagnetic storm (Kp={kp})")
     
     aqi = data["air_quality"].get("eu_aqi", 0) or 0
-    if aqi > 80: risk_score += 2; risk_factors.append(f"Poor air quality (AQI {aqi})")
-    elif aqi > 60: risk_score += 1; risk_factors.append(f"Moderate air quality (AQI {aqi})")
+    if aqi > 80: risk_score += 2; risk_factors.append(f"Poor air (AQI {aqi})")
+    elif aqi > 60: risk_score += 1; risk_factors.append(f"Moderate air (AQI {aqi})")
     
     uv = data["air_quality"].get("uv_index", 0) or 0
     if uv >= 8: risk_score += 2; risk_factors.append(f"Very high UV ({uv})")
     elif uv >= 6: risk_score += 1; risk_factors.append(f"High UV ({uv})")
     
-    eq_count = data["earthquakes"].get("count", 0)
-    if eq_count > 0:
-        max_mag = data["earthquakes"].get("max_magnitude")
-        if max_mag and max_mag >= 5:
-            risk_score += 3; risk_factors.append(f"Earthquake M{max_mag} nearby")
+    eq_max = data["earthquakes"].get("max_magnitude")
+    if eq_max and eq_max >= 5:
+        risk_score += 3; risk_factors.append(f"Earthquake M{eq_max}")
     
-    if data["flood"].get("risk") == "High":
-        risk_score += 2; risk_factors.append("High flood risk")
-    
-    if risk_score >= 5: risk_level = "High"
-    elif risk_score >= 3: risk_level = "Medium"
-    elif risk_score >= 1: risk_level = "Low-Medium"
-    else: risk_level = "Low"
-    
-    # Build summary
-    summary = {
-        "temperature": data["weather"].get("temperature"),
-        "weather": data["weather"].get("weather"),
-        "air_quality": aqi,
-        "uv_index": uv,
-        "kp_index": kp,
-        "aurora_probability": data["space"]["aurora"].get("probability", 0),
-        "earthquakes_nearby": eq_count,
-        "flood_risk": data["flood"].get("risk"),
-    }
+    risk_level = "High" if risk_score >= 5 else "Medium" if risk_score >= 3 else "Low-Medium" if risk_score >= 1 else "Low"
     
     return {
         "status": "success",
@@ -799,16 +990,80 @@ def get_alert(
         "language": language,
         "recommendation": recommendation,
         "ai_source": ai_source,
-        "risk": {
-            "level": risk_level,
-            "factors": risk_factors
+        "risk": {"level": risk_level, "factors": risk_factors},
+        "summary": {
+            "temperature": data["weather"].get("temperature"),
+            "weather": data["weather"].get("weather"),
+            "air_quality": aqi,
+            "uv_index": uv,
+            "kp_index": kp,
+            "aurora_probability": data["space"]["aurora"].get("probability", 0),
+            "earthquakes_nearby": data["earthquakes"].get("count", 0),
+            "flood_risk": data["flood"].get("risk"),
         },
-        "summary": summary,
         "data": data
     }
 
 
-# === 8. MAIN ===
+@app.post("/chat/")
+def chat_with_ai(
+    lat: float = Query(DEFAULT_LAT),
+    lon: float = Query(DEFAULT_LON),
+    profile: str = Query("General Public"),
+    language: str = Query("de"),
+    question: str = Query(..., description="User's question")
+):
+    """Chat with AI about environmental conditions"""
+    
+    if language not in TRANSLATIONS:
+        language = "de"
+    
+    # Fetch data
+    data = {
+        "weather": fetch_weather(lat, lon),
+        "air_quality": fetch_air_quality(lat, lon),
+        "pollen": fetch_pollen(lat, lon),
+        "space": {
+            "kp": fetch_kp_index(),
+            "solar_wind": fetch_solar_wind(),
+            "xray": fetch_xray_flux(),
+            "aurora": fetch_aurora_forecast(lat, lon),
+        },
+        "earthquakes": fetch_earthquakes_nearby(lat, lon),
+        "flood": fetch_flood_risk(lat, lon),
+        "marine": fetch_marine(lat, lon),
+    }
+    
+    ai_source = "rule-based"
+    ai_debug = None
+    
+    if HF_API_KEY:
+        prompt = build_ai_prompt(data, profile, language, user_question=question)
+        ai_response, ai_debug = call_ai_api(prompt)
+        
+        if ai_response:
+            ai_source = ai_debug.get("success_model", "apertus")
+            answer = ai_response
+        else:
+            # Fallback: Generate a simple response
+            answer = generate_recommendation(data, profile, language)
+    else:
+        answer = generate_recommendation(data, profile, language)
+    
+    return {
+        "status": "success",
+        "question": question,
+        "answer": answer,
+        "ai_source": ai_source,
+        "language": language,
+        "data_summary": {
+            "temperature": data["weather"].get("temperature"),
+            "weather": data["weather"].get("weather"),
+            "air_quality": data["air_quality"].get("eu_aqi"),
+            "uv_index": data["air_quality"].get("uv_index"),
+        }
+    }
+
 
 if __name__ == "__main__":
     import uvicorn
