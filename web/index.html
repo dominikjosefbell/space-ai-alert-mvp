@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌍 Environmental Monitor - AI Powered</title>
+    <title>🌍 Environmental Monitor</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -23,163 +23,240 @@
             background: linear-gradient(135deg, var(--bg) 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
             color: var(--text);
-            padding: 15px;
+            padding: 12px;
         }
         .container { max-width: 1400px; margin: 0 auto; }
         
         header {
             text-align: center;
-            padding: 20px;
+            padding: 16px;
             background: var(--card);
             border-radius: 16px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             border: 1px solid var(--border);
         }
         h1 {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             background: linear-gradient(90deg, var(--accent), var(--accent2));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .subtitle { color: var(--dim); margin-top: 5px; font-size: 0.85rem; }
+        .subtitle { color: var(--dim); margin-top: 4px; font-size: 0.8rem; }
         .ai-badge {
             display: inline-block;
             background: linear-gradient(90deg, #10b981, #059669);
             color: white;
-            padding: 4px 12px;
+            padding: 3px 10px;
             border-radius: 20px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 600;
-            margin-top: 8px;
+            margin-top: 6px;
         }
         
         .controls {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
             justify-content: center;
             align-items: flex-end;
-            padding: 15px;
+            padding: 12px;
             background: var(--card);
             border-radius: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             border: 1px solid var(--border);
         }
-        .control-group { display: flex; flex-direction: column; gap: 4px; }
-        .control-group label { font-size: 0.7rem; color: var(--dim); text-transform: uppercase; }
+        .control-group { display: flex; flex-direction: column; gap: 3px; }
+        .control-group label { font-size: 0.65rem; color: var(--dim); text-transform: uppercase; }
         input, select {
-            padding: 10px 12px;
+            padding: 8px 10px;
             border: 1px solid var(--border);
             border-radius: 8px;
             background: rgba(0,0,0,0.4);
             color: #fff;
-            font-size: 0.9rem;
-            min-width: 110px;
+            font-size: 0.85rem;
+            min-width: 100px;
         }
-        input:focus, select:focus { outline: none; border-color: var(--accent); }
         button {
-            padding: 10px 20px;
+            padding: 8px 16px;
             border: none;
             border-radius: 8px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
         }
         .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,212,255,0.3); }
+        .btn-primary:hover { transform: translateY(-1px); }
         .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; }
         
-        /* AI Recommendation Box - PROMINENT */
+        /* AI Box */
         .ai-box {
-            background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(5,150,105,0.1));
-            border: 2px solid rgba(16,185,129,0.4);
+            background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(5,150,105,0.08));
+            border: 1px solid rgba(16,185,129,0.3);
             border-radius: 16px;
-            padding: 25px;
-            margin-bottom: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
             position: relative;
         }
-        .ai-box::before {
-            content: '🤖 AI';
+        .ai-label {
             position: absolute;
-            top: -12px;
-            left: 20px;
+            top: -10px;
+            left: 16px;
             background: linear-gradient(90deg, #10b981, #059669);
             color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
             font-weight: 700;
         }
         .ai-recommendation {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             line-height: 1.6;
             color: #fff;
-            margin-top: 5px;
+            margin-top: 4px;
         }
         .ai-meta {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.08);
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
         }
-        .ai-source {
-            font-size: 0.75rem;
-            color: var(--dim);
-        }
+        .ai-source { font-size: 0.7rem; color: var(--dim); }
+        
         .risk-badge {
-            padding: 6px 14px;
-            border-radius: 20px;
+            padding: 4px 12px;
+            border-radius: 16px;
             font-weight: 700;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
         }
-        .risk-low { background: rgba(0,255,136,0.2); color: var(--success); }
-        .risk-low-medium { background: rgba(255,193,7,0.15); color: #e0a800; }
-        .risk-medium { background: rgba(255,193,7,0.2); color: var(--warning); }
-        .risk-high { background: rgba(255,87,51,0.2); color: var(--danger); }
+        .risk-low { background: rgba(0,255,136,0.15); color: var(--success); }
+        .risk-medium { background: rgba(255,193,7,0.18); color: var(--warning); }
+        .risk-high { background: rgba(255,87,51,0.18); color: var(--danger); }
+        .risk-critical { background: rgba(255,0,0,0.25); color: #ff4444; }
         
         .risk-factors {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 10px;
+            gap: 5px;
+            margin-top: 8px;
         }
         .risk-factor {
-            background: rgba(255,255,255,0.08);
+            background: rgba(255,193,7,0.15);
+            border: 1px solid rgba(255,193,7,0.3);
             padding: 4px 10px;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 0.75rem;
-            color: var(--dim);
+            color: var(--warning);
         }
+        .risk-factor.severe {
+            background: rgba(255,87,51,0.15);
+            border-color: rgba(255,87,51,0.3);
+            color: var(--danger);
+        }
+        
+        /* Chat Interface */
+        .chat-section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .chat-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--accent);
+        }
+        .chat-messages {
+            max-height: 250px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+            padding: 8px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            min-height: 60px;
+        }
+        .chat-message {
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .chat-user {
+            background: rgba(0,212,255,0.15);
+            border: 1px solid rgba(0,212,255,0.3);
+            margin-left: 15%;
+            text-align: right;
+        }
+        .chat-ai {
+            background: rgba(16,185,129,0.15);
+            border: 1px solid rgba(16,185,129,0.3);
+            margin-right: 15%;
+        }
+        .chat-placeholder {
+            color: var(--dim);
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+        .chat-input-row {
+            display: flex;
+            gap: 8px;
+        }
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 0.9rem;
+        }
+        .chat-input:focus { outline: none; border-color: var(--accent); }
+        .chat-send {
+            padding: 12px 24px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .chat-send:disabled { opacity: 0.5; cursor: not-allowed; }
         
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 15px;
+            gap: 12px;
         }
         .card {
             background: var(--card);
             border-radius: 12px;
-            padding: 16px;
+            padding: 14px;
             border: 1px solid var(--border);
         }
         .card-header {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
-            padding-bottom: 10px;
+            gap: 6px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
             border-bottom: 1px solid var(--border);
         }
-        .card-icon { font-size: 1.2rem; }
-        .card-title { font-size: 0.9rem; font-weight: 600; flex: 1; }
+        .card-icon { font-size: 1.1rem; }
+        .card-title { font-size: 0.85rem; font-weight: 600; flex: 1; }
         .source-badge {
-            font-size: 0.6rem;
-            padding: 2px 6px;
+            font-size: 0.55rem;
+            padding: 2px 5px;
             border-radius: 4px;
             background: rgba(0,212,255,0.1);
             color: var(--accent);
@@ -188,64 +265,95 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            cursor: help;
+            transition: background 0.2s;
+        }
+        .metric:hover {
+            background: rgba(255,255,255,0.03);
+            border-radius: 4px;
         }
         .metric:last-child { border-bottom: none; }
-        .metric-label { color: var(--dim); font-size: 0.8rem; }
-        .metric-value { font-weight: 600; font-size: 0.85rem; }
+        .metric-label { color: var(--dim); font-size: 0.75rem; }
+        .metric-value { font-weight: 600; font-size: 0.8rem; }
+        .metric-info {
+            font-size: 0.65rem;
+            color: var(--dim);
+            margin-top: 2px;
+            display: none;
+        }
+        .metric:hover .metric-info {
+            display: block;
+        }
+        
         .badge {
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-size: 0.7rem;
+            padding: 2px 7px;
+            border-radius: 8px;
+            font-size: 0.65rem;
             font-weight: 600;
         }
-        .badge-good { background: rgba(0,255,136,0.15); color: var(--success); }
-        .badge-moderate { background: rgba(255,193,7,0.15); color: var(--warning); }
-        .badge-bad { background: rgba(255,87,51,0.15); color: var(--danger); }
+        .badge-good { background: rgba(0,255,136,0.12); color: var(--success); }
+        .badge-moderate { background: rgba(255,193,7,0.12); color: var(--warning); }
+        .badge-bad { background: rgba(255,87,51,0.12); color: var(--danger); }
+        
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+        }
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            background: #1a1a2e;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            position: absolute;
+            z-index: 100;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            text-align: center;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+        }
         
         .loading {
             text-align: center;
-            padding: 30px;
+            padding: 20px;
             color: var(--dim);
         }
         .loading::after {
             content: '';
             display: inline-block;
-            width: 18px;
-            height: 18px;
+            width: 14px;
+            height: 14px;
             border: 2px solid rgba(0,212,255,0.3);
             border-top-color: var(--accent);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-left: 10px;
+            margin-left: 8px;
             vertical-align: middle;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        .error {
-            background: rgba(255,87,51,0.1);
-            border: 1px solid rgba(255,87,51,0.3);
-            color: var(--danger);
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        
         footer {
             text-align: center;
-            padding: 20px;
+            padding: 16px;
             color: #444;
-            font-size: 0.75rem;
-            margin-top: 20px;
+            font-size: 0.7rem;
+            margin-top: 16px;
         }
         footer a { color: var(--accent); text-decoration: none; }
         
         @media (max-width: 768px) {
-            h1 { font-size: 1.4rem; }
-            .controls { flex-direction: column; align-items: stretch; }
-            input, select { width: 100%; }
-            .ai-recommendation { font-size: 1rem; }
+            .controls { flex-direction: column; }
+            .chat-user { margin-left: 5%; }
+            .chat-ai { margin-right: 5%; }
         }
     </style>
 </head>
@@ -253,21 +361,21 @@
     <div class="container">
         <header>
             <h1>🌍 Environmental Monitor</h1>
-            <p class="subtitle">Space Weather • Earthquakes • Air Quality • Weather</p>
+            <p class="subtitle" id="subtitle">Weltraumwetter • Erdbeben • Waldbrände • Luftqualität • Wetter</p>
             <span class="ai-badge">✨ Powered by Swiss AI Apertus</span>
         </header>
         
         <div class="controls">
             <div class="control-group">
-                <label>Latitude</label>
+                <label id="lbl-lat">Breitengrad</label>
                 <input type="number" id="lat" value="47.3769" step="0.0001">
             </div>
             <div class="control-group">
-                <label>Longitude</label>
+                <label id="lbl-lon">Längengrad</label>
                 <input type="number" id="lon" value="8.5417" step="0.0001">
             </div>
             <div class="control-group">
-                <label>Profil</label>
+                <label id="lbl-profile">Profil</label>
                 <select id="profile">
                     <option value="General Public">Allgemein</option>
                     <option value="Outdoor/Sports">Outdoor/Sport</option>
@@ -279,24 +387,45 @@
                 </select>
             </div>
             <div class="control-group">
-                <label>Sprache</label>
-                <select id="language">
+                <label id="lbl-lang">Sprache</label>
+                <select id="language" onchange="updateLanguage()">
                     <option value="de">🇩🇪 Deutsch</option>
                     <option value="en">🇬🇧 English</option>
                     <option value="fr">🇫🇷 Français</option>
                     <option value="it">🇮🇹 Italiano</option>
                 </select>
             </div>
-            <button class="btn-primary" onclick="fetchAlert()">🔍 Empfehlung holen</button>
-            <button class="btn-secondary" onclick="useMyLocation()">📍 Mein Standort</button>
+            <button class="btn-primary" onclick="fetchAlert()" id="btn-fetch">🔍 Empfehlung holen</button>
+            <button class="btn-secondary" onclick="useMyLocation()" id="btn-location">📍 Mein Standort</button>
         </div>
         
         <div id="ai-container"></div>
+        
+        <!-- Chat Section -->
+        <div class="chat-section">
+            <div class="chat-title">💬 <span id="chat-title-text">Fragen Sie die KI</span></div>
+            <div class="chat-messages" id="chat-messages">
+                <div class="chat-placeholder" id="chat-placeholder">
+                    Stellen Sie eine Frage zu den Umweltbedingungen...
+                </div>
+            </div>
+            <div class="chat-input-row">
+                <input type="text" class="chat-input" id="chat-input" 
+                       placeholder="z.B. Kann ich heute joggen gehen?"
+                       onkeypress="if(event.key==='Enter')sendChat()">
+                <button class="chat-send" onclick="sendChat()" id="chat-send">Senden</button>
+            </div>
+        </div>
+        
         <div class="grid" id="data-grid"></div>
         
         <footer>
-            <p>Daten: <a href="https://www.swpc.noaa.gov/">NOAA</a> • <a href="https://earthquake.usgs.gov/">USGS</a> • <a href="https://api.nasa.gov/">NASA</a> • <a href="https://open-meteo.com/">Open-Meteo</a></p>
-            <p style="margin-top:5px">KI: <a href="https://www.swiss-ai.org/apertus">Swiss AI Apertus</a> • v7.0</p>
+            <p>Daten: <a href="https://www.swpc.noaa.gov/">NOAA GOES/DSCOVR</a> • 
+               <a href="https://earthquake.usgs.gov/">USGS</a> • 
+               <a href="https://firms.modaps.eosdis.nasa.gov/">NASA FIRMS VIIRS</a> • 
+               <a href="https://www.gdacs.org/">UN GDACS</a> • 
+               <a href="https://open-meteo.com/">Open-Meteo/Copernicus</a></p>
+            <p style="margin-top:4px">KI: <a href="https://www.swiss-ai.org/apertus">Swiss AI Apertus</a> • v7.2</p>
         </footer>
     </div>
 
@@ -305,13 +434,278 @@
             ? 'http://localhost:8000' 
             : 'https://space-ai-alert-mvp.onrender.com';
         
+        let currentData = null;
+        
+        // === TRANSLATIONS ===
+        const i18n = {
+            de: {
+                subtitle: "Weltraumwetter • Erdbeben • Waldbrände • Luftqualität • Wetter",
+                latitude: "Breitengrad",
+                longitude: "Längengrad",
+                profile: "Profil",
+                language: "Sprache",
+                get_alert: "🔍 Empfehlung holen",
+                my_location: "📍 Mein Standort",
+                chat_title: "Fragen Sie die KI",
+                chat_placeholder: "Stellen Sie eine Frage zu den Umweltbedingungen...",
+                chat_input_placeholder: "z.B. Kann ich heute joggen gehen?",
+                send: "Senden",
+                loading: "Analysiere Daten...",
+                
+                // Profiles
+                "General Public": "Allgemein",
+                "Outdoor/Sports": "Outdoor/Sport",
+                "Asthma/Respiratory": "Asthma/Atemwege",
+                "Allergy": "Allergie",
+                "Pilot/Aviation": "Pilot/Luftfahrt",
+                "Aurora Hunter": "Aurora/Nordlichter",
+                "Marine/Sailing": "Marine/Segeln",
+                
+                // Weather conditions
+                "Clear": "Klar",
+                "Partly cloudy": "Teilweise bewölkt",
+                "Overcast": "Bewölkt",
+                "Fog": "Nebel",
+                "Drizzle": "Nieselregen",
+                "Rain": "Regen",
+                "Heavy rain": "Starkregen",
+                "Snow": "Schnee",
+                "Heavy snow": "Starker Schneefall",
+                "Showers": "Schauer",
+                "Thunderstorm": "Gewitter",
+                
+                // Categories
+                "excellent": "Ausgezeichnet",
+                "good": "Gut",
+                "moderate": "Mässig",
+                "poor": "Schlecht",
+                "very_poor": "Sehr schlecht",
+                "hazardous": "Gefährlich",
+                "low": "Niedrig",
+                "high": "Hoch",
+                "very_high": "Sehr hoch",
+                "none": "Keine",
+                "calm": "Ruhig",
+                "rough": "Rau",
+                "dangerous": "Gefährlich",
+                
+                // Risk levels
+                "Low": "Niedrig",
+                "Medium": "Mittel",
+                "High": "Hoch",
+                "Critical": "Kritisch",
+                
+                // Cards
+                weather: "Wetter",
+                temperature: "Temperatur",
+                conditions: "Bedingungen",
+                humidity: "Feuchtigkeit",
+                wind: "Wind",
+                air_quality: "Luftqualität",
+                category: "Kategorie",
+                space_weather: "Weltraumwetter",
+                solar_wind: "Sonnenwind",
+                hazards: "Gefahren",
+                earthquakes: "Erdbeben",
+                wildfires: "Waldbrände",
+                volcanoes: "Vulkane",
+                disasters: "Katastrophen",
+                max_magnitude: "Max. Stärke",
+                flood: "Hochwasser",
+                sea: "See/Marine",
+                pollen: "Pollen",
+                grass: "Gräser",
+                birch: "Birke",
+                alder: "Erle",
+                ragweed: "Ambrosia",
+                aurora: "Aurora",
+                probability: "Wahrscheinlichkeit",
+                visibility: "Sichtbarkeit",
+                required_kp: "Kp benötigt",
+                current_kp: "Aktueller Kp",
+                
+                // Parameter explanations by profile
+                explanations: {
+                    "General Public": {
+                        kp: "Kp-Index zeigt geomagnetische Aktivität. Unter 4 = normal.",
+                        aqi: "Luftqualitätsindex. Unter 50 = gut für alle.",
+                        uv: "UV-Index. Unter 3 = sicher, 3-5 = Sonnenschutz empfohlen.",
+                        temp: "Gefühlte Temperatur für Kleidungswahl.",
+                    },
+                    "Outdoor/Sports": {
+                        kp: "Bei Kp ≥5 können GPS-Geräte ungenau werden.",
+                        aqi: "Unter 50: perfekt für Sport. Über 100: Training reduzieren.",
+                        uv: "Über 6: Sonnencreme alle 2h, Mittagssonne meiden.",
+                        temp: "Ideal für Sport: 10-20°C. Über 25°C: mehr trinken!",
+                    },
+                    "Asthma/Respiratory": {
+                        kp: "Keine direkte Auswirkung auf Atemwege.",
+                        aqi: "WICHTIG! Über 50: Aktivitäten einschränken. Über 100: drinnen bleiben.",
+                        uv: "Kein direkter Einfluss auf Atemwege.",
+                        pollen: "Hohe Werte können Asthma verschlimmern.",
+                    },
+                    "Pilot/Aviation": {
+                        kp: "WICHTIG! Kp ≥5: HF-Funk gestört, GPS ungenau. Kp ≥7: Polarrouten meiden.",
+                        xray: "M/X-Klasse Flares: Kurzwellenfunk-Blackouts möglich.",
+                        solar_wind: "Über 600 km/s: erhöhte Strahlungsbelastung in Reiseflughöhe.",
+                    },
+                    "Aurora Hunter": {
+                        kp: "WICHTIG! Kp ≥4: Aurora möglich in Skandinavien. Kp ≥6: sichtbar in Mitteleuropa!",
+                        aurora: "Wahrscheinlichkeit für Ihren Standort. Über 30% = gute Chancen!",
+                        clouds: "Wolken blockieren die Sicht - klarer Himmel nötig.",
+                    },
+                }
+            },
+            en: {
+                subtitle: "Space Weather • Earthquakes • Wildfires • Air Quality • Weather",
+                latitude: "Latitude",
+                longitude: "Longitude",
+                profile: "Profile",
+                language: "Language",
+                get_alert: "🔍 Get Recommendation",
+                my_location: "📍 My Location",
+                chat_title: "Ask the AI",
+                chat_placeholder: "Ask a question about environmental conditions...",
+                chat_input_placeholder: "e.g. Can I go jogging today?",
+                send: "Send",
+                loading: "Analyzing data...",
+                
+                "General Public": "General",
+                "Outdoor/Sports": "Outdoor/Sports",
+                "Asthma/Respiratory": "Asthma/Respiratory",
+                "Allergy": "Allergy",
+                "Pilot/Aviation": "Pilot/Aviation",
+                "Aurora Hunter": "Aurora Hunter",
+                "Marine/Sailing": "Marine/Sailing",
+                
+                "Clear": "Clear",
+                "Partly cloudy": "Partly cloudy",
+                "Overcast": "Overcast",
+                "Fog": "Fog",
+                "Rain": "Rain",
+                "Snow": "Snow",
+                "Thunderstorm": "Thunderstorm",
+                
+                "excellent": "Excellent",
+                "good": "Good",
+                "moderate": "Moderate",
+                "poor": "Poor",
+                "low": "Low",
+                "high": "High",
+                "none": "None",
+                "calm": "Calm",
+                
+                "Low": "Low",
+                "Medium": "Medium", 
+                "High": "High",
+                "Critical": "Critical",
+                
+                weather: "Weather",
+                temperature: "Temperature",
+                conditions: "Conditions",
+                humidity: "Humidity",
+                wind: "Wind",
+                air_quality: "Air Quality",
+                space_weather: "Space Weather",
+                hazards: "Hazards",
+                earthquakes: "Earthquakes",
+                wildfires: "Wildfires",
+                pollen: "Pollen",
+                aurora: "Aurora",
+                
+                explanations: {
+                    "General Public": {
+                        kp: "Kp index shows geomagnetic activity. Below 4 = normal.",
+                        aqi: "Air Quality Index. Below 50 = good for everyone.",
+                        uv: "UV Index. Below 3 = safe, 3-5 = sunscreen recommended.",
+                    },
+                    "Outdoor/Sports": {
+                        kp: "Kp ≥5 may affect GPS accuracy.",
+                        aqi: "Below 50: perfect for sports. Above 100: reduce training.",
+                        uv: "Above 6: apply sunscreen every 2h, avoid midday sun.",
+                    },
+                }
+            },
+            fr: {
+                subtitle: "Météo spatiale • Séismes • Incendies • Qualité de l'air • Météo",
+                get_alert: "🔍 Obtenir recommandation",
+                my_location: "📍 Ma position",
+                chat_title: "Posez une question à l'IA",
+                send: "Envoyer",
+                loading: "Analyse en cours...",
+                weather: "Météo",
+                temperature: "Température",
+                "Clear": "Dégagé",
+                "Partly cloudy": "Partiellement nuageux",
+                "Overcast": "Couvert",
+                "Low": "Faible",
+                "Medium": "Moyen",
+                "High": "Élevé",
+            },
+            it: {
+                subtitle: "Meteo spaziale • Terremoti • Incendi • Qualità dell'aria • Meteo",
+                get_alert: "🔍 Ottieni raccomandazione",
+                my_location: "📍 La mia posizione",
+                chat_title: "Chiedi all'IA",
+                send: "Invia",
+                loading: "Analisi in corso...",
+                weather: "Meteo",
+                "Clear": "Sereno",
+                "Partly cloudy": "Parzialmente nuvoloso",
+                "Low": "Basso",
+                "Medium": "Medio",
+                "High": "Alto",
+            }
+        };
+        
+        function getLang() {
+            return document.getElementById('language').value;
+        }
+        
+        function t(key) {
+            const lang = getLang();
+            return i18n[lang]?.[key] || i18n.en?.[key] || i18n.de?.[key] || key;
+        }
+        
+        function getExplanation(param, profile) {
+            const lang = getLang();
+            const explanations = i18n[lang]?.explanations || i18n.de.explanations;
+            return explanations[profile]?.[param] || explanations["General Public"]?.[param] || "";
+        }
+        
+        function updateLanguage() {
+            const lang = getLang();
+            document.getElementById('subtitle').textContent = t('subtitle');
+            document.getElementById('lbl-lat').textContent = t('latitude');
+            document.getElementById('lbl-lon').textContent = t('longitude');
+            document.getElementById('lbl-profile').textContent = t('profile');
+            document.getElementById('lbl-lang').textContent = t('language');
+            document.getElementById('btn-fetch').textContent = t('get_alert');
+            document.getElementById('btn-location').textContent = t('my_location');
+            document.getElementById('chat-title-text').textContent = t('chat_title');
+            document.getElementById('chat-placeholder').textContent = t('chat_placeholder');
+            document.getElementById('chat-input').placeholder = t('chat_input_placeholder') || t('chat_placeholder');
+            document.getElementById('chat-send').textContent = t('send');
+            
+            // Update profile options
+            const profileSelect = document.getElementById('profile');
+            Array.from(profileSelect.options).forEach(opt => {
+                opt.textContent = t(opt.value);
+            });
+            
+            if (currentData) {
+                renderAIBox(currentData);
+                renderDataCards(currentData);
+            }
+        }
+        
         async function fetchAlert() {
             const lat = document.getElementById('lat').value;
             const lon = document.getElementById('lon').value;
             const profile = document.getElementById('profile').value;
-            const language = document.getElementById('language').value;
+            const language = getLang();
             
-            document.getElementById('ai-container').innerHTML = '<div class="loading">KI analysiert Umweltdaten...</div>';
+            document.getElementById('ai-container').innerHTML = `<div class="loading">${t('loading')}</div>`;
             document.getElementById('data-grid').innerHTML = '';
             
             try {
@@ -319,6 +713,7 @@
                 const data = await res.json();
                 
                 if (data.status === 'success') {
+                    currentData = data;
                     renderAIBox(data);
                     renderDataCards(data);
                 } else {
@@ -329,36 +724,103 @@
             }
         }
         
-        function getRiskClass(level) {
-            return {
-                'Low': 'risk-low',
-                'Low-Medium': 'risk-low-medium', 
-                'Medium': 'risk-medium',
-                'High': 'risk-high'
-            }[level] || 'risk-medium';
+        async function sendChat() {
+            const input = document.getElementById('chat-input');
+            const question = input.value.trim();
+            if (!question) return;
+            
+            const lat = document.getElementById('lat').value;
+            const lon = document.getElementById('lon').value;
+            const profile = document.getElementById('profile').value;
+            const language = getLang();
+            
+            const messagesDiv = document.getElementById('chat-messages');
+            
+            // Remove placeholder
+            const placeholder = document.getElementById('chat-placeholder');
+            if (placeholder) placeholder.remove();
+            
+            // Add user message
+            messagesDiv.innerHTML += `<div class="chat-message chat-user">👤 ${question}</div>`;
+            input.value = '';
+            
+            // Show typing
+            const typingId = 'typing-' + Date.now();
+            messagesDiv.innerHTML += `<div class="chat-message chat-ai" id="${typingId}">💭 ...</div>`;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            document.getElementById('chat-send').disabled = true;
+            
+            try {
+                const res = await fetch(`${API_BASE}/chat/?lat=${lat}&lon=${lon}&profile=${encodeURIComponent(profile)}&language=${language}&question=${encodeURIComponent(question)}`, {
+                    method: 'POST'
+                });
+                const data = await res.json();
+                
+                document.getElementById(typingId)?.remove();
+                
+                if (data.status === 'success') {
+                    messagesDiv.innerHTML += `<div class="chat-message chat-ai">🤖 ${data.answer}</div>`;
+                } else {
+                    messagesDiv.innerHTML += `<div class="chat-message chat-ai">❌ Error</div>`;
+                }
+            } catch (e) {
+                document.getElementById(typingId)?.remove();
+                messagesDiv.innerHTML += `<div class="chat-message chat-ai">❌ ${e.message}</div>`;
+            }
+            
+            document.getElementById('chat-send').disabled = false;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
         
-        function getBadge(v, thresholds) {
-            if (v <= thresholds[0]) return 'badge-good';
-            if (v <= thresholds[1]) return 'badge-moderate';
-            return 'badge-bad';
+        function getRiskClass(level) {
+            const map = {
+                'Low': 'risk-low',
+                'Medium': 'risk-medium',
+                'High': 'risk-high',
+                'Critical': 'risk-critical'
+            };
+            return map[level] || 'risk-low';
         }
         
         function renderAIBox(data) {
-            const factors = data.risk.factors?.length 
-                ? `<div class="risk-factors">${data.risk.factors.map(f => `<span class="risk-factor">⚠️ ${f}</span>`).join('')}</div>` 
-                : '';
+            const riskLevel = t(data.risk.level);
             
-            const aiSourceText = data.ai_source === 'apertus' ? 'Swiss AI Apertus' : 'Regel-basiert';
+            // Build detailed risk factors with explanations
+            let factorsHtml = '';
+            if (data.risk.factors?.length) {
+                factorsHtml = `<div class="risk-factors">`;
+                data.risk.factors.forEach(f => {
+                    const isSevere = f.includes('🔥') || f.includes('Earthquake') || f.includes('Critical');
+                    factorsHtml += `<span class="risk-factor ${isSevere ? 'severe' : ''}">${f}</span>`;
+                });
+                factorsHtml += `</div>`;
+            }
+            
+            // Show disaster details
+            let disasterDetails = '';
+            if (data.data?.gdacs?.alerts?.length) {
+                disasterDetails = '<div style="margin-top: 8px; font-size: 0.8rem; color: var(--warning);">';
+                data.data.gdacs.alerts.forEach(alert => {
+                    disasterDetails += `⚠️ ${alert.type || 'Alert'}: ${alert.name} (${alert.country || 'Global'}) `;
+                });
+                disasterDetails += '</div>';
+            }
+            
+            const aiSourceText = data.ai_source === 'apertus' ? 'Swiss AI Apertus' : 
+                                 data.ai_source === 'rule-based' ? (getLang() === 'de' ? 'Regel-basiert' : 'Rule-based') : 
+                                 data.ai_source;
             
             document.getElementById('ai-container').innerHTML = `
                 <div class="ai-box">
+                    <span class="ai-label">🤖 AI</span>
                     <div class="ai-recommendation">${data.recommendation}</div>
+                    ${disasterDetails}
                     <div class="ai-meta">
-                        <span class="ai-source">📍 ${data.location.lat.toFixed(4)}, ${data.location.lon.toFixed(4)} • ${data.profile} • ${aiSourceText}</span>
-                        <span class="risk-badge ${getRiskClass(data.risk.level)}">${data.risk.level} Risk</span>
+                        <span class="ai-source">📍 ${data.location.lat.toFixed(4)}, ${data.location.lon.toFixed(4)} • ${t(data.profile)} • ${aiSourceText}</span>
+                        <span class="risk-badge ${getRiskClass(data.risk.level)}">${riskLevel} Risk</span>
                     </div>
-                    ${factors}
+                    ${factorsHtml}
                 </div>
             `;
         }
@@ -366,148 +828,175 @@
         function renderDataCards(data) {
             const s = data.summary;
             const d = data.data;
+            const profile = document.getElementById('profile').value;
+            
+            // Translate values
+            const translateValue = (val) => {
+                if (!val) return 'N/A';
+                return t(val) || val;
+            };
+            
+            const getBadgeClass = (value, thresholds) => {
+                if (value <= thresholds[0]) return 'badge-good';
+                if (value <= thresholds[1]) return 'badge-moderate';
+                return 'badge-bad';
+            };
+            
+            // Pollen level translation
+            const pollenLevel = (level) => translateValue(level);
             
             document.getElementById('data-grid').innerHTML = `
+                <!-- Weather -->
                 <div class="card">
                     <div class="card-header">
                         <span class="card-icon">🌤️</span>
-                        <span class="card-title">Wetter</span>
+                        <span class="card-title">${t('weather')}</span>
                         <span class="source-badge">Open-Meteo</span>
                     </div>
-                    <div class="metric">
-                        <span class="metric-label">Temperatur</span>
+                    <div class="metric tooltip">
+                        <span class="metric-label">${t('temperature')}</span>
                         <span class="metric-value">${s.temperature?.toFixed(1) || 'N/A'}°C</span>
+                        <span class="tooltip-text">${getExplanation('temp', profile)}</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Bedingungen</span>
-                        <span class="metric-value">${s.weather || 'N/A'}</span>
+                        <span class="metric-label">${t('conditions')}</span>
+                        <span class="metric-value">${translateValue(s.weather)}</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Feuchtigkeit</span>
+                        <span class="metric-label">${t('humidity')}</span>
                         <span class="metric-value">${d.weather?.humidity || 'N/A'}%</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Wind</span>
+                        <span class="metric-label">${t('wind')}</span>
                         <span class="metric-value">${d.weather?.wind_speed?.toFixed(0) || 'N/A'} km/h</span>
                     </div>
                 </div>
                 
+                <!-- Air Quality -->
                 <div class="card">
                     <div class="card-header">
                         <span class="card-icon">💨</span>
-                        <span class="card-title">Luftqualität</span>
+                        <span class="card-title">${t('air_quality')}</span>
                         <span class="source-badge">Copernicus</span>
                     </div>
-                    <div class="metric">
+                    <div class="metric tooltip">
                         <span class="metric-label">EU AQI</span>
-                        <span class="metric-value"><span class="badge ${getBadge(s.air_quality || 0, [40, 60])}">${s.air_quality || 'N/A'}</span></span>
+                        <span class="metric-value"><span class="badge ${getBadgeClass(s.air_quality || 0, [40, 80])}">${s.air_quality || 'N/A'}</span></span>
+                        <span class="tooltip-text">${getExplanation('aqi', profile)}</span>
                     </div>
-                    <div class="metric">
+                    <div class="metric tooltip">
                         <span class="metric-label">UV-Index</span>
-                        <span class="metric-value"><span class="badge ${getBadge(s.uv_index || 0, [3, 6])}">${s.uv_index?.toFixed(1) || 'N/A'}</span></span>
+                        <span class="metric-value"><span class="badge ${getBadgeClass(s.uv_index || 0, [3, 6])}">${s.uv_index?.toFixed(1) || 'N/A'}</span></span>
+                        <span class="tooltip-text">${getExplanation('uv', profile)}</span>
                     </div>
                     <div class="metric">
                         <span class="metric-label">PM2.5</span>
                         <span class="metric-value">${d.air_quality?.pm2_5?.toFixed(1) || 'N/A'} μg/m³</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Kategorie</span>
-                        <span class="metric-value">${d.air_quality?.category || 'N/A'}</span>
+                        <span class="metric-label">${t('category')}</span>
+                        <span class="metric-value">${translateValue(d.air_quality?.category)}</span>
                     </div>
                 </div>
                 
+                <!-- Space Weather -->
                 <div class="card">
                     <div class="card-header">
                         <span class="card-icon">🌞</span>
-                        <span class="card-title">Weltraumwetter</span>
-                        <span class="source-badge">NOAA</span>
+                        <span class="card-title">${t('space_weather')}</span>
+                        <span class="source-badge">NOAA GOES</span>
                     </div>
-                    <div class="metric">
+                    <div class="metric tooltip">
                         <span class="metric-label">Kp-Index</span>
                         <span class="metric-value">${s.kp_index?.toFixed(1) || 'N/A'}</span>
+                        <span class="tooltip-text">${getExplanation('kp', profile)}</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Aurora</span>
-                        <span class="metric-value">${s.aurora_probability || 0}%</span>
+                        <span class="metric-label">${t('aurora')}</span>
+                        <span class="metric-value">${d.space?.aurora?.probability || 0}%</span>
                     </div>
                     <div class="metric">
                         <span class="metric-label">X-Ray</span>
                         <span class="metric-value">${d.space?.xray?.level || 'N/A'}</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Solar Wind</span>
+                        <span class="metric-label">${t('solar_wind')}</span>
                         <span class="metric-value">${d.space?.solar_wind?.speed?.toFixed(0) || 'N/A'} km/s</span>
                     </div>
                 </div>
                 
+                <!-- Hazards -->
                 <div class="card">
                     <div class="card-header">
                         <span class="card-icon">⚠️</span>
-                        <span class="card-title">Gefahren</span>
-                        <span class="source-badge">USGS/NASA</span>
+                        <span class="card-title">${t('hazards')}</span>
+                        <span class="source-badge">USGS/NASA/GDACS</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Erdbeben (500km)</span>
+                        <span class="metric-label">${t('earthquakes')} (500km)</span>
                         <span class="metric-value">${s.earthquakes_nearby || 0}</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Max. Magnitude</span>
-                        <span class="metric-value">${d.earthquakes?.max_magnitude?.toFixed(1) || 'N/A'}</span>
+                        <span class="metric-label">🔥 ${t('wildfires')} (100km)</span>
+                        <span class="metric-value"><span class="badge ${s.wildfires_nearby > 0 ? 'badge-bad' : 'badge-good'}">${s.wildfires_nearby || 0}</span></span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Hochwasser</span>
-                        <span class="metric-value"><span class="badge ${s.flood_risk === 'High' ? 'badge-bad' : s.flood_risk === 'Moderate' ? 'badge-moderate' : 'badge-good'}">${s.flood_risk || 'N/A'}</span></span>
+                        <span class="metric-label">⚠️ ${t('disasters')}</span>
+                        <span class="metric-value"><span class="badge ${s.disaster_alerts > 0 ? 'badge-moderate' : 'badge-good'}">${s.disaster_alerts || 0}</span></span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">See/Marine</span>
-                        <span class="metric-value">${d.marine?.conditions || 'N/A'}</span>
+                        <span class="metric-label">${t('flood')}</span>
+                        <span class="metric-value"><span class="badge ${d.flood?.risk === 'high' ? 'badge-bad' : 'badge-good'}">${translateValue(d.flood?.risk)}</span></span>
                     </div>
                 </div>
                 
+                <!-- Pollen -->
                 <div class="card">
                     <div class="card-header">
                         <span class="card-icon">🌸</span>
-                        <span class="card-title">Pollen</span>
+                        <span class="card-title">${t('pollen')}</span>
                         <span class="source-badge">Open-Meteo</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Gräser</span>
-                        <span class="metric-value">${d.pollen?.pollen?.grass?.level || 'N/A'}</span>
+                        <span class="metric-label">${t('grass')}</span>
+                        <span class="metric-value">${pollenLevel(d.pollen?.pollen?.grass?.level)}</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Birke</span>
-                        <span class="metric-value">${d.pollen?.pollen?.birch?.level || 'N/A'}</span>
+                        <span class="metric-label">${t('birch')}</span>
+                        <span class="metric-value">${pollenLevel(d.pollen?.pollen?.birch?.level)}</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Erle</span>
-                        <span class="metric-value">${d.pollen?.pollen?.alder?.level || 'N/A'}</span>
+                        <span class="metric-label">${t('alder')}</span>
+                        <span class="metric-value">${pollenLevel(d.pollen?.pollen?.alder?.level)}</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Ambrosia</span>
-                        <span class="metric-value">${d.pollen?.pollen?.ragweed?.level || 'N/A'}</span>
+                        <span class="metric-label">${t('ragweed')}</span>
+                        <span class="metric-value">${pollenLevel(d.pollen?.pollen?.ragweed?.level)}</span>
                     </div>
                 </div>
                 
+                <!-- Aurora -->
                 <div class="card">
                     <div class="card-header">
                         <span class="card-icon">🌌</span>
-                        <span class="card-title">Aurora</span>
+                        <span class="card-title">${t('aurora')}</span>
                         <span class="source-badge">NOAA OVATION</span>
                     </div>
-                    <div class="metric">
-                        <span class="metric-label">Wahrscheinlichkeit</span>
+                    <div class="metric tooltip">
+                        <span class="metric-label">${t('probability')}</span>
                         <span class="metric-value">${d.space?.aurora?.probability || 0}%</span>
+                        <span class="tooltip-text">${getExplanation('aurora', profile)}</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Sichtbarkeit</span>
-                        <span class="metric-value">${d.space?.aurora?.visibility || 'N/A'}</span>
+                        <span class="metric-label">${t('visibility')}</span>
+                        <span class="metric-value">${translateValue(d.space?.aurora?.visibility)}</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Kp benötigt</span>
+                        <span class="metric-label">${t('required_kp')}</span>
                         <span class="metric-value">≥ 4</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Aktueller Kp</span>
+                        <span class="metric-label">${t('current_kp')}</span>
                         <span class="metric-value">${s.kp_index?.toFixed(1) || 'N/A'}</span>
                     </div>
                 </div>
@@ -522,15 +1011,16 @@
                         document.getElementById('lon').value = pos.coords.longitude.toFixed(4);
                         fetchAlert();
                     },
-                    err => alert('Standort-Fehler: ' + err.message)
+                    err => alert('Location error: ' + err.message)
                 );
-            } else {
-                alert('Geolocation nicht unterstützt');
             }
         }
         
-        // Load on page ready
-        document.addEventListener('DOMContentLoaded', fetchAlert);
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateLanguage();
+            fetchAlert();
+        });
     </script>
 </body>
 </html>
