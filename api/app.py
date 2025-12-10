@@ -998,10 +998,11 @@ def call_ai_api(prompt: str) -> tuple[Optional[str], dict]:
         return None, debug_info
     
     endpoints = [
-        {"name": "Apertus-8B", "url": "https://router.huggingface.co/hf-inference/models/swiss-ai/Apertus-8B-Instruct-2509/v1/chat/completions", "format": "openai"},
-        {"name": "Apertus-HF", "url": "https://api-inference.huggingface.co/models/swiss-ai/Apertus-8B-Instruct-2509", "format": "hf"},
-        {"name": "Zephyr", "url": "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta", "format": "hf"},
-        {"name": "Mistral", "url": "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2", "format": "hf"},
+        # New router.huggingface.co endpoints (required since late 2024)
+        {"name": "Zephyr-7B", "url": "https://router.huggingface.co/hf-inference/models/HuggingFaceH4/zephyr-7b-beta/v1/chat/completions", "format": "openai"},
+        {"name": "Mistral-7B", "url": "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.3/v1/chat/completions", "format": "openai"},
+        {"name": "Llama-3.2-3B", "url": "https://router.huggingface.co/hf-inference/models/meta-llama/Llama-3.2-3B-Instruct/v1/chat/completions", "format": "openai"},
+        {"name": "Qwen-2.5-72B", "url": "https://router.huggingface.co/hf-inference/models/Qwen/Qwen2.5-72B-Instruct/v1/chat/completions", "format": "openai"},
     ]
     
     headers = {"Authorization": f"Bearer {HF_API_KEY}", "Content-Type": "application/json"}
@@ -1009,10 +1010,13 @@ def call_ai_api(prompt: str) -> tuple[Optional[str], dict]:
     for endpoint in endpoints:
         attempt = {"name": endpoint["name"]}
         try:
-            if endpoint["format"] == "openai":
-                payload = {"model": "swiss-ai/Apertus-8B-Instruct-2509", "messages": [{"role": "user", "content": prompt}], "max_tokens": 300, "temperature": 0.7}
-            else:
-                payload = {"inputs": prompt, "parameters": {"max_new_tokens": 300, "temperature": 0.7, "do_sample": True}}
+            # All endpoints now use OpenAI-compatible chat format
+            payload = {
+                "model": endpoint["url"].split("/models/")[1].split("/v1")[0],
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 300,
+                "temperature": 0.7
+            }
             
             response = requests.post(endpoint["url"], headers=headers, json=payload, timeout=30)
             attempt["status"] = response.status_code
@@ -1020,14 +1024,10 @@ def call_ai_api(prompt: str) -> tuple[Optional[str], dict]:
             if response.status_code == 200:
                 result = response.json()
                 
-                if "choices" in result:
-                    text = result["choices"][0]["message"]["content"]
-                elif isinstance(result, list) and result:
-                    text = result[0].get("generated_text", "")
-                    if prompt in text:
-                        text = text.split(prompt)[-1]
+                if "choices" in result and result["choices"]:
+                    text = result["choices"][0].get("message", {}).get("content", "")
                 else:
-                    attempt["error"] = "Unknown response format"
+                    attempt["error"] = "No choices in response"
                     debug_info["attempts"].append(attempt)
                     continue
                 
@@ -1039,7 +1039,8 @@ def call_ai_api(prompt: str) -> tuple[Optional[str], dict]:
                     return text, debug_info
             else:
                 try:
-                    attempt["error"] = response.json().get("error", response.text[:100])
+                    err_json = response.json()
+                    attempt["error"] = err_json.get("error", {}).get("message", response.text[:100]) if isinstance(err_json.get("error"), dict) else str(err_json.get("error", response.text[:100]))
                 except:
                     attempt["error"] = response.text[:100]
                     
