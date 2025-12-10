@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌍 Complete Environmental Monitor v6</title>
+    <title>🌍 Environmental Monitor - AI Powered</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --bg-dark: #0a0a1a;
-            --bg-card: rgba(255,255,255,0.03);
+            --bg: #0a0a1a;
+            --card: rgba(255,255,255,0.03);
             --border: rgba(255,255,255,0.08);
             --text: #e4e4e4;
-            --text-dim: #888;
+            --dim: #888;
             --accent: #00d4ff;
             --accent2: #7b2cbf;
             --success: #00ff88;
@@ -20,27 +20,39 @@
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, var(--bg-dark) 0%, #16213e 50%, #0f3460 100%);
+            background: linear-gradient(135deg, var(--bg) 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
             color: var(--text);
-            padding: 20px;
+            padding: 15px;
         }
-        .container { max-width: 1600px; margin: 0 auto; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        
         header {
             text-align: center;
-            padding: 25px;
-            background: var(--bg-card);
-            border-radius: 20px;
+            padding: 20px;
+            background: var(--card);
+            border-radius: 16px;
             margin-bottom: 20px;
             border: 1px solid var(--border);
         }
         h1 {
-            font-size: 2rem;
+            font-size: 1.8rem;
             background: linear-gradient(90deg, var(--accent), var(--accent2));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .subtitle { color: var(--text-dim); margin-top: 8px; font-size: 0.9rem; }
+        .subtitle { color: var(--dim); margin-top: 5px; font-size: 0.85rem; }
+        .ai-badge {
+            display: inline-block;
+            background: linear-gradient(90deg, #10b981, #059669);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+        
         .controls {
             display: flex;
             flex-wrap: wrap;
@@ -48,13 +60,13 @@
             justify-content: center;
             align-items: flex-end;
             padding: 15px;
-            background: var(--bg-card);
+            background: var(--card);
             border-radius: 12px;
             margin-bottom: 20px;
             border: 1px solid var(--border);
         }
         .control-group { display: flex; flex-direction: column; gap: 4px; }
-        .control-group label { font-size: 0.75rem; color: var(--text-dim); }
+        .control-group label { font-size: 0.7rem; color: var(--dim); text-transform: uppercase; }
         input, select {
             padding: 10px 12px;
             border: 1px solid var(--border);
@@ -62,7 +74,7 @@
             background: rgba(0,0,0,0.4);
             color: #fff;
             font-size: 0.9rem;
-            min-width: 120px;
+            min-width: 110px;
         }
         input:focus, select:focus { outline: none; border-color: var(--accent); }
         button {
@@ -77,66 +89,174 @@
         .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,212,255,0.3); }
         .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; }
-        .alert-box {
-            background: linear-gradient(135deg, rgba(0,212,255,0.08), rgba(123,44,191,0.08));
-            border: 1px solid rgba(0,212,255,0.3);
-            border-radius: 12px;
-            padding: 18px;
+        
+        /* AI Recommendation Box - PROMINENT */
+        .ai-box {
+            background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(5,150,105,0.1));
+            border: 2px solid rgba(16,185,129,0.4);
+            border-radius: 16px;
+            padding: 25px;
             margin-bottom: 20px;
+            position: relative;
         }
-        .alert-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-        .risk-badge { padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; }
+        .ai-box::before {
+            content: '🤖 AI';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: linear-gradient(90deg, #10b981, #059669);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .ai-recommendation {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #fff;
+            margin-top: 5px;
+        }
+        .ai-meta {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .ai-source {
+            font-size: 0.75rem;
+            color: var(--dim);
+        }
+        .risk-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
         .risk-low { background: rgba(0,255,136,0.2); color: var(--success); }
         .risk-low-medium { background: rgba(255,193,7,0.15); color: #e0a800; }
         .risk-medium { background: rgba(255,193,7,0.2); color: var(--warning); }
         .risk-high { background: rgba(255,87,51,0.2); color: var(--danger); }
-        .risk-critical { background: rgba(255,0,64,0.2); color: #ff0040; }
-        .alert-advice { font-size: 1rem; line-height: 1.5; color: #ccc; }
-        .risk-factors { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 6px; }
-        .risk-factor { background: rgba(255,255,255,0.08); padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .card {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 18px;
-            border: 1px solid var(--border);
-            transition: transform 0.2s;
+        
+        .risk-factors {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
         }
-        .card:hover { transform: translateY(-2px); }
-        .card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
-        .card-icon { font-size: 1.3rem; }
-        .card-title { font-size: 0.95rem; font-weight: 600; }
-        .source-badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; background: rgba(0,212,255,0.1); color: var(--accent); margin-left: auto; }
-        .metric { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .risk-factor {
+            background: rgba(255,255,255,0.08);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: var(--dim);
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 15px;
+        }
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--border);
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        .card-icon { font-size: 1.2rem; }
+        .card-title { font-size: 0.9rem; font-weight: 600; flex: 1; }
+        .source-badge {
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(0,212,255,0.1);
+            color: var(--accent);
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
         .metric:last-child { border-bottom: none; }
-        .metric-label { color: var(--text-dim); font-size: 0.85rem; }
-        .metric-value { font-weight: 600; font-size: 0.9rem; }
-        .badge { padding: 3px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; }
+        .metric-label { color: var(--dim); font-size: 0.8rem; }
+        .metric-value { font-weight: 600; font-size: 0.85rem; }
+        .badge {
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
         .badge-good { background: rgba(0,255,136,0.15); color: var(--success); }
         .badge-moderate { background: rgba(255,193,7,0.15); color: var(--warning); }
         .badge-bad { background: rgba(255,87,51,0.15); color: var(--danger); }
-        .list-item { background: rgba(0,0,0,0.2); border-radius: 6px; padding: 10px; margin-top: 8px; }
-        .list-item-title { font-weight: 600; font-size: 0.9rem; }
-        .list-item-meta { font-size: 0.75rem; color: var(--text-dim); margin-top: 3px; }
-        .loading { text-align: center; padding: 30px; color: var(--text-dim); }
-        .loading::after { content: ''; display: inline-block; width: 20px; height: 20px; border: 2px solid rgba(0,212,255,0.3); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-left: 10px; vertical-align: middle; }
+        
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: var(--dim);
+        }
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(0,212,255,0.3);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .error { background: rgba(255,87,51,0.1); border: 1px solid rgba(255,87,51,0.3); color: var(--danger); padding: 15px; border-radius: 8px; text-align: center; }
-        footer { text-align: center; padding: 20px; color: #555; font-size: 0.8rem; }
+        
+        .error {
+            background: rgba(255,87,51,0.1);
+            border: 1px solid rgba(255,87,51,0.3);
+            color: var(--danger);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #444;
+            font-size: 0.75rem;
+            margin-top: 20px;
+        }
         footer a { color: var(--accent); text-decoration: none; }
+        
         @media (max-width: 768px) {
-            h1 { font-size: 1.5rem; }
+            h1 { font-size: 1.4rem; }
             .controls { flex-direction: column; align-items: stretch; }
             input, select { width: 100%; }
+            .ai-recommendation { font-size: 1rem; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🌍 Complete Environmental Monitor</h1>
-            <p class="subtitle">Real-time: NOAA Space Weather • USGS Earthquakes • NASA Events • NWS Alerts • Open-Meteo</p>
+            <h1>🌍 Environmental Monitor</h1>
+            <p class="subtitle">Space Weather • Earthquakes • Air Quality • Weather</p>
+            <span class="ai-badge">✨ Powered by Swiss AI Apertus</span>
         </header>
+        
         <div class="controls">
             <div class="control-group">
                 <label>Latitude</label>
@@ -147,137 +267,269 @@
                 <input type="number" id="lon" value="8.5417" step="0.0001">
             </div>
             <div class="control-group">
-                <label>Profile</label>
+                <label>Profil</label>
                 <select id="profile">
-                    <option value="General Public">General Public</option>
-                    <option value="Outdoor/Sports">Outdoor/Sports</option>
-                    <option value="Asthma/Respiratory">Asthma/Respiratory</option>
-                    <option value="Pilot/Aviation">Pilot/Aviation</option>
-                    <option value="Aurora Hunter">Aurora Hunter</option>
-                    <option value="Marine/Sailing">Marine/Sailing</option>
+                    <option value="General Public">Allgemein</option>
+                    <option value="Outdoor/Sports">Outdoor/Sport</option>
+                    <option value="Asthma/Respiratory">Asthma/Atemwege</option>
+                    <option value="Allergy">Allergie</option>
+                    <option value="Pilot/Aviation">Pilot/Luftfahrt</option>
+                    <option value="Aurora Hunter">Aurora/Nordlichter</option>
+                    <option value="Marine/Sailing">Marine/Segeln</option>
                 </select>
             </div>
-            <button class="btn-primary" onclick="fetchAlert()">🔍 Get Alert</button>
-            <button class="btn-secondary" onclick="useMyLocation()">📍 My Location</button>
+            <div class="control-group">
+                <label>Sprache</label>
+                <select id="language">
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="en">🇬🇧 English</option>
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="it">🇮🇹 Italiano</option>
+                </select>
+            </div>
+            <button class="btn-primary" onclick="fetchAlert()">🔍 Empfehlung holen</button>
+            <button class="btn-secondary" onclick="useMyLocation()">📍 Mein Standort</button>
         </div>
-        <div id="alert-container"></div>
-        <div class="grid" id="data-grid"><div class="card"><div class="loading">Loading...</div></div></div>
+        
+        <div id="ai-container"></div>
+        <div class="grid" id="data-grid"></div>
+        
         <footer>
-            <p>Data: <a href="https://www.swpc.noaa.gov/">NOAA</a> • <a href="https://earthquake.usgs.gov/">USGS</a> • <a href="https://api.nasa.gov/">NASA</a> • <a href="https://www.weather.gov/">NWS</a> • <a href="https://open-meteo.com/">Open-Meteo</a></p>
-            <p style="margin-top:5px">v6.0 Complete Environmental Suite</p>
+            <p>Daten: <a href="https://www.swpc.noaa.gov/">NOAA</a> • <a href="https://earthquake.usgs.gov/">USGS</a> • <a href="https://api.nasa.gov/">NASA</a> • <a href="https://open-meteo.com/">Open-Meteo</a></p>
+            <p style="margin-top:5px">KI: <a href="https://www.swiss-ai.org/apertus">Swiss AI Apertus</a> • v7.0</p>
         </footer>
     </div>
+
     <script>
-        const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://space-ai-alert-mvp.onrender.com';
+        const API_BASE = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000' 
+            : 'https://space-ai-alert-mvp.onrender.com';
         
         async function fetchAlert() {
             const lat = document.getElementById('lat').value;
             const lon = document.getElementById('lon').value;
             const profile = document.getElementById('profile').value;
+            const language = document.getElementById('language').value;
             
-            document.getElementById('alert-container').innerHTML = '<div class="loading">Fetching from all data sources...</div>';
+            document.getElementById('ai-container').innerHTML = '<div class="loading">KI analysiert Umweltdaten...</div>';
             document.getElementById('data-grid').innerHTML = '';
             
             try {
-                const res = await fetch(`${API_BASE}/alert/?lat=${lat}&lon=${lon}&profile=${encodeURIComponent(profile)}`);
+                const res = await fetch(`${API_BASE}/alert/?lat=${lat}&lon=${lon}&profile=${encodeURIComponent(profile)}&language=${language}`);
                 const data = await res.json();
+                
                 if (data.status === 'success') {
-                    renderAlert(data);
-                    renderCards(data);
-                } else throw new Error(data.detail || 'Error');
+                    renderAIBox(data);
+                    renderDataCards(data);
+                } else {
+                    throw new Error(data.detail || 'API Error');
+                }
             } catch (e) {
-                document.getElementById('alert-container').innerHTML = `<div class="error">❌ ${e.message}</div>`;
+                document.getElementById('ai-container').innerHTML = `<div class="error">❌ ${e.message}</div>`;
             }
         }
         
-        function getRiskClass(l) {
-            return {'Low':'risk-low','Low-Medium':'risk-low-medium','Medium':'risk-medium','High':'risk-high','Critical':'risk-critical'}[l] || 'risk-medium';
+        function getRiskClass(level) {
+            return {
+                'Low': 'risk-low',
+                'Low-Medium': 'risk-low-medium', 
+                'Medium': 'risk-medium',
+                'High': 'risk-high'
+            }[level] || 'risk-medium';
         }
         
-        function getBadge(v, t) {
-            if (v <= t[0]) return 'badge-good';
-            if (v <= t[1]) return 'badge-moderate';
+        function getBadge(v, thresholds) {
+            if (v <= thresholds[0]) return 'badge-good';
+            if (v <= thresholds[1]) return 'badge-moderate';
             return 'badge-bad';
         }
         
-        function renderAlert(d) {
-            const factors = d.risk.factors?.length ? `<div class="risk-factors">${d.risk.factors.map(f=>`<span class="risk-factor">${f}</span>`).join('')}</div>` : '';
-            document.getElementById('alert-container').innerHTML = `
-                <div class="alert-box">
-                    <div class="alert-header">
-                        <span class="risk-badge ${getRiskClass(d.risk.level)}">${d.risk.level} Risk</span>
-                        <span style="color:var(--text-dim)">Profile: ${d.profile}</span>
+        function renderAIBox(data) {
+            const factors = data.risk.factors?.length 
+                ? `<div class="risk-factors">${data.risk.factors.map(f => `<span class="risk-factor">⚠️ ${f}</span>`).join('')}</div>` 
+                : '';
+            
+            const aiSourceText = data.ai_source === 'apertus' ? 'Swiss AI Apertus' : 'Regel-basiert';
+            
+            document.getElementById('ai-container').innerHTML = `
+                <div class="ai-box">
+                    <div class="ai-recommendation">${data.recommendation}</div>
+                    <div class="ai-meta">
+                        <span class="ai-source">📍 ${data.location.lat.toFixed(4)}, ${data.location.lon.toFixed(4)} • ${data.profile} • ${aiSourceText}</span>
+                        <span class="risk-badge ${getRiskClass(data.risk.level)}">${data.risk.level} Risk</span>
                     </div>
-                    <div class="alert-advice">${d.advice}</div>
                     ${factors}
-                </div>`;
+                </div>
+            `;
         }
         
-        function renderCards(d) {
-            const s = d.summary;
-            const sp = d.data.space;
-            const eq = d.data.earthquakes;
-            const ev = d.data.natural_events;
-            const env = d.data.environment;
-            const hz = d.data.hazards;
-            
-            let eqList = (eq.earthquakes||[]).slice(0,3).map(q=>`<div class="list-item"><div class="list-item-title">M${q.magnitude?.toFixed(1)} - ${q.location||'Unknown'}</div><div class="list-item-meta">${q.distance_km?q.distance_km+'km • ':''}Depth: ${q.depth_km?.toFixed(0)||'?'}km</div></div>`).join('') || '<p style="color:var(--text-dim);font-size:0.85rem;padding:10px">No earthquakes nearby</p>';
-            
-            let evList = (ev.events||[]).slice(0,3).map(e=>`<div class="list-item"><div class="list-item-title">${e.title||'Event'}</div><div class="list-item-meta">${e.category||''} ${e.distance_km?'• '+e.distance_km+'km':''}</div></div>`).join('') || '<p style="color:var(--text-dim);font-size:0.85rem;padding:10px">No events nearby</p>';
+        function renderDataCards(data) {
+            const s = data.summary;
+            const d = data.data;
             
             document.getElementById('data-grid').innerHTML = `
                 <div class="card">
-                    <div class="card-header"><span class="card-icon">🌞</span><span class="card-title">Space Weather</span><span class="source-badge">NOAA</span></div>
-                    <div class="metric"><span class="metric-label">Kp Index</span><span class="metric-value">${s.kp_index?.toFixed(1)||'N/A'}</span></div>
-                    <div class="metric"><span class="metric-label">Solar Wind</span><span class="metric-value">${s.solar_wind_speed?.toFixed(0)||'N/A'} km/s</span></div>
-                    <div class="metric"><span class="metric-label">X-Ray</span><span class="metric-value">${s.xray_level||'N/A'}</span></div>
-                    <div class="metric"><span class="metric-label">Aurora</span><span class="metric-value">${s.aurora_probability||0}%</span></div>
+                    <div class="card-header">
+                        <span class="card-icon">🌤️</span>
+                        <span class="card-title">Wetter</span>
+                        <span class="source-badge">Open-Meteo</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Temperatur</span>
+                        <span class="metric-value">${s.temperature?.toFixed(1) || 'N/A'}°C</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Bedingungen</span>
+                        <span class="metric-value">${s.weather || 'N/A'}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Feuchtigkeit</span>
+                        <span class="metric-value">${d.weather?.humidity || 'N/A'}%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Wind</span>
+                        <span class="metric-value">${d.weather?.wind_speed?.toFixed(0) || 'N/A'} km/h</span>
+                    </div>
                 </div>
+                
                 <div class="card">
-                    <div class="card-header"><span class="card-icon">🌍</span><span class="card-title">Earthquakes</span><span class="source-badge">USGS</span></div>
-                    <div class="metric"><span class="metric-label">Nearby (500km)</span><span class="metric-value">${eq.count||0}</span></div>
-                    <div class="metric"><span class="metric-label">Max Magnitude</span><span class="metric-value">${eq.statistics?.max_magnitude?.toFixed(1)||'N/A'}</span></div>
-                    ${eqList}
+                    <div class="card-header">
+                        <span class="card-icon">💨</span>
+                        <span class="card-title">Luftqualität</span>
+                        <span class="source-badge">Copernicus</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">EU AQI</span>
+                        <span class="metric-value"><span class="badge ${getBadge(s.air_quality || 0, [40, 60])}">${s.air_quality || 'N/A'}</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">UV-Index</span>
+                        <span class="metric-value"><span class="badge ${getBadge(s.uv_index || 0, [3, 6])}">${s.uv_index?.toFixed(1) || 'N/A'}</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">PM2.5</span>
+                        <span class="metric-value">${d.air_quality?.pm2_5?.toFixed(1) || 'N/A'} μg/m³</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Kategorie</span>
+                        <span class="metric-value">${d.air_quality?.category || 'N/A'}</span>
+                    </div>
                 </div>
+                
                 <div class="card">
-                    <div class="card-header"><span class="card-icon">⚠️</span><span class="card-title">Natural Events</span><span class="source-badge">NASA</span></div>
-                    <div class="metric"><span class="metric-label">Nearby (500km)</span><span class="metric-value">${ev.count||0}</span></div>
-                    ${evList}
+                    <div class="card-header">
+                        <span class="card-icon">🌞</span>
+                        <span class="card-title">Weltraumwetter</span>
+                        <span class="source-badge">NOAA</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Kp-Index</span>
+                        <span class="metric-value">${s.kp_index?.toFixed(1) || 'N/A'}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Aurora</span>
+                        <span class="metric-value">${s.aurora_probability || 0}%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">X-Ray</span>
+                        <span class="metric-value">${d.space?.xray?.level || 'N/A'}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Solar Wind</span>
+                        <span class="metric-value">${d.space?.solar_wind?.speed?.toFixed(0) || 'N/A'} km/s</span>
+                    </div>
                 </div>
+                
                 <div class="card">
-                    <div class="card-header"><span class="card-icon">🌤️</span><span class="card-title">Weather</span><span class="source-badge">Open-Meteo</span></div>
-                    <div class="metric"><span class="metric-label">Temperature</span><span class="metric-value">${s.temperature?.toFixed(1)||'N/A'}°C</span></div>
-                    <div class="metric"><span class="metric-label">Conditions</span><span class="metric-value">${s.weather||'N/A'}</span></div>
-                    <div class="metric"><span class="metric-label">Humidity</span><span class="metric-value">${env.weather?.humidity||'N/A'}%</span></div>
-                    <div class="metric"><span class="metric-label">Wind</span><span class="metric-value">${env.weather?.wind?.speed?.toFixed(0)||'N/A'} km/h</span></div>
+                    <div class="card-header">
+                        <span class="card-icon">⚠️</span>
+                        <span class="card-title">Gefahren</span>
+                        <span class="source-badge">USGS/NASA</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Erdbeben (500km)</span>
+                        <span class="metric-value">${s.earthquakes_nearby || 0}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Max. Magnitude</span>
+                        <span class="metric-value">${d.earthquakes?.max_magnitude?.toFixed(1) || 'N/A'}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Hochwasser</span>
+                        <span class="metric-value"><span class="badge ${s.flood_risk === 'High' ? 'badge-bad' : s.flood_risk === 'Moderate' ? 'badge-moderate' : 'badge-good'}">${s.flood_risk || 'N/A'}</span></span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">See/Marine</span>
+                        <span class="metric-value">${d.marine?.conditions || 'N/A'}</span>
+                    </div>
                 </div>
+                
                 <div class="card">
-                    <div class="card-header"><span class="card-icon">💨</span><span class="card-title">Air Quality</span><span class="source-badge">Copernicus</span></div>
-                    <div class="metric"><span class="metric-label">EU AQI</span><span class="metric-value"><span class="badge ${getBadge(s.air_quality_aqi||0,[40,60])}">${s.air_quality_aqi||'N/A'}</span></span></div>
-                    <div class="metric"><span class="metric-label">PM2.5</span><span class="metric-value">${env.air_quality?.pollutants?.pm2_5?.value?.toFixed(1)||'N/A'} μg/m³</span></div>
-                    <div class="metric"><span class="metric-label">PM10</span><span class="metric-value">${env.air_quality?.pollutants?.pm10?.value?.toFixed(1)||'N/A'} μg/m³</span></div>
-                    <div class="metric"><span class="metric-label">NO₂</span><span class="metric-value">${env.air_quality?.pollutants?.no2?.value?.toFixed(1)||'N/A'} μg/m³</span></div>
+                    <div class="card-header">
+                        <span class="card-icon">🌸</span>
+                        <span class="card-title">Pollen</span>
+                        <span class="source-badge">Open-Meteo</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Gräser</span>
+                        <span class="metric-value">${d.pollen?.pollen?.grass?.level || 'N/A'}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Birke</span>
+                        <span class="metric-value">${d.pollen?.pollen?.birch?.level || 'N/A'}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Erle</span>
+                        <span class="metric-value">${d.pollen?.pollen?.alder?.level || 'N/A'}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Ambrosia</span>
+                        <span class="metric-value">${d.pollen?.pollen?.ragweed?.level || 'N/A'}</span>
+                    </div>
                 </div>
+                
                 <div class="card">
-                    <div class="card-header"><span class="card-icon">☀️</span><span class="card-title">UV & Hazards</span></div>
-                    <div class="metric"><span class="metric-label">UV Index</span><span class="metric-value"><span class="badge ${getBadge(s.uv_index||0,[3,6])}">${s.uv_index?.toFixed(1)||'N/A'}</span></span></div>
-                    <div class="metric"><span class="metric-label">UV Category</span><span class="metric-value">${env.uv?.category||'N/A'}</span></div>
-                    <div class="metric"><span class="metric-label">Flood Risk</span><span class="metric-value"><span class="badge ${hz.floods?.flood_risk==='High'?'badge-bad':hz.floods?.flood_risk==='Moderate'?'badge-moderate':'badge-good'}">${hz.floods?.flood_risk||'N/A'}</span></span></div>
-                    <div class="metric"><span class="metric-label">Sea Conditions</span><span class="metric-value">${hz.marine?.sea_conditions||'N/A'}</span></div>
+                    <div class="card-header">
+                        <span class="card-icon">🌌</span>
+                        <span class="card-title">Aurora</span>
+                        <span class="source-badge">NOAA OVATION</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Wahrscheinlichkeit</span>
+                        <span class="metric-value">${d.space?.aurora?.probability || 0}%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Sichtbarkeit</span>
+                        <span class="metric-value">${d.space?.aurora?.visibility || 'N/A'}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Kp benötigt</span>
+                        <span class="metric-value">≥ 4</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Aktueller Kp</span>
+                        <span class="metric-value">${s.kp_index?.toFixed(1) || 'N/A'}</span>
+                    </div>
                 </div>
             `;
         }
         
         function useMyLocation() {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(p => {
-                    document.getElementById('lat').value = p.coords.latitude.toFixed(4);
-                    document.getElementById('lon').value = p.coords.longitude.toFixed(4);
-                    fetchAlert();
-                }, e => alert('Location error: ' + e.message));
-            } else alert('Geolocation not supported');
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        document.getElementById('lat').value = pos.coords.latitude.toFixed(4);
+                        document.getElementById('lon').value = pos.coords.longitude.toFixed(4);
+                        fetchAlert();
+                    },
+                    err => alert('Standort-Fehler: ' + err.message)
+                );
+            } else {
+                alert('Geolocation nicht unterstützt');
+            }
         }
         
+        // Load on page ready
         document.addEventListener('DOMContentLoaded', fetchAlert);
     </script>
 </body>
