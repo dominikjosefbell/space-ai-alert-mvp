@@ -990,35 +990,41 @@ Recommendation:"""
 
 
 def call_ai_api(prompt: str) -> tuple[Optional[str], dict]:
-    """Call AI API with multiple fallbacks"""
+    """Call AI API with HuggingFace Inference Providers"""
     debug_info = {"api_key_set": bool(HF_API_KEY), "key_prefix": HF_API_KEY[:10] + "..." if HF_API_KEY else None, "attempts": []}
     
     if not HF_API_KEY:
         debug_info["error"] = "No API key configured"
         return None, debug_info
     
-    endpoints = [
-        # New router.huggingface.co endpoints (required since late 2024)
-        {"name": "Zephyr-7B", "url": "https://router.huggingface.co/hf-inference/models/HuggingFaceH4/zephyr-7b-beta/v1/chat/completions", "format": "openai"},
-        {"name": "Mistral-7B", "url": "https://router.huggingface.co/hf-inference/models/mistralai/Mistral-7B-Instruct-v0.3/v1/chat/completions", "format": "openai"},
-        {"name": "Llama-3.2-3B", "url": "https://router.huggingface.co/hf-inference/models/meta-llama/Llama-3.2-3B-Instruct/v1/chat/completions", "format": "openai"},
-        {"name": "Qwen-2.5-72B", "url": "https://router.huggingface.co/hf-inference/models/Qwen/Qwen2.5-72B-Instruct/v1/chat/completions", "format": "openai"},
+    # Use the unified HuggingFace router endpoint (correct format!)
+    url = "https://router.huggingface.co/v1/chat/completions"
+    
+    # Models available on HF Inference Providers
+    models = [
+        "Qwen/Qwen2.5-72B-Instruct",
+        "meta-llama/Llama-3.3-70B-Instruct",
+        "mistralai/Mistral-7B-Instruct-v0.3",
+        "HuggingFaceH4/zephyr-7b-beta",
     ]
     
-    headers = {"Authorization": f"Bearer {HF_API_KEY}", "Content-Type": "application/json"}
+    headers = {
+        "Authorization": f"Bearer {HF_API_KEY}",
+        "Content-Type": "application/json"
+    }
     
-    for endpoint in endpoints:
-        attempt = {"name": endpoint["name"]}
+    for model in models:
+        attempt = {"name": model.split("/")[-1]}
         try:
-            # All endpoints now use OpenAI-compatible chat format
             payload = {
-                "model": endpoint["url"].split("/models/")[1].split("/v1")[0],
+                "model": model,
                 "messages": [{"role": "user", "content": prompt}],
                 "max_tokens": 300,
-                "temperature": 0.7
+                "temperature": 0.7,
+                "stream": False
             }
             
-            response = requests.post(endpoint["url"], headers=headers, json=payload, timeout=30)
+            response = requests.post(url, headers=headers, json=payload, timeout=30)
             attempt["status"] = response.status_code
             
             if response.status_code == 200:
@@ -1026,24 +1032,27 @@ def call_ai_api(prompt: str) -> tuple[Optional[str], dict]:
                 
                 if "choices" in result and result["choices"]:
                     text = result["choices"][0].get("message", {}).get("content", "")
+                    text = text.strip()
+                    
+                    if text and len(text) > 20:
+                        attempt["success"] = True
+                        debug_info["attempts"].append(attempt)
+                        debug_info["success_model"] = model
+                        return text, debug_info
                 else:
                     attempt["error"] = "No choices in response"
-                    debug_info["attempts"].append(attempt)
-                    continue
-                
-                text = text.strip()
-                if text and len(text) > 20:
-                    attempt["success"] = True
-                    debug_info["attempts"].append(attempt)
-                    debug_info["success_model"] = endpoint["name"]
-                    return text, debug_info
             else:
                 try:
                     err_json = response.json()
-                    attempt["error"] = err_json.get("error", {}).get("message", response.text[:100]) if isinstance(err_json.get("error"), dict) else str(err_json.get("error", response.text[:100]))
+                    if isinstance(err_json.get("error"), dict):
+                        attempt["error"] = err_json["error"].get("message", str(err_json["error"]))[:200]
+                    else:
+                        attempt["error"] = str(err_json.get("error", response.text[:200]))
                 except:
-                    attempt["error"] = response.text[:100]
+                    attempt["error"] = response.text[:200]
                     
+        except requests.exceptions.Timeout:
+            attempt["error"] = "Timeout (30s)"
         except Exception as e:
             attempt["error"] = str(e)
         
