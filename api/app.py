@@ -806,7 +806,23 @@ def call_ai_api(prompt: str) -> tuple[Optional[str], dict]:
 
 
 def generate_recommendation(data: dict, profile: str, language: str) -> str:
-    """Generate rule-based recommendation"""
+    """Generate rule-based recommendation in correct language"""
+    
+    # Weather condition translations
+    weather_translations = {
+        "de": {"Clear": "Klar", "Partly cloudy": "Teilweise bewölkt", "Overcast": "Bewölkt", 
+               "Fog": "Nebel", "Drizzle": "Nieselregen", "Rain": "Regen", "Heavy rain": "Starkregen",
+               "Snow": "Schnee", "Heavy snow": "Starker Schneefall", "Showers": "Schauer", "Thunderstorm": "Gewitter"},
+        "fr": {"Clear": "Dégagé", "Partly cloudy": "Partiellement nuageux", "Overcast": "Couvert",
+               "Rain": "Pluie", "Snow": "Neige", "Thunderstorm": "Orage"},
+        "it": {"Clear": "Sereno", "Partly cloudy": "Parzialmente nuvoloso", "Overcast": "Nuvoloso",
+               "Rain": "Pioggia", "Snow": "Neve", "Thunderstorm": "Temporale"},
+    }
+    
+    def translate_weather(w):
+        if language in weather_translations:
+            return weather_translations[language].get(w, w)
+        return w
     
     weather = data.get("weather", {})
     air = data.get("air_quality", {})
@@ -867,7 +883,9 @@ def generate_recommendation(data: dict, profile: str, language: str) -> str:
             tips.append(f"🌌 {t('aurora_unlikely', language)} (Kp={kp})")
     
     # Build response
-    weather_desc = f"{weather.get('weather', '')}, {temp}°C" if temp else weather.get('weather', '')
+    weather_condition = weather.get('weather', '')
+    weather_translated = translate_weather(weather_condition)
+    weather_desc = f"{weather_translated}, {temp}°C" if temp else weather_translated
     
     parts = [f"🌤️ {t('good_day', language)}! {weather_desc}."]
     parts.extend(warnings)
@@ -1002,31 +1020,65 @@ def get_alert(
         risk_score += 1
         risk_factors.append(f"🌍 Earthquake M{eq_max}")
     
-    # GDACS alerts
-    gdacs_count = data["gdacs"].get("count", 0)
-    if gdacs_count > 0:
-        risk_score += 2
-        risk_factors.append(f"⚠️ {gdacs_count} disaster alerts")
+    # GDACS alerts - only count RED/ORANGE alerts as risk
+    gdacs_alerts = data["gdacs"].get("alerts", [])
+    red_alerts = [a for a in gdacs_alerts if a.get("alert_level") == "Red"]
+    orange_alerts = [a for a in gdacs_alerts if a.get("alert_level") == "Orange"]
+    
+    if red_alerts:
+        risk_score += 3
+        for a in red_alerts[:2]:
+            risk_factors.append(f"🚨 {a.get('type', 'Alert')}: {a.get('name', 'Unknown')}")
+    elif orange_alerts:
+        risk_score += 1
+        for a in orange_alerts[:2]:
+            risk_factors.append(f"⚠️ {a.get('type', 'Alert')}: {a.get('name', 'Unknown')}")
+    # Green alerts don't increase risk score
     
     # Air quality
     aqi = data["air_quality"].get("eu_aqi", 0) or 0
-    if aqi > 80:
+    if aqi > 100:
+        risk_score += 3
+        risk_factors.append(f"😷 Hazardous air (AQI {aqi})")
+    elif aqi > 80:
         risk_score += 2
         risk_factors.append(f"😷 Poor air (AQI {aqi})")
     
-    # UV
+    # UV - only high risk for very high UV
     uv = data["air_quality"].get("uv_index", 0) or 0
-    if uv >= 8:
+    if uv >= 11:
+        risk_score += 2
+        risk_factors.append(f"☀️ Extreme UV ({uv})")
+    elif uv >= 8:
         risk_score += 1
-        risk_factors.append(f"☀️ High UV ({uv})")
+        risk_factors.append(f"☀️ Very high UV ({uv})")
     
-    # Space weather
+    # Space weather - only severe storms
     kp = data["space"]["kp"].get("value", 0) or 0
-    if kp >= 7:
+    if kp >= 8:
+        risk_score += 3
+        risk_factors.append(f"🌞 Extreme storm (Kp={kp})")
+    elif kp >= 7:
         risk_score += 2
         risk_factors.append(f"🌞 Severe storm (Kp={kp})")
+    elif kp >= 5:
+        risk_score += 1
+        risk_factors.append(f"🌞 Geomagnetic storm (Kp={kp})")
     
-    risk_level = "Critical" if risk_score >= 6 else "High" if risk_score >= 4 else "Medium" if risk_score >= 2 else "Low"
+    # Flood risk
+    if data["flood"].get("risk") == "high":
+        risk_score += 2
+        risk_factors.append("🌊 High flood risk")
+    
+    # Determine risk level with better thresholds
+    if risk_score >= 5:
+        risk_level = "Critical"
+    elif risk_score >= 3:
+        risk_level = "High"
+    elif risk_score >= 2:
+        risk_level = "Medium"
+    else:
+        risk_level = "Low"
     
     return {
         "status": "success",
