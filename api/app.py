@@ -1080,6 +1080,9 @@ def get_alert(
     else:
         risk_level = "Low"
     
+    # Count for summary
+    gdacs_count = len(data["gdacs"].get("alerts", []))
+    
     return {
         "status": "success",
         "timestamp": datetime.utcnow().isoformat() + "Z",
