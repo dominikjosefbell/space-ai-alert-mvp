@@ -908,12 +908,16 @@ def fetch_tides(lat: float, lon: float) -> dict:
 # =============================================================================
 
 def build_ai_prompt(data: dict, profile: str, language: str, user_question: str = None) -> str:
-    """Build comprehensive prompt for AI with all data"""
+    """Build comprehensive prompt for AI with ALL data exactly as shown in UI"""
     
-    lang_names = {"de": "German", "en": "English", "fr": "French", "it": "Italian"}
-    lang_name = lang_names.get(language, "German")
+    lang_instructions = {
+        "de": "Antworte auf Deutsch.",
+        "en": "Answer in English.",
+        "fr": "Réponds en français.",
+        "it": "Rispondi in italiano."
+    }
     
-    # Extract all data
+    # Extract all data with safe defaults
     weather = data.get("weather", {})
     air = data.get("air_quality", {})
     space = data.get("space", {})
@@ -921,72 +925,136 @@ def build_ai_prompt(data: dict, profile: str, language: str, user_question: str 
     fires = data.get("wildfires", {})
     pollen = data.get("pollen", {})
     donki = data.get("donki", {})
+    flood = data.get("flood", {})
+    marine = data.get("marine", {})
+    gdacs = data.get("gdacs", {})
+    solar_rad = data.get("solar_radiation", {})
     
+    # Build detailed data summary - exactly what UI shows
     data_summary = f"""
-CURRENT ENVIRONMENTAL DATA:
+=== AKTUELLE UMWELTDATEN (wie im Dashboard angezeigt) ===
 
-WEATHER (Open-Meteo/ECMWF):
-- Temperature: {weather.get('temperature')}°C (feels like {weather.get('feels_like')}°C)
-- Conditions: {weather.get('weather')}
-- Humidity: {weather.get('humidity')}%
-- Wind: {weather.get('wind_speed')} km/h
-- Cloud cover: {weather.get('cloud_cover')}%
+🌤️ WETTER (Open-Meteo/ECMWF):
+- Temperatur: {weather.get('temperature', 'N/A')}°C
+- Gefühlt wie: {weather.get('feels_like', 'N/A')}°C
+- Bedingungen: {weather.get('weather', 'N/A')}
+- Feuchtigkeit: {weather.get('humidity', 'N/A')}%
+- Wind: {weather.get('wind_speed', 'N/A')} km/h
+- Windböen: {weather.get('wind_gusts', 'N/A')} km/h
+- Bewölkung: {weather.get('cloud_cover', 'N/A')}%
+- Luftdruck: {weather.get('pressure', 'N/A')} hPa
 
-AIR QUALITY (Copernicus CAMS):
-- EU AQI: {air.get('eu_aqi')} ({air.get('category')})
-- PM2.5: {air.get('pm2_5')} μg/m³
-- UV Index: {air.get('uv_index')} ({air.get('uv_category')})
+💨 LUFTQUALITÄT (Copernicus CAMS):
+- EU AQI: {air.get('eu_aqi', 'N/A')} (Kategorie: {air.get('category', 'N/A')})
+- US AQI: {air.get('us_aqi', 'N/A')}
+- PM2.5: {air.get('pm2_5', 'N/A')} μg/m³
+- PM10: {air.get('pm10', 'N/A')} μg/m³
+- Ozon: {air.get('ozone', 'N/A')} μg/m³
+- NO2: {air.get('no2', 'N/A')} μg/m³
+- UV-Index: {air.get('uv_index', 'N/A')} ({air.get('uv_category', 'N/A')})
 
-POLLEN: High levels: {', '.join(pollen.get('high_pollen', [])) or 'None'}
+🌸 POLLEN (Open-Meteo):
+- Gräser: {pollen.get('pollen', {}).get('grass', {}).get('level', 'N/A')}
+- Birke: {pollen.get('pollen', {}).get('birch', {}).get('level', 'N/A')}
+- Erle: {pollen.get('pollen', {}).get('alder', {}).get('level', 'N/A')}
+- Ambrosia: {pollen.get('pollen', {}).get('ragweed', {}).get('level', 'N/A')}
+- Hohe Belastung bei: {', '.join(pollen.get('high_pollen', [])) or 'Keine'}
 
-SPACE WEATHER (NOAA GOES/DSCOVR):
-- Kp Index: {space.get('kp', {}).get('value')} ({space.get('kp', {}).get('level')})
-- Solar Wind: {space.get('solar_wind', {}).get('speed')} km/s
-- X-Ray Flux: {space.get('xray', {}).get('level')}
-- Aurora probability: {space.get('aurora', {}).get('probability')}%
+🌞 WELTRAUMWETTER (NOAA GOES/DSCOVR):
+- Kp-Index: {space.get('kp', {}).get('value', 'N/A')} ({space.get('kp', {}).get('level', 'N/A')})
+- Sonnenwind Geschwindigkeit: {space.get('solar_wind', {}).get('speed', 'N/A')} km/s
+- Sonnenwind Dichte: {space.get('solar_wind', {}).get('density', 'N/A')} p/cm³
+- Sonnenwind Bz: {space.get('solar_wind', {}).get('bz', 'N/A')} nT
+- X-Ray Flux: {space.get('xray', {}).get('level', 'N/A')}
+- Proton Flux: {space.get('protons', {}).get('level', 'N/A') if space.get('protons') else 'N/A'}
 
-NASA DONKI EVENTS:
-- Recent CMEs: {donki.get('cme', {}).get('count', 0)}, Earth-directed: {donki.get('cme', {}).get('earth_directed', False)}
-- Recent Solar Flares: {donki.get('flares', {}).get('count', 0)}, Max class: {donki.get('flares', {}).get('max_class')}
-- Geomagnetic Storms: {donki.get('storms', {}).get('count', 0)}
+🌌 AURORA (NOAA OVATION):
+- Wahrscheinlichkeit: {space.get('aurora', {}).get('probability', 0)}%
+- Sichtbarkeit: {space.get('aurora', {}).get('visibility', 'N/A')}
+- Benötigter Kp für Sichtung: ≥4 (Mitteleuropa)
 
-HAZARDS:
-- Earthquakes nearby: {eq.get('count', 0)}, Max magnitude: {eq.get('max_magnitude')}
-- Wildfires nearby: {fires.get('count', 0)}
-- Flood risk: {data.get('flood', {}).get('risk')}
+🌞 NASA DONKI EREIGNISSE:
+- Koronale Massenauswürfe (CME): {donki.get('cme', {}).get('count', 0)} in letzten 7 Tagen
+- CME Richtung Erde: {'JA!' if donki.get('cme', {}).get('earth_directed') else 'Nein'}
+- Sonnenflares: {donki.get('flares', {}).get('count', 0)} (Max: {donki.get('flares', {}).get('max_class', 'Keine')})
+- Geomagnetische Stürme: {donki.get('storms', {}).get('count', 0)}
+
+⚠️ GEFAHREN:
+- Erdbeben (500km Radius): {eq.get('count', 0)} (Max Magnitude: {eq.get('max_magnitude', 'Keine')})
+- Waldbrände (100km Radius): {fires.get('count', 0)}
+- GDACS Katastrophenwarnungen: {gdacs.get('count', 0)}
+- Hochwasserrisiko: {flood.get('risk', 'N/A')}
+
+🌊 MARINE (falls Küstennähe):
+- Wellenhöhe: {marine.get('wave_height', 'N/A')} m
+- Bedingungen: {marine.get('conditions', 'N/A')}
+
+☀️ SOLARSTRAHLUNG (NASA POWER):
+- Potential: {solar_rad.get('solar_potential', 'N/A')}
+- Strahlung: {solar_rad.get('all_sky_radiation', 'N/A')} kWh/m²/Tag
 """
 
+    # Add GDACS details if any
+    if gdacs.get('alerts'):
+        data_summary += "\n📢 AKTIVE KATASTROPHENWARNUNGEN:\n"
+        for alert in gdacs.get('alerts', [])[:3]:
+            data_summary += f"- {alert.get('type', 'Alert')}: {alert.get('name', 'Unknown')} ({alert.get('country', 'Global')}) - {alert.get('alert_level', 'Unknown')} Alert\n"
+
+    # Add wildfire details if any
+    if fires.get('fires'):
+        data_summary += "\n🔥 WALDBRÄNDE IN DER NÄHE:\n"
+        for fire in fires.get('fires', [])[:3]:
+            data_summary += f"- {fire.get('distance_km', '?')} km entfernt, Helligkeit: {fire.get('brightness', 'N/A')}K\n"
+
+    # Profile context
+    profile_contexts = {
+        "General Public": "eine normale Person im Alltag",
+        "Outdoor/Sports": "jemanden der draussen Sport treiben möchte (Joggen, Radfahren, Wandern)",
+        "Asthma/Respiratory": "jemanden mit Asthma oder Atemwegserkrankungen - Luftqualität und Pollen sind besonders wichtig",
+        "Allergy": "jemanden mit Pollenallergien - Pollenbelastung ist kritisch",
+        "Pilot/Aviation": "einen Piloten - Weltraumwetter (HF-Funk, GPS), Sonnenstürme und Flugbedingungen sind wichtig",
+        "Aurora Hunter": "jemanden der Nordlichter sehen möchte - Kp-Index, Aurora-Wahrscheinlichkeit sind entscheidend",
+        "Marine/Sailing": "jemanden der segelt oder Boot fährt - Wellenhöhe, Wind, Seebedingungen sind wichtig",
+    }
+    
+    profile_context = profile_contexts.get(profile, "eine normale Person")
+
     if user_question:
-        return f"""You are a helpful environmental advisor. Answer the user's question using the current data.
+        instruction = f"""Du bist ein hilfreicher Umweltberater. Beantworte die Frage des Nutzers basierend auf den aktuellen Daten.
 
-Profile: {profile}
-Question: {user_question}
+PROFIL: {profile} ({profile_context})
+
+FRAGE: {user_question}
 
 {data_summary}
 
-IMPORTANT:
-- Answer in {lang_name}
-- Be specific and reference the actual data values
-- Give practical advice
-- Keep it concise (2-4 sentences)
-- Use emojis
+WICHTIG:
+- {lang_instructions.get(language, lang_instructions['de'])}
+- Beziehe dich auf die KONKRETEN WERTE aus den Daten oben
+- Wenn ein Wert als "N/A" oder "None" angezeigt wird, sage dass diese Daten nicht verfügbar sind
+- Sei präzise und hilfreich (2-4 Sätze)
+- Nutze passende Emojis
+- Gib praktische Empfehlungen
 
-Answer:"""
+Antwort:"""
     else:
-        return f"""You are a helpful environmental advisor. Give a personalized recommendation.
+        instruction = f"""Du bist ein hilfreicher Umweltberater. Gib eine personalisierte Empfehlung basierend auf den aktuellen Daten.
 
-Profile: {profile}
+PROFIL: {profile} ({profile_context})
 
 {data_summary}
 
-IMPORTANT:
-- Answer in {lang_name}
-- Maximum 3-4 sentences
-- Give specific, actionable advice based on the data
-- Warn about any hazards
-- Use emojis
+WICHTIG:
+- {lang_instructions.get(language, lang_instructions['de'])}
+- Maximum 3-4 Sätze
+- Beziehe dich auf konkrete Werte (Temperatur, AQI, UV, etc.)
+- Warne bei Gefahren (schlechte Luft, hohe UV, Waldbrände, Erdbeben)
+- Nutze passende Emojis
+- Ende positiv wenn die Bedingungen gut sind
 
-Recommendation:"""
+Empfehlung:"""
+
+    return instruction
 
 
 def call_ai_api(prompt: str) -> tuple[Optional[str], dict]:
