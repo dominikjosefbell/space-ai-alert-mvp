@@ -1,7 +1,7 @@
 import os
 import json
 import re
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 import requests
 from datetime import datetime, timedelta
@@ -9,9 +9,9 @@ from typing import Optional
 
 # --- 1. Initialization and Setup ---
 app = FastAPI(
-    title="Space Weather AI Alert API - Extended",
-    description="Comprehensive space weather monitoring with multiple satellite data sources.",
-    version="3.0.0"
+    title="Space Weather & Environment API - Full Suite",
+    description="Comprehensive space weather, air quality, UV index, and environmental monitoring.",
+    version="4.0.0"
 )
 
 # CORS Middleware
@@ -29,625 +29,619 @@ HF_MODEL = os.getenv("HF_MODEL", "HuggingFaceH4/zephyr-7b-beta")
 HF_INFERENCE_URL = f"https://api-inference.huggingface.co/models/{HF_MODEL}"
 HF_API_KEY = os.getenv("HF_API_KEY") or os.getenv("APERTUS_API_KEY")
 
+# Default location (Zürich, Switzerland - can be overridden)
+DEFAULT_LAT = 47.3769
+DEFAULT_LON = 8.5417
+
 # --- 3. Data Source URLs ---
 
-# NOAA Space Weather Prediction Center (SWPC) - FREE, no API key needed!
+# NOAA Space Weather Prediction Center
 NOAA_URLS = {
-    # Geomagnetic indices
     "kp_index": "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json",
-    "dst_index": "https://services.swpc.noaa.gov/products/kyoto-dst.json",
-    
-    # Solar Wind (from DSCOVR satellite at L1)
     "solar_wind_plasma": "https://services.swpc.noaa.gov/products/solar-wind/plasma-2-hour.json",
     "solar_wind_mag": "https://services.swpc.noaa.gov/products/solar-wind/mag-2-hour.json",
-    
-    # GOES Satellite Data
     "xray_flux": "https://services.swpc.noaa.gov/json/goes/primary/xrays-6-hour.json",
     "proton_flux": "https://services.swpc.noaa.gov/json/goes/primary/integral-protons-6-hour.json",
-    "electron_flux": "https://services.swpc.noaa.gov/json/goes/primary/integral-electrons-6-hour.json",
-    
-    # Forecasts and Alerts
-    "aurora_forecast": "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json",
-    "solar_probabilities": "https://services.swpc.noaa.gov/json/solar_probabilities.json",
-    "alerts": "https://services.swpc.noaa.gov/products/alerts.json",
-    
-    # Solar Activity
-    "sunspot_report": "https://services.swpc.noaa.gov/json/sunspot_report.json",
-    "solar_regions": "https://services.swpc.noaa.gov/json/solar_regions.json",
     "xray_flares": "https://services.swpc.noaa.gov/json/goes/primary/xray-flares-7-day.json",
 }
 
-# NASA DONKI (Space Weather Database)
+# NASA DONKI
 NASA_DONKI_URLS = {
-    "gst": "https://api.nasa.gov/DONKI/GST",  # Geomagnetic Storms
-    "cme": "https://api.nasa.gov/DONKI/CME",  # Coronal Mass Ejections
-    "flr": "https://api.nasa.gov/DONKI/FLR",  # Solar Flares
-    "sep": "https://api.nasa.gov/DONKI/SEP",  # Solar Energetic Particles
-    "hss": "https://api.nasa.gov/DONKI/HSS",  # High Speed Streams
-    "ips": "https://api.nasa.gov/DONKI/IPS",  # Interplanetary Shocks
+    "gst": "https://api.nasa.gov/DONKI/GST",
+    "cme": "https://api.nasa.gov/DONKI/CME",
+    "flr": "https://api.nasa.gov/DONKI/FLR",
+    "sep": "https://api.nasa.gov/DONKI/SEP",
+}
+
+# Open-Meteo APIs (FREE, no key required!)
+OPEN_METEO_URLS = {
+    "air_quality": "https://air-quality-api.open-meteo.com/v1/air-quality",
+    "weather": "https://api.open-meteo.com/v1/forecast",
+    "uv": "https://air-quality-api.open-meteo.com/v1/air-quality",  # UV is in air quality API
 }
 
 
 # --- 4. Root Endpoint ---
 @app.get("/")
 def read_root():
-    """Health check and API information."""
+    """Health check and API overview."""
     return {
         "status": "online",
-        "version": "3.0.0 - Extended",
-        "message": "Space Weather AI Alert API with comprehensive satellite data",
+        "version": "4.0.0 - Full Environmental Suite",
+        "message": "Space Weather + Air Quality + UV Index + Weather API",
         "data_sources": {
-            "noaa_swpc": list(NOAA_URLS.keys()),
-            "nasa_donki": list(NASA_DONKI_URLS.keys()),
+            "space_weather": ["NOAA SWPC", "NASA DONKI", "GOES Satellites", "DSCOVR"],
+            "environment": ["Open-Meteo Air Quality", "Copernicus CAMS", "Open-Meteo Weather"],
         },
+        "capabilities": [
+            "Real-time Kp-index & geomagnetic activity",
+            "Solar wind speed, density, magnetic field",
+            "X-ray flux & solar flare detection",
+            "Proton flux & radiation storms",
+            "Air Quality Index (EU & US standards)",
+            "PM2.5, PM10, NO2, O3, SO2, CO",
+            "UV Index with health recommendations",
+            "Pollen forecast (Europe)",
+            "Weather conditions",
+        ],
         "endpoints": {
-            "health": "/",
             "alert": "/alert/?profile=General%20Public",
-            "full_data": "/space-weather/full",
-            "kp_index": "/space-weather/kp",
-            "solar_wind": "/space-weather/solar-wind",
-            "xray": "/space-weather/xray",
-            "protons": "/space-weather/protons",
-            "aurora": "/space-weather/aurora",
-            "flares": "/space-weather/flares",
-            "debug": "/debug/"
+            "environment": "/environment/?lat=47.37&lon=8.54",
+            "space_weather": "/space-weather/full",
+            "air_quality": "/air-quality/?lat=47.37&lon=8.54",
+            "uv_index": "/uv/?lat=47.37&lon=8.54",
+            "weather": "/weather/?lat=47.37&lon=8.54",
+            "combined": "/combined/?lat=47.37&lon=8.54&profile=General%20Public",
         }
     }
 
 
-# --- 5. Data Fetching Functions ---
+# --- 5. Utility Functions ---
 
-def safe_fetch(url: str, params: dict = None, timeout: int = 10) -> Optional[list | dict]:
+def safe_fetch(url: str, params: dict = None, timeout: int = 10) -> Optional[dict | list]:
     """Safely fetch JSON data from an API endpoint."""
     try:
         response = requests.get(url, params=params, timeout=timeout)
         response.raise_for_status()
         return response.json()
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
         print(f"Fetch error for {url}: {e}")
         return None
-    except json.JSONDecodeError:
-        print(f"JSON decode error for {url}")
-        return None
 
+
+# --- 6. Space Weather Functions (from Phase 1) ---
 
 def fetch_kp_index() -> dict:
     """Fetch current Kp-index from NOAA."""
     data = safe_fetch(NOAA_URLS["kp_index"])
-    
     if data and isinstance(data, list) and len(data) > 1:
-        # Format: [["time_tag","Kp","a_running","station_count"], ["2025-12-10...", "3.33", ...], ...]
         latest = data[-1]
         return {
             "value": float(latest[1]) if len(latest) > 1 else None,
             "time": latest[0] if len(latest) > 0 else None,
             "status": "ok"
         }
-    return {"value": None, "time": None, "status": "error"}
+    return {"value": None, "status": "error"}
 
 
 def fetch_solar_wind() -> dict:
-    """Fetch solar wind plasma data from DSCOVR satellite."""
+    """Fetch solar wind plasma data from DSCOVR."""
     plasma = safe_fetch(NOAA_URLS["solar_wind_plasma"])
     mag = safe_fetch(NOAA_URLS["solar_wind_mag"])
     
-    result = {
-        "speed": None,
-        "density": None,
-        "temperature": None,
-        "bz": None,
-        "bt": None,
-        "time": None,
-        "status": "error"
-    }
+    result = {"speed": None, "density": None, "bz": None, "status": "error"}
     
-    # Plasma data: [["time_tag", "density", "speed", "temperature"], ...]
     if plasma and isinstance(plasma, list) and len(plasma) > 1:
-        latest_plasma = plasma[-1]
-        if len(latest_plasma) >= 4:
-            result["time"] = latest_plasma[0]
-            result["density"] = float(latest_plasma[1]) if latest_plasma[1] else None
-            result["speed"] = float(latest_plasma[2]) if latest_plasma[2] else None
-            result["temperature"] = float(latest_plasma[3]) if latest_plasma[3] else None
+        latest = plasma[-1]
+        if len(latest) >= 4:
+            result["speed"] = float(latest[2]) if latest[2] else None
+            result["density"] = float(latest[1]) if latest[1] else None
             result["status"] = "ok"
     
-    # Magnetic field data: [["time_tag", "bx_gsm", "by_gsm", "bz_gsm", "bt", ...], ...]
     if mag and isinstance(mag, list) and len(mag) > 1:
-        latest_mag = mag[-1]
-        if len(latest_mag) >= 5:
-            result["bz"] = float(latest_mag[3]) if latest_mag[3] else None
-            result["bt"] = float(latest_mag[4]) if latest_mag[4] else None
+        latest = mag[-1]
+        if len(latest) >= 5:
+            result["bz"] = float(latest[3]) if latest[3] else None
     
     return result
 
 
 def fetch_xray_flux() -> dict:
-    """Fetch X-ray flux data from GOES satellite."""
+    """Fetch X-ray flux from GOES."""
     data = safe_fetch(NOAA_URLS["xray_flux"])
-    
-    if data and isinstance(data, list) and len(data) > 1:
-        # Find latest valid reading
+    if data and isinstance(data, list):
         for entry in reversed(data):
             if isinstance(entry, dict) and entry.get("flux"):
                 flux = float(entry["flux"])
-                # Classify flare level
                 if flux >= 1e-4:
-                    level = "X" + str(int(flux / 1e-4))
+                    level = f"X{int(flux / 1e-4)}"
                 elif flux >= 1e-5:
-                    level = "M" + str(int(flux / 1e-5))
+                    level = f"M{int(flux / 1e-5)}"
                 elif flux >= 1e-6:
-                    level = "C" + str(int(flux / 1e-6))
-                elif flux >= 1e-7:
-                    level = "B" + str(int(flux / 1e-7))
+                    level = f"C{int(flux / 1e-6)}"
                 else:
-                    level = "A"
-                
-                return {
-                    "flux": flux,
-                    "level": level,
-                    "time": entry.get("time_tag"),
-                    "status": "ok"
-                }
-    
-    return {"flux": None, "level": None, "time": None, "status": "error"}
+                    level = "B"
+                return {"flux": flux, "level": level, "status": "ok"}
+    return {"flux": None, "level": None, "status": "error"}
 
 
 def fetch_proton_flux() -> dict:
-    """Fetch proton flux data from GOES satellite (radiation storm indicator)."""
+    """Fetch proton flux from GOES."""
     data = safe_fetch(NOAA_URLS["proton_flux"])
-    
-    if data and isinstance(data, list) and len(data) > 1:
-        # Find latest >10 MeV proton flux
+    if data and isinstance(data, list):
         for entry in reversed(data):
             if isinstance(entry, dict) and entry.get("energy") == ">=10 MeV":
                 flux = float(entry.get("flux", 0))
-                
-                # NOAA S-scale for radiation storms
-                if flux >= 100000:
-                    level = "S5 - Extreme"
-                elif flux >= 10000:
-                    level = "S4 - Severe"
-                elif flux >= 1000:
-                    level = "S3 - Strong"
-                elif flux >= 100:
-                    level = "S2 - Moderate"
-                elif flux >= 10:
-                    level = "S1 - Minor"
-                else:
-                    level = "S0 - None"
-                
-                return {
-                    "flux_10mev": flux,
-                    "level": level,
-                    "time": entry.get("time_tag"),
-                    "status": "ok"
-                }
-    
-    return {"flux_10mev": None, "level": None, "time": None, "status": "error"}
+                if flux >= 100000: level = "S5 - Extreme"
+                elif flux >= 10000: level = "S4 - Severe"
+                elif flux >= 1000: level = "S3 - Strong"
+                elif flux >= 100: level = "S2 - Moderate"
+                elif flux >= 10: level = "S1 - Minor"
+                else: level = "S0 - None"
+                return {"flux": flux, "level": level, "status": "ok"}
+    return {"flux": None, "level": "S0 - None", "status": "error"}
 
 
-def fetch_recent_flares() -> dict:
-    """Fetch recent solar flare events."""
-    data = safe_fetch(NOAA_URLS["xray_flares"])
-    
-    if data and isinstance(data, list):
-        # Filter last 24 hours
-        recent_flares = []
-        cutoff = datetime.utcnow() - timedelta(hours=24)
-        
-        for flare in data[-20:]:  # Check last 20 entries
-            if isinstance(flare, dict):
-                recent_flares.append({
-                    "class": flare.get("classtype", "Unknown"),
-                    "start": flare.get("begintime"),
-                    "peak": flare.get("maxtime"),
-                    "end": flare.get("endtime"),
-                    "region": flare.get("region")
-                })
-        
-        return {
-            "count_24h": len(recent_flares),
-            "flares": recent_flares[-5:],  # Last 5 flares
-            "status": "ok"
-        }
-    
-    return {"count_24h": 0, "flares": [], "status": "error"}
+# --- 7. NEW: Air Quality Functions ---
 
-
-def fetch_aurora_forecast() -> dict:
-    """Fetch aurora forecast from OVATION model."""
-    data = safe_fetch(NOAA_URLS["aurora_forecast"])
-    
-    if data and isinstance(data, dict):
-        return {
-            "forecast_time": data.get("Forecast Time"),
-            "observation_time": data.get("Observation Time"),
-            "status": "ok",
-            # Note: Full aurora map data is large, we just confirm availability
-            "data_available": "coordinates" in data
-        }
-    
-    return {"forecast_time": None, "status": "error"}
-
-
-def fetch_nasa_donki(event_type: str, days: int = 7) -> dict:
-    """Fetch events from NASA DONKI database."""
-    if event_type not in NASA_DONKI_URLS:
-        return {"events": [], "status": "invalid_type"}
-    
-    today = datetime.now()
-    start_date = today - timedelta(days=days)
+def fetch_air_quality(lat: float, lon: float) -> dict:
+    """Fetch air quality data from Open-Meteo (Copernicus CAMS data)."""
     
     params = {
-        "startDate": start_date.strftime("%Y-%m-%d"),
-        "endDate": today.strftime("%Y-%m-%d"),
-        "api_key": NASA_API_KEY
+        "latitude": lat,
+        "longitude": lon,
+        "current": "european_aqi,us_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,dust,uv_index",
+        "hourly": "pm2_5,pm10,nitrogen_dioxide,ozone",
+        "forecast_days": 1,
+        "timezone": "auto"
     }
     
-    data = safe_fetch(NASA_DONKI_URLS[event_type], params=params, timeout=15)
+    data = safe_fetch(OPEN_METEO_URLS["air_quality"], params=params, timeout=15)
     
-    if data and isinstance(data, list):
-        return {
-            "event_type": event_type,
-            "count": len(data),
-            "events": data[-5:] if len(data) > 5 else data,  # Last 5 events
-            "status": "ok"
-        }
+    if not data:
+        return {"status": "error", "message": "Failed to fetch air quality data"}
     
-    return {"event_type": event_type, "events": [], "status": "error"}
+    current = data.get("current", {})
+    
+    # Interpret EU AQI
+    eu_aqi = current.get("european_aqi", 0)
+    if eu_aqi <= 20: eu_category = "Good"
+    elif eu_aqi <= 40: eu_category = "Fair"
+    elif eu_aqi <= 60: eu_category = "Moderate"
+    elif eu_aqi <= 80: eu_category = "Poor"
+    elif eu_aqi <= 100: eu_category = "Very Poor"
+    else: eu_category = "Extremely Poor"
+    
+    # Interpret US AQI
+    us_aqi = current.get("us_aqi", 0)
+    if us_aqi <= 50: us_category = "Good"
+    elif us_aqi <= 100: us_category = "Moderate"
+    elif us_aqi <= 150: us_category = "Unhealthy for Sensitive Groups"
+    elif us_aqi <= 200: us_category = "Unhealthy"
+    elif us_aqi <= 300: us_category = "Very Unhealthy"
+    else: us_category = "Hazardous"
+    
+    return {
+        "status": "ok",
+        "location": {"latitude": lat, "longitude": lon},
+        "european_aqi": {
+            "value": eu_aqi,
+            "category": eu_category
+        },
+        "us_aqi": {
+            "value": us_aqi,
+            "category": us_category
+        },
+        "pollutants": {
+            "pm2_5": {"value": current.get("pm2_5"), "unit": "μg/m³"},
+            "pm10": {"value": current.get("pm10"), "unit": "μg/m³"},
+            "no2": {"value": current.get("nitrogen_dioxide"), "unit": "μg/m³"},
+            "o3": {"value": current.get("ozone"), "unit": "μg/m³"},
+            "so2": {"value": current.get("sulphur_dioxide"), "unit": "μg/m³"},
+            "co": {"value": current.get("carbon_monoxide"), "unit": "μg/m³"},
+        },
+        "dust": current.get("dust"),
+        "time": current.get("time"),
+        "data_source": "Copernicus CAMS via Open-Meteo"
+    }
 
 
-def fetch_all_space_weather() -> dict:
-    """Fetch comprehensive space weather data from all sources."""
+def fetch_uv_index(lat: float, lon: float) -> dict:
+    """Fetch UV index data."""
+    
+    params = {
+        "latitude": lat,
+        "longitude": lon,
+        "current": "uv_index,uv_index_clear_sky",
+        "hourly": "uv_index",
+        "forecast_days": 1,
+        "timezone": "auto"
+    }
+    
+    data = safe_fetch(OPEN_METEO_URLS["uv"], params=params, timeout=10)
+    
+    if not data:
+        return {"status": "error"}
+    
+    current = data.get("current", {})
+    uv = current.get("uv_index", 0)
+    
+    # UV Index categories (WHO standard)
+    if uv <= 2:
+        category = "Low"
+        recommendation = "No protection required. Safe to be outside."
+    elif uv <= 5:
+        category = "Moderate"
+        recommendation = "Wear sunglasses. Use SPF 30+ sunscreen if outside for 30+ minutes."
+    elif uv <= 7:
+        category = "High"
+        recommendation = "Reduce sun exposure 10am-4pm. Wear hat, sunglasses, SPF 30+ sunscreen."
+    elif uv <= 10:
+        category = "Very High"
+        recommendation = "Minimize sun exposure. Seek shade. Protective clothing essential."
+    else:
+        category = "Extreme"
+        recommendation = "Avoid sun exposure. Stay indoors if possible. Maximum protection required."
+    
+    return {
+        "status": "ok",
+        "uv_index": round(uv, 1),
+        "uv_index_clear_sky": round(current.get("uv_index_clear_sky", 0), 1),
+        "category": category,
+        "recommendation": recommendation,
+        "time": current.get("time"),
+        "location": {"latitude": lat, "longitude": lon}
+    }
+
+
+def fetch_pollen(lat: float, lon: float) -> dict:
+    """Fetch pollen data (Europe only)."""
+    
+    params = {
+        "latitude": lat,
+        "longitude": lon,
+        "current": "alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen",
+        "timezone": "auto"
+    }
+    
+    data = safe_fetch(OPEN_METEO_URLS["air_quality"], params=params, timeout=10)
+    
+    if not data:
+        return {"status": "error", "message": "Pollen data not available (Europe only)"}
+    
+    current = data.get("current", {})
+    
+    def pollen_level(value):
+        if value is None: return {"value": None, "level": "N/A"}
+        if value < 10: return {"value": value, "level": "Low"}
+        if value < 50: return {"value": value, "level": "Moderate"}
+        if value < 100: return {"value": value, "level": "High"}
+        return {"value": value, "level": "Very High"}
+    
+    return {
+        "status": "ok",
+        "pollen": {
+            "grass": pollen_level(current.get("grass_pollen")),
+            "birch": pollen_level(current.get("birch_pollen")),
+            "alder": pollen_level(current.get("alder_pollen")),
+            "mugwort": pollen_level(current.get("mugwort_pollen")),
+            "olive": pollen_level(current.get("olive_pollen")),
+            "ragweed": pollen_level(current.get("ragweed_pollen")),
+        },
+        "unit": "grains/m³",
+        "note": "Pollen data available for Europe only",
+        "time": current.get("time")
+    }
+
+
+def fetch_weather(lat: float, lon: float) -> dict:
+    """Fetch current weather conditions."""
+    
+    params = {
+        "latitude": lat,
+        "longitude": lon,
+        "current": "temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m",
+        "timezone": "auto"
+    }
+    
+    data = safe_fetch(OPEN_METEO_URLS["weather"], params=params, timeout=10)
+    
+    if not data:
+        return {"status": "error"}
+    
+    current = data.get("current", {})
+    
+    # Weather code interpretation (WMO codes)
+    weather_codes = {
+        0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
+        45: "Foggy", 48: "Depositing rime fog",
+        51: "Light drizzle", 53: "Moderate drizzle", 55: "Dense drizzle",
+        61: "Slight rain", 63: "Moderate rain", 65: "Heavy rain",
+        71: "Slight snow", 73: "Moderate snow", 75: "Heavy snow",
+        80: "Slight rain showers", 81: "Moderate rain showers", 82: "Violent rain showers",
+        95: "Thunderstorm", 96: "Thunderstorm with slight hail", 99: "Thunderstorm with heavy hail"
+    }
+    
+    code = current.get("weather_code", 0)
+    
+    return {
+        "status": "ok",
+        "temperature": {
+            "actual": current.get("temperature_2m"),
+            "feels_like": current.get("apparent_temperature"),
+            "unit": "°C"
+        },
+        "humidity": current.get("relative_humidity_2m"),
+        "precipitation": current.get("precipitation"),
+        "weather": {
+            "code": code,
+            "description": weather_codes.get(code, "Unknown")
+        },
+        "cloud_cover": current.get("cloud_cover"),
+        "wind": {
+            "speed": current.get("wind_speed_10m"),
+            "direction": current.get("wind_direction_10m"),
+            "unit": "km/h"
+        },
+        "time": current.get("time"),
+        "location": {"latitude": lat, "longitude": lon}
+    }
+
+
+# --- 8. API Endpoints ---
+
+@app.get("/space-weather/full")
+def get_space_weather():
+    """Get comprehensive space weather data."""
     return {
         "timestamp": datetime.utcnow().isoformat() + "Z",
-        "geomagnetic": {
-            "kp_index": fetch_kp_index(),
-        },
+        "geomagnetic": {"kp_index": fetch_kp_index()},
         "solar_wind": fetch_solar_wind(),
         "radiation": {
             "xray": fetch_xray_flux(),
-            "protons": fetch_proton_flux(),
-        },
-        "solar_activity": {
-            "recent_flares": fetch_recent_flares(),
-        },
-        "forecasts": {
-            "aurora": fetch_aurora_forecast(),
-        },
-        "nasa_events": {
-            "geomagnetic_storms": fetch_nasa_donki("gst"),
-            "coronal_mass_ejections": fetch_nasa_donki("cme"),
-            "solar_flares": fetch_nasa_donki("flr"),
+            "protons": fetch_proton_flux()
         }
     }
 
 
-# --- 6. Individual Data Endpoints ---
-
-@app.get("/space-weather/kp")
-def get_kp_index():
-    """Get current Kp-index."""
-    return fetch_kp_index()
-
-
-@app.get("/space-weather/solar-wind")
-def get_solar_wind():
-    """Get current solar wind conditions from DSCOVR."""
-    return fetch_solar_wind()
+@app.get("/air-quality/")
+def get_air_quality(
+    lat: float = Query(DEFAULT_LAT, description="Latitude"),
+    lon: float = Query(DEFAULT_LON, description="Longitude")
+):
+    """Get air quality data for a location."""
+    return fetch_air_quality(lat, lon)
 
 
-@app.get("/space-weather/xray")
-def get_xray():
-    """Get current X-ray flux (flare indicator)."""
-    return fetch_xray_flux()
+@app.get("/uv/")
+def get_uv(
+    lat: float = Query(DEFAULT_LAT),
+    lon: float = Query(DEFAULT_LON)
+):
+    """Get UV index for a location."""
+    return fetch_uv_index(lat, lon)
 
 
-@app.get("/space-weather/protons")
-def get_protons():
-    """Get current proton flux (radiation storm indicator)."""
-    return fetch_proton_flux()
+@app.get("/pollen/")
+def get_pollen(
+    lat: float = Query(DEFAULT_LAT),
+    lon: float = Query(DEFAULT_LON)
+):
+    """Get pollen forecast (Europe only)."""
+    return fetch_pollen(lat, lon)
 
 
-@app.get("/space-weather/aurora")
-def get_aurora():
-    """Get aurora forecast."""
-    return fetch_aurora_forecast()
+@app.get("/weather/")
+def get_weather(
+    lat: float = Query(DEFAULT_LAT),
+    lon: float = Query(DEFAULT_LON)
+):
+    """Get current weather conditions."""
+    return fetch_weather(lat, lon)
 
 
-@app.get("/space-weather/flares")
-def get_flares():
-    """Get recent solar flares."""
-    return fetch_recent_flares()
+@app.get("/environment/")
+def get_environment(
+    lat: float = Query(DEFAULT_LAT),
+    lon: float = Query(DEFAULT_LON)
+):
+    """Get all environmental data for a location."""
+    return {
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "location": {"latitude": lat, "longitude": lon},
+        "air_quality": fetch_air_quality(lat, lon),
+        "uv_index": fetch_uv_index(lat, lon),
+        "pollen": fetch_pollen(lat, lon),
+        "weather": fetch_weather(lat, lon)
+    }
 
 
-@app.get("/space-weather/full")
-def get_full_space_weather():
-    """Get comprehensive space weather data from all sources."""
-    return fetch_all_space_weather()
+# --- 9. Combined Alert Endpoint ---
 
-
-@app.get("/nasa/{event_type}")
-def get_nasa_events(event_type: str, days: int = 7):
-    """Get NASA DONKI events (gst, cme, flr, sep, hss, ips)."""
-    return fetch_nasa_donki(event_type, days)
-
-
-# --- 7. AI Alert Generation ---
-
-def calculate_risk_level(data: dict) -> tuple[str, list[str]]:
-    """Calculate overall risk level based on all available data."""
+def calculate_combined_risk(space_data: dict, env_data: dict) -> tuple[str, list[str]]:
+    """Calculate risk from both space weather and environmental data."""
     risks = []
-    risk_score = 0
+    score = 0
     
-    # Kp-index assessment
-    kp = data.get("geomagnetic", {}).get("kp_index", {}).get("value")
-    if kp is not None:
-        if kp >= 7:
-            risk_score += 3
-            risks.append(f"Severe geomagnetic storm (Kp={kp})")
-        elif kp >= 5:
-            risk_score += 2
-            risks.append(f"Moderate geomagnetic storm (Kp={kp})")
-        elif kp >= 4:
-            risk_score += 1
-            risks.append(f"Minor geomagnetic activity (Kp={kp})")
+    # Space weather risks
+    kp = space_data.get("geomagnetic", {}).get("kp_index", {}).get("value")
+    if kp and kp >= 5:
+        score += 2
+        risks.append(f"Geomagnetic storm (Kp={kp})")
     
-    # Solar wind assessment
-    sw = data.get("solar_wind", {})
-    speed = sw.get("speed")
-    bz = sw.get("bz")
+    sw_speed = space_data.get("solar_wind", {}).get("speed")
+    if sw_speed and sw_speed > 600:
+        score += 1
+        risks.append(f"High solar wind ({sw_speed:.0f} km/s)")
     
-    if speed and speed > 700:
-        risk_score += 2
-        risks.append(f"High-speed solar wind ({speed:.0f} km/s)")
-    elif speed and speed > 500:
-        risk_score += 1
-        risks.append(f"Elevated solar wind ({speed:.0f} km/s)")
+    xray = space_data.get("radiation", {}).get("xray", {}).get("level", "")
+    if xray.startswith("M") or xray.startswith("X"):
+        score += 2
+        risks.append(f"Solar flare ({xray})")
     
-    if bz is not None and bz < -10:
-        risk_score += 2
-        risks.append(f"Strong southward IMF (Bz={bz:.1f} nT)")
-    elif bz is not None and bz < -5:
-        risk_score += 1
-        risks.append(f"Southward IMF (Bz={bz:.1f} nT)")
+    # Environmental risks
+    aqi = env_data.get("air_quality", {}).get("european_aqi", {}).get("value", 0)
+    if aqi and aqi > 80:
+        score += 2
+        risks.append(f"Poor air quality (AQI={aqi})")
+    elif aqi and aqi > 60:
+        score += 1
+        risks.append(f"Moderate air quality (AQI={aqi})")
     
-    # X-ray flux assessment
-    xray = data.get("radiation", {}).get("xray", {})
-    if xray.get("level", "").startswith("X"):
-        risk_score += 3
-        risks.append(f"X-class flare detected ({xray['level']})")
-    elif xray.get("level", "").startswith("M"):
-        risk_score += 2
-        risks.append(f"M-class flare detected ({xray['level']})")
+    uv = env_data.get("uv_index", {}).get("uv_index", 0)
+    if uv and uv >= 8:
+        score += 2
+        risks.append(f"Very high UV ({uv})")
+    elif uv and uv >= 6:
+        score += 1
+        risks.append(f"High UV ({uv})")
     
-    # Proton flux assessment
-    protons = data.get("radiation", {}).get("protons", {})
-    if protons.get("level", "").startswith("S") and protons["level"] != "S0 - None":
-        risk_score += 2
-        risks.append(f"Radiation storm: {protons['level']}")
-    
-    # Determine overall risk level
-    if risk_score >= 6:
-        level = "High"
-    elif risk_score >= 3:
-        level = "Medium"
-    elif risk_score >= 1:
-        level = "Low-Medium"
-    else:
-        level = "Low"
+    # Determine level
+    if score >= 5: level = "High"
+    elif score >= 3: level = "Medium"
+    elif score >= 1: level = "Low-Medium"
+    else: level = "Low"
     
     return level, risks
 
 
-def generate_profile_advice(profile: str, risk_level: str, risks: list[str], data: dict) -> str:
-    """Generate profile-specific advice based on current conditions."""
+def generate_combined_advice(profile: str, space_data: dict, env_data: dict, risk_level: str) -> str:
+    """Generate advice based on all data sources."""
+    
+    kp = space_data.get("geomagnetic", {}).get("kp_index", {}).get("value", 0) or 0
+    aqi = env_data.get("air_quality", {}).get("european_aqi", {}).get("value", 0) or 0
+    uv = env_data.get("uv_index", {}).get("uv_index", 0) or 0
+    temp = env_data.get("weather", {}).get("temperature", {}).get("actual", "N/A")
     
     profile_lower = profile.lower()
-    kp = data.get("geomagnetic", {}).get("kp_index", {}).get("value", 0) or 0
-    sw_speed = data.get("solar_wind", {}).get("speed", 0) or 0
     
-    base_conditions = f"Current conditions: Kp={kp:.1f}"
-    if sw_speed:
-        base_conditions += f", Solar wind {sw_speed:.0f} km/s"
+    # Build advice based on profile
+    if "outdoor" in profile_lower or "sport" in profile_lower or "exercise" in profile_lower:
+        parts = [f"Current: {temp}°C, UV {uv}, AQI {aqi}."]
+        if aqi > 60:
+            parts.append("Consider reducing outdoor exercise intensity due to air quality.")
+        if uv >= 6:
+            parts.append(f"UV is {env_data.get('uv_index', {}).get('category', 'high')} - sun protection essential.")
+        if kp >= 5:
+            parts.append("Geomagnetic storm may affect GPS accuracy for fitness tracking.")
+        return " ".join(parts)
     
-    # Profile-specific advice
-    if "pilot" in profile_lower or "aviation" in profile_lower or "flight" in profile_lower:
-        if risk_level == "High":
-            return f"{base_conditions}. CAUTION: HF radio blackouts likely on polar routes. Consider alternate routing. Monitor SIGMET advisories. GPS accuracy may be degraded."
-        elif risk_level == "Medium":
-            return f"{base_conditions}. HF communication may experience intermittent disruption on high-latitude routes. Standard procedures apply."
-        else:
-            return f"{base_conditions}. Normal operations. No significant space weather impacts expected."
+    elif "asthma" in profile_lower or "respiratory" in profile_lower or "allergy" in profile_lower:
+        pollen = env_data.get("pollen", {}).get("pollen", {})
+        parts = [f"Air Quality Index: {aqi} ({env_data.get('air_quality', {}).get('european_aqi', {}).get('category', 'N/A')})."]
+        pm25 = env_data.get("air_quality", {}).get("pollutants", {}).get("pm2_5", {}).get("value")
+        if pm25:
+            parts.append(f"PM2.5: {pm25} μg/m³.")
+        if aqi > 60:
+            parts.append("Consider staying indoors or wearing N95 mask outdoors.")
+        
+        # Check pollen levels
+        high_pollen = [k for k, v in pollen.items() if v.get("level") in ["High", "Very High"]]
+        if high_pollen:
+            parts.append(f"High pollen: {', '.join(high_pollen)}.")
+        return " ".join(parts)
     
-    elif "grid" in profile_lower or "power" in profile_lower or "utility" in profile_lower:
-        if risk_level == "High":
-            return f"{base_conditions}. WARNING: GIC levels elevated. Monitor transformer temperatures. Consider reducing reactive power reserves. Check protection systems."
-        elif risk_level == "Medium":
-            return f"{base_conditions}. Elevated GIC possible. Maintain situational awareness. Review contingency procedures."
-        else:
-            return f"{base_conditions}. Normal grid operations. Low GIC risk."
+    elif "pilot" in profile_lower or "aviation" in profile_lower:
+        parts = [f"Space weather: Kp={kp}."]
+        if kp >= 5:
+            parts.append("HF radio degradation possible on polar routes.")
+        xray = space_data.get("radiation", {}).get("xray", {}).get("level", "")
+        if xray.startswith("M") or xray.startswith("X"):
+            parts.append(f"Solar flare {xray} - radio blackouts possible.")
+        parts.append(f"Surface conditions: {temp}°C, visibility may vary.")
+        return " ".join(parts)
     
-    elif "satellite" in profile_lower or "spacecraft" in profile_lower:
-        proton_level = data.get("radiation", {}).get("protons", {}).get("level", "S0")
-        if risk_level == "High" or "S2" in proton_level or "S3" in proton_level:
-            return f"{base_conditions}. ALERT: Elevated radiation environment. Consider postponing EVA activities. Single-event upsets possible. Increased atmospheric drag on LEO assets."
-        elif risk_level == "Medium":
-            return f"{base_conditions}. Monitor radiation levels. Spacecraft charging possible during substorms."
-        else:
-            return f"{base_conditions}. Nominal space environment. Standard operations."
-    
-    elif "radio" in profile_lower or "ham" in profile_lower or "hf" in profile_lower:
-        xray_level = data.get("radiation", {}).get("xray", {}).get("level", "A")
-        if xray_level.startswith("X") or xray_level.startswith("M"):
-            return f"{base_conditions}. HF radio blackout in progress ({xray_level} flare). Daylight side affected. Try higher frequencies or wait for recovery."
-        elif kp >= 5:
-            return f"{base_conditions}. Excellent conditions for aurora-related propagation! 6m and 2m band openings possible at high latitudes."
-        else:
-            return f"{base_conditions}. Normal propagation conditions. HF bands stable."
-    
-    elif "aurora" in profile_lower or "photographer" in profile_lower or "northern lights" in profile_lower:
-        if kp >= 7:
-            return f"{base_conditions}. EXCELLENT aurora viewing! Visible at mid-latitudes (40-50°N). Peak activity expected. Get away from city lights!"
-        elif kp >= 5:
-            return f"{base_conditions}. Good aurora conditions! Visible at higher latitudes (50-60°N). Best viewing after midnight."
-        elif kp >= 4:
-            return f"{base_conditions}. Possible aurora at high latitudes (60°N+). Worth checking if you're in northern regions."
-        else:
-            return f"{base_conditions}. Low aurora probability. Kp needs to reach 4+ for visible activity at most locations."
-    
-    elif "gps" in profile_lower or "navigation" in profile_lower or "survey" in profile_lower:
-        if risk_level == "High":
-            return f"{base_conditions}. GPS accuracy degraded due to ionospheric disturbance. Expect position errors. Consider SBAS corrections or postpone precision work."
-        elif risk_level == "Medium":
-            return f"{base_conditions}. Minor ionospheric irregularities possible. Monitor GPS accuracy if precision is critical."
-        else:
-            return f"{base_conditions}. Normal GPS operations expected. Ionospheric conditions stable."
-    
-    else:  # General Public
-        if risk_level == "High":
-            return f"{base_conditions}. Significant space weather event in progress. Aurora may be visible at unusual latitudes. Minor technology disruptions possible. No health concerns for people on Earth."
-        elif risk_level == "Medium":
-            return f"{base_conditions}. Active space weather conditions. Aurora hunters in northern regions may have good viewing opportunities."
-        else:
-            return f"{base_conditions}. Quiet space weather conditions. No impacts expected for daily activities."
+    else:  # General
+        parts = []
+        parts.append(f"Weather: {temp}°C, {env_data.get('weather', {}).get('weather', {}).get('description', 'N/A')}.")
+        parts.append(f"Air Quality: {env_data.get('air_quality', {}).get('european_aqi', {}).get('category', 'N/A')}.")
+        parts.append(f"UV Index: {uv} ({env_data.get('uv_index', {}).get('category', 'N/A')}).")
+        if kp >= 4:
+            parts.append(f"Space weather active (Kp={kp}) - aurora possible at high latitudes!")
+        return " ".join(parts)
 
 
-def generate_ai_response(data: dict, profile: str) -> dict:
-    """Generate AI-enhanced response or fallback to rule-based."""
+@app.get("/combined/")
+def get_combined_alert(
+    lat: float = Query(DEFAULT_LAT),
+    lon: float = Query(DEFAULT_LON),
+    profile: str = Query("General Public")
+):
+    """Get combined space weather + environmental alert."""
     
-    # Calculate risk level from data
-    risk_level, risk_factors = calculate_risk_level(data)
+    # Fetch all data
+    space_data = {
+        "geomagnetic": {"kp_index": fetch_kp_index()},
+        "solar_wind": fetch_solar_wind(),
+        "radiation": {"xray": fetch_xray_flux(), "protons": fetch_proton_flux()}
+    }
     
-    # Generate profile-specific advice
-    advice = generate_profile_advice(profile, risk_level, risk_factors, data)
+    env_data = {
+        "air_quality": fetch_air_quality(lat, lon),
+        "uv_index": fetch_uv_index(lat, lon),
+        "pollen": fetch_pollen(lat, lon),
+        "weather": fetch_weather(lat, lon)
+    }
     
-    # Try AI enhancement if available
-    if HF_API_KEY:
-        try:
-            # Prepare concise data summary for AI
-            kp = data.get("geomagnetic", {}).get("kp_index", {}).get("value", "N/A")
-            sw = data.get("solar_wind", {})
-            xray = data.get("radiation", {}).get("xray", {}).get("level", "N/A")
-            
-            prompt = f"""<|system|>
-You are a space weather advisor. Enhance this alert with additional context.
-Keep response under 100 words. Be specific and actionable.
-</s>
-<|user|>
-Data: Kp={kp}, Solar Wind={sw.get('speed', 'N/A')} km/s, Bz={sw.get('bz', 'N/A')} nT, X-ray={xray}
-Risk: {risk_level}
-Profile: {profile}
-Base advice: {advice}
-
-Enhance this advice with any additional relevant details.
-</s>
-<|assistant|>
-"""
-            
-            response = requests.post(
-                HF_INFERENCE_URL,
-                json={"inputs": prompt, "parameters": {"max_new_tokens": 150, "temperature": 0.7}},
-                headers={"Authorization": f"Bearer {HF_API_KEY}"},
-                timeout=20
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                if isinstance(result, list) and len(result) > 0:
-                    enhanced = result[0].get('generated_text', '')
-                    if enhanced and len(enhanced) > 20:
-                        advice = enhanced[:500]  # Limit length
-                        
-        except Exception as e:
-            print(f"AI enhancement failed: {e}")
-            # Continue with rule-based advice
+    # Calculate risk
+    risk_level, risk_factors = calculate_combined_risk(space_data, env_data)
+    
+    # Generate advice
+    advice = generate_combined_advice(profile, space_data, env_data, risk_level)
     
     return {
-        "risk_level": risk_level,
-        "risk_factors": risk_factors,
+        "status": "success",
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "location": {"latitude": lat, "longitude": lon},
+        "profile": profile,
+        "risk": {
+            "level": risk_level,
+            "factors": risk_factors
+        },
         "advice": advice,
-        "source": "ai-enhanced" if HF_API_KEY else "rule-based"
+        "summary": {
+            "kp_index": space_data["geomagnetic"]["kp_index"].get("value"),
+            "solar_wind_speed": space_data["solar_wind"].get("speed"),
+            "xray_level": space_data["radiation"]["xray"].get("level"),
+            "air_quality_aqi": env_data["air_quality"].get("european_aqi", {}).get("value"),
+            "uv_index": env_data["uv_index"].get("uv_index"),
+            "temperature": env_data["weather"].get("temperature", {}).get("actual"),
+        },
+        "data": {
+            "space_weather": space_data,
+            "environment": env_data
+        }
     }
 
 
-# --- 8. Main Alert Endpoint ---
-
 @app.get("/alert/")
-def get_ai_alert(profile: str = "General Public"):
-    """Generate a comprehensive space weather alert tailored to the user profile."""
-    
-    try:
-        # Fetch all space weather data
-        space_weather_data = fetch_all_space_weather()
-        
-        # Generate AI response
-        ai_alert = generate_ai_response(space_weather_data, profile)
-        
-        # Prepare summary for response
-        summary = {
-            "kp_index": space_weather_data["geomagnetic"]["kp_index"].get("value"),
-            "solar_wind_speed": space_weather_data["solar_wind"].get("speed"),
-            "solar_wind_bz": space_weather_data["solar_wind"].get("bz"),
-            "xray_level": space_weather_data["radiation"]["xray"].get("level"),
-            "proton_level": space_weather_data["radiation"]["protons"].get("level"),
-            "recent_flares": space_weather_data["solar_activity"]["recent_flares"].get("count_24h", 0),
-        }
-        
-        return {
-            "status": "success",
-            "profile": profile,
-            "summary": summary,
-            "ai_alert": ai_alert,
-            "full_data_available": "/space-weather/full",
-            "timestamp": space_weather_data["timestamp"]
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+def get_alert(
+    profile: str = Query("General Public"),
+    lat: float = Query(DEFAULT_LAT),
+    lon: float = Query(DEFAULT_LON)
+):
+    """Legacy alert endpoint - now includes environmental data."""
+    return get_combined_alert(lat=lat, lon=lon, profile=profile)
 
 
-# --- 9. Debug Endpoint ---
+# --- 10. Debug Endpoint ---
 
 @app.get("/debug/")
 def debug_info():
-    """Debug endpoint to check all data sources."""
-    
-    results = {
+    """Debug endpoint."""
+    return {
         "api_keys": {
-            "nasa_api_key_set": bool(NASA_API_KEY and NASA_API_KEY != "DEMO_KEY"),
-            "hf_api_key_set": bool(HF_API_KEY),
+            "nasa": bool(NASA_API_KEY and NASA_API_KEY != "DEMO_KEY"),
+            "huggingface": bool(HF_API_KEY)
         },
-        "hf_model": HF_MODEL,
-        "noaa_endpoints": {},
-        "nasa_endpoints": {},
+        "default_location": {"lat": DEFAULT_LAT, "lon": DEFAULT_LON},
+        "test_space": fetch_kp_index(),
+        "test_air": fetch_air_quality(DEFAULT_LAT, DEFAULT_LON),
+        "test_uv": fetch_uv_index(DEFAULT_LAT, DEFAULT_LON)
     }
-    
-    # Test NOAA endpoints
-    for name, url in list(NOAA_URLS.items())[:5]:  # Test first 5
-        try:
-            r = requests.get(url, timeout=5)
-            results["noaa_endpoints"][name] = f"OK ({r.status_code})"
-        except Exception as e:
-            results["noaa_endpoints"][name] = f"Error: {str(e)[:30]}"
-    
-    # Test NASA endpoint
-    try:
-        r = requests.get(NASA_DONKI_URLS["gst"], params={"api_key": NASA_API_KEY}, timeout=5)
-        results["nasa_endpoints"]["donki_gst"] = f"OK ({r.status_code})"
-    except Exception as e:
-        results["nasa_endpoints"]["donki_gst"] = f"Error: {str(e)[:30]}"
-    
-    # Fetch sample data
-    results["sample_data"] = {
-        "kp_index": fetch_kp_index(),
-        "solar_wind": fetch_solar_wind(),
-    }
-    
-    return results
 
 
-# --- 10. Local Development ---
+# --- 11. Local Development ---
 
 if __name__ == "__main__":
     import uvicorn
