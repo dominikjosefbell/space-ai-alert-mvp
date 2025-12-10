@@ -265,6 +265,53 @@ def fetch_electron_flux() -> dict:
     return {"flux": None, "status": "error"}
 
 
+def fetch_dst_index() -> dict:
+    """Fetch Dst index from NOAA Geospace (measures geomagnetic storm intensity)"""
+    data = safe_fetch("https://services.swpc.noaa.gov/json/geospace/geospace_dst_1_hour.json", timeout=15)
+    
+    if not data or not isinstance(data, list):
+        return {"status": "error", "value": None}
+    
+    # Get the latest value
+    try:
+        latest = data[-1] if data else None
+        if latest and "dst" in latest:
+            dst_value = float(latest["dst"])
+            
+            # Classify storm intensity based on Dst
+            # Dst > -20: Quiet
+            # -20 to -50: Weak storm
+            # -50 to -100: Moderate storm
+            # -100 to -200: Strong storm
+            # -200 to -350: Severe storm
+            # < -350: Extreme storm
+            if dst_value > -20:
+                level = "Quiet"
+            elif dst_value > -50:
+                level = "Weak Storm"
+            elif dst_value > -100:
+                level = "Moderate Storm"
+            elif dst_value > -200:
+                level = "Strong Storm"
+            elif dst_value > -350:
+                level = "Severe Storm"
+            else:
+                level = "Extreme Storm"
+            
+            return {
+                "status": "ok",
+                "value": dst_value,
+                "level": level,
+                "unit": "nT",
+                "time": latest.get("time_tag"),
+                "source": "NOAA Geospace / Kyoto WDC"
+            }
+    except (KeyError, TypeError, ValueError) as e:
+        pass
+    
+    return {"status": "error", "value": None}
+
+
 def fetch_aurora_forecast(lat: float, lon: float) -> dict:
     """Fetch aurora probability from NOAA OVATION model"""
     data = safe_fetch("https://services.swpc.noaa.gov/json/ovation_aurora_latest.json", timeout=15)
@@ -962,6 +1009,7 @@ def build_ai_prompt(data: dict, profile: str, language: str, user_question: str 
 
 🌞 WELTRAUMWETTER (NOAA GOES/DSCOVR):
 - Kp-Index: {space.get('kp', {}).get('value', 'N/A')} ({space.get('kp', {}).get('level', 'N/A')})
+- Dst-Index: {space.get('dst', {}).get('value', 'N/A')} nT ({space.get('dst', {}).get('level', 'N/A')})
 - Sonnenwind Geschwindigkeit: {space.get('solar_wind', {}).get('speed', 'N/A')} km/s
 - Sonnenwind Dichte: {space.get('solar_wind', {}).get('density', 'N/A')} p/cm³
 - Sonnenwind Bz: {space.get('solar_wind', {}).get('bz', 'N/A')} nT
@@ -1319,6 +1367,7 @@ def get_all_data(lat: float = Query(DEFAULT_LAT), lon: float = Query(DEFAULT_LON
         "pollen": fetch_pollen(lat, lon),
         "space": {
             "kp": fetch_kp_index(),
+            "dst": fetch_dst_index(),
             "solar_wind": fetch_solar_wind(),
             "xray": fetch_xray_flux(),
             "protons": fetch_proton_flux(),
@@ -1361,6 +1410,7 @@ def get_alert(
         "pollen": fetch_pollen(lat, lon),
         "space": {
             "kp": fetch_kp_index(),
+            "dst": fetch_dst_index(),
             "solar_wind": fetch_solar_wind(),
             "xray": fetch_xray_flux(),
             "protons": fetch_proton_flux(),
@@ -1516,22 +1566,31 @@ def chat(
     if language not in TRANSLATIONS:
         language = "de"
     
-    # Fetch relevant data
+    # Fetch ALL relevant data - same as alert endpoint!
     data = {
         "weather": fetch_weather(lat, lon),
         "air_quality": fetch_air_quality(lat, lon),
         "pollen": fetch_pollen(lat, lon),
         "space": {
             "kp": fetch_kp_index(),
+            "dst": fetch_dst_index(),
+            "solar_wind": fetch_solar_wind(),
+            "xray": fetch_xray_flux(),
+            "protons": fetch_proton_flux(),
             "aurora": fetch_aurora_forecast(lat, lon),
         },
         "donki": {
             "cme": fetch_cme_events(),
             "flares": fetch_solar_flares(),
+            "storms": fetch_geomagnetic_storms(),
         },
         "earthquakes": fetch_earthquakes_nearby(lat, lon),
         "wildfires": fetch_wildfires_nearby(lat, lon),
+        "volcanoes": fetch_volcanoes_nearby(lat, lon),
+        "gdacs": fetch_gdacs_alerts(lat, lon),
         "flood": fetch_flood_risk(lat, lon),
+        "marine": fetch_marine(lat, lon),
+        "solar_radiation": fetch_solar_radiation(lat, lon),
     }
     
     # Try AI first
@@ -1563,6 +1622,7 @@ def get_space_weather(lat: float = Query(DEFAULT_LAT), lon: float = Query(DEFAUL
     """Get all space weather data"""
     return {
         "kp": fetch_kp_index(),
+        "dst": fetch_dst_index(),
         "solar_wind": fetch_solar_wind(),
         "xray": fetch_xray_flux(),
         "protons": fetch_proton_flux(),
