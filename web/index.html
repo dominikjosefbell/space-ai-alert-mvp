@@ -25,7 +25,7 @@
             color: var(--text);
             padding: 12px;
         }
-        .container { max-width: 1400px; margin: 0 auto; }
+        .container { max-width: 1600px; margin: 0 auto; }
         
         header {
             text-align: center;
@@ -41,7 +41,17 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .subtitle { color: var(--dim); margin-top: 4px; font-size: 0.8rem; }
+        .subtitle { color: var(--dim); margin-top: 4px; font-size: 0.75rem; }
+        .satellite-badges { margin-top: 8px; }
+        .satellite-badge {
+            display: inline-block;
+            background: rgba(0,212,255,0.15);
+            color: var(--accent);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.6rem;
+            margin: 2px;
+        }
         .ai-badge {
             display: inline-block;
             background: linear-gradient(90deg, #10b981, #059669);
@@ -53,17 +63,28 @@
             margin-top: 6px;
         }
         
+        .section-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .section-header {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+        
         .controls {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
             justify-content: center;
             align-items: flex-end;
-            padding: 12px;
-            background: var(--card);
-            border-radius: 12px;
-            margin-bottom: 16px;
-            border: 1px solid var(--border);
         }
         .control-group { display: flex; flex-direction: column; gap: 3px; }
         .control-group label { font-size: 0.65rem; color: var(--dim); text-transform: uppercase; }
@@ -89,35 +110,17 @@
         .btn-primary:hover { transform: translateY(-1px); }
         .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; }
         
-        /* AI Box */
         .ai-box {
             background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(5,150,105,0.08));
             border: 1px solid rgba(16,185,129,0.3);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            position: relative;
-        }
-        .ai-label {
-            position: absolute;
-            top: -10px;
-            left: 16px;
-            background: linear-gradient(90deg, #10b981, #059669);
-            color: white;
-            padding: 3px 10px;
             border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 700;
-        }
-        .ai-recommendation {
-            font-size: 1.1rem;
-            line-height: 1.6;
-            color: #fff;
-            margin-top: 4px;
-        }
-        .ai-meta {
+            padding: 16px;
             margin-top: 12px;
-            padding-top: 12px;
+        }
+        .ai-recommendation { font-size: 1rem; line-height: 1.6; color: #fff; }
+        .ai-meta {
+            margin-top: 10px;
+            padding-top: 10px;
             border-top: 1px solid rgba(255,255,255,0.08);
             display: flex;
             justify-content: space-between;
@@ -127,23 +130,13 @@
         }
         .ai-source { font-size: 0.7rem; color: var(--dim); }
         
-        .risk-badge {
-            padding: 4px 12px;
-            border-radius: 16px;
-            font-weight: 700;
-            font-size: 0.75rem;
-        }
+        .risk-badge { padding: 4px 12px; border-radius: 16px; font-weight: 700; font-size: 0.75rem; }
         .risk-low { background: rgba(0,255,136,0.15); color: var(--success); }
         .risk-medium { background: rgba(255,193,7,0.18); color: var(--warning); }
         .risk-high { background: rgba(255,87,51,0.18); color: var(--danger); }
         .risk-critical { background: rgba(255,0,0,0.25); color: #ff4444; }
         
-        .risk-factors {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-top: 8px;
-        }
+        .risk-factors { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
         .risk-factor {
             background: rgba(255,193,7,0.15);
             border: 1px solid rgba(255,193,7,0.3);
@@ -152,110 +145,47 @@
             font-size: 0.75rem;
             color: var(--warning);
         }
-        .risk-factor.severe {
-            background: rgba(255,87,51,0.15);
-            border-color: rgba(255,87,51,0.3);
-            color: var(--danger);
-        }
+        .risk-factor.severe { background: rgba(255,87,51,0.15); border-color: rgba(255,87,51,0.3); color: var(--danger); }
         
-        /* Chat Interface */
-        .chat-section {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-        .chat-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--accent);
-        }
         .chat-messages {
-            max-height: 250px;
+            max-height: 300px;
             overflow-y: auto;
             margin-bottom: 12px;
             padding: 8px;
             background: rgba(0,0,0,0.2);
             border-radius: 12px;
-            min-height: 60px;
+            min-height: 80px;
         }
-        .chat-message {
-            padding: 10px 14px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }
-        .chat-user {
-            background: rgba(0,212,255,0.15);
-            border: 1px solid rgba(0,212,255,0.3);
-            margin-left: 15%;
-            text-align: right;
-        }
-        .chat-ai {
-            background: rgba(16,185,129,0.15);
-            border: 1px solid rgba(16,185,129,0.3);
-            margin-right: 15%;
-        }
-        .chat-placeholder {
-            color: var(--dim);
-            font-style: italic;
-            text-align: center;
-            padding: 20px;
-        }
-        .chat-input-row {
-            display: flex;
-            gap: 8px;
-        }
-        .chat-input {
-            flex: 1;
-            padding: 12px 16px;
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            background: rgba(0,0,0,0.3);
-            color: #fff;
-            font-size: 0.9rem;
-        }
-        .chat-input:focus { outline: none; border-color: var(--accent); }
-        .chat-send {
-            padding: 12px 24px;
-            border-radius: 24px;
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            color: white;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .chat-send:disabled { opacity: 0.5; cursor: not-allowed; }
+        .chat-message { padding: 10px 14px; border-radius: 12px; margin-bottom: 8px; font-size: 0.85rem; line-height: 1.5; }
+        .chat-user { background: rgba(0,212,255,0.15); border: 1px solid rgba(0,212,255,0.3); margin-left: 20%; text-align: right; }
+        .chat-ai { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); margin-right: 10%; }
+        .chat-ai-initial { background: rgba(123,44,191,0.15); border: 1px solid rgba(123,44,191,0.3); }
+        .chat-input-row { display: flex; gap: 8px; }
+        .chat-input { flex: 1; padding: 10px 14px; border: 1px solid var(--border); border-radius: 20px; background: rgba(0,0,0,0.3); color: #fff; font-size: 0.85rem; }
+        .chat-send { padding: 10px 20px; border-radius: 20px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; border: none; font-weight: 600; cursor: pointer; }
+        .chat-header { display: flex; justify-content: space-between; align-items: center; }
+        .chat-clear { font-size: 0.7rem; color: var(--dim); cursor: pointer; }
+        .chat-clear:hover { color: var(--danger); }
         
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 12px;
-        }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
         .card {
             background: var(--card);
             border-radius: 12px;
-            padding: 14px;
+            padding: 12px;
             border: 1px solid var(--border);
         }
         .card-header {
             display: flex;
             align-items: center;
             gap: 6px;
-            margin-bottom: 10px;
-            padding-bottom: 8px;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
             border-bottom: 1px solid var(--border);
         }
-        .card-icon { font-size: 1.1rem; }
-        .card-title { font-size: 0.85rem; font-weight: 600; flex: 1; }
+        .card-icon { font-size: 1rem; }
+        .card-title { font-size: 0.8rem; font-weight: 600; flex: 1; }
         .source-badge {
-            font-size: 0.55rem;
+            font-size: 0.5rem;
             padding: 2px 5px;
             border-radius: 4px;
             background: rgba(0,212,255,0.1);
@@ -265,68 +195,28 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 6px 0;
+            padding: 4px 0;
             border-bottom: 1px solid rgba(255,255,255,0.02);
-            cursor: help;
-            transition: background 0.2s;
-        }
-        .metric:hover {
-            background: rgba(255,255,255,0.03);
-            border-radius: 4px;
         }
         .metric:last-child { border-bottom: none; }
-        .metric-label { color: var(--dim); font-size: 0.75rem; }
-        .metric-value { font-weight: 600; font-size: 0.8rem; }
-        .metric-info {
-            font-size: 0.65rem;
-            color: var(--dim);
-            margin-top: 2px;
-            display: none;
-        }
-        .metric:hover .metric-info {
-            display: block;
-        }
+        .metric-label { color: var(--dim); font-size: 0.7rem; }
+        .metric-value { font-weight: 600; font-size: 0.75rem; }
         
-        .badge {
-            padding: 2px 7px;
-            border-radius: 8px;
-            font-size: 0.65rem;
-            font-weight: 600;
-        }
+        .badge { padding: 2px 6px; border-radius: 6px; font-size: 0.6rem; font-weight: 600; }
         .badge-good { background: rgba(0,255,136,0.12); color: var(--success); }
         .badge-moderate { background: rgba(255,193,7,0.12); color: var(--warning); }
         .badge-bad { background: rgba(255,87,51,0.12); color: var(--danger); }
         
-        /* Tooltip */
-        .tooltip {
-            position: relative;
-        }
-        .tooltip .tooltip-text {
-            visibility: hidden;
-            background: #1a1a2e;
-            color: #fff;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            position: absolute;
-            z-index: 100;
-            bottom: 125%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 200px;
-            text-align: center;
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-        .tooltip:hover .tooltip-text {
-            visibility: visible;
+        .data-section-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin: 12px 0 8px 0;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--border);
         }
         
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: var(--dim);
-        }
+        .loading { text-align: center; padding: 20px; color: var(--dim); }
         .loading::after {
             content: '';
             display: inline-block;
@@ -337,23 +227,14 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-left: 8px;
-            vertical-align: middle;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        footer {
-            text-align: center;
-            padding: 16px;
-            color: #444;
-            font-size: 0.7rem;
-            margin-top: 16px;
-        }
-        footer a { color: var(--accent); text-decoration: none; }
+        footer { text-align: center; padding: 16px; color: #444; font-size: 0.65rem; margin-top: 16px; }
         
         @media (max-width: 768px) {
-            .controls { flex-direction: column; }
-            .chat-user { margin-left: 5%; }
-            .chat-ai { margin-right: 5%; }
+            .grid { grid-template-columns: 1fr 1fr; }
+            .controls { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
@@ -361,667 +242,294 @@
     <div class="container">
         <header>
             <h1>🌍 Environmental Monitor</h1>
-            <p class="subtitle" id="subtitle">Weltraumwetter • Erdbeben • Waldbrände • Luftqualität • Wetter</p>
-            <span class="ai-badge">✨ Powered by Swiss AI Apertus</span>
+            <p class="subtitle" id="subtitle">Complete Edition - 15+ Satellitendatenquellen</p>
+            <div class="satellite-badges">
+                <span class="satellite-badge">GOES-16/18</span>
+                <span class="satellite-badge">DSCOVR</span>
+                <span class="satellite-badge">VIIRS</span>
+                <span class="satellite-badge">Sentinel-5P</span>
+            </div>
+            <span class="ai-badge">✨ KI: Qwen 72B</span>
         </header>
         
-        <div class="controls">
-            <div class="control-group">
-                <label id="lbl-lat">Breitengrad</label>
-                <input type="number" id="lat" value="47.3769" step="0.0001">
-            </div>
-            <div class="control-group">
-                <label id="lbl-lon">Längengrad</label>
-                <input type="number" id="lon" value="8.5417" step="0.0001">
-            </div>
-            <div class="control-group">
-                <label id="lbl-profile">Profil</label>
-                <select id="profile">
-                    <option value="General Public">Allgemein</option>
-                    <option value="Outdoor/Sports">Outdoor/Sport</option>
-                    <option value="Asthma/Respiratory">Asthma/Atemwege</option>
-                    <option value="Allergy">Allergie</option>
-                    <option value="Pilot/Aviation">Pilot/Luftfahrt</option>
-                    <option value="Aurora Hunter">Aurora/Nordlichter</option>
-                    <option value="Marine/Sailing">Marine/Segeln</option>
-                </select>
-            </div>
-            <div class="control-group">
-                <label id="lbl-lang">Sprache</label>
-                <select id="language" onchange="updateLanguage()">
-                    <option value="de">🇩🇪 Deutsch</option>
-                    <option value="en">🇬🇧 English</option>
-                    <option value="fr">🇫🇷 Français</option>
-                    <option value="it">🇮🇹 Italiano</option>
-                </select>
-            </div>
-            <button class="btn-primary" onclick="fetchAlert()" id="btn-fetch">🔍 Empfehlung holen</button>
-            <button class="btn-secondary" onclick="useMyLocation()" id="btn-location">📍 Mein Standort</button>
-        </div>
-        
-        <div id="ai-container"></div>
-        
-        <!-- Chat Section -->
-        <div class="chat-section">
-            <div class="chat-title">💬 <span id="chat-title-text">Fragen Sie die KI</span></div>
-            <div class="chat-messages" id="chat-messages">
-                <div class="chat-placeholder" id="chat-placeholder">
-                    Stellen Sie eine Frage zu den Umweltbedingungen...
+        <div class="section-box">
+            <div class="section-header">📊 <span id="inputsTitle">Standort & Einstellungen</span></div>
+            <div class="controls">
+                <div class="control-group">
+                    <label id="latLabel">Breitengrad</label>
+                    <input type="number" id="lat" value="47.3769" step="0.0001">
                 </div>
+                <div class="control-group">
+                    <label id="lonLabel">Längengrad</label>
+                    <input type="number" id="lon" value="8.5417" step="0.0001">
+                </div>
+                <div class="control-group">
+                    <label id="profileLabel">Profil</label>
+                    <select id="profile">
+                        <option value="General Public">Allgemein</option>
+                        <option value="Outdoor/Sports">Outdoor/Sport</option>
+                        <option value="Asthma/Respiratory">Asthma/Atemwege</option>
+                        <option value="Allergy">Allergie</option>
+                        <option value="Pilot/Aviation">Pilot/Luftfahrt</option>
+                        <option value="Aurora Hunter">Aurora/Nordlichter</option>
+                        <option value="Marine/Sailing">Marine/Segeln</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label id="langLabel">Sprache</label>
+                    <select id="language" onchange="changeLanguage()">
+                        <option value="de">🇩🇪 Deutsch</option>
+                        <option value="en">🇬🇧 English</option>
+                        <option value="fr">🇫🇷 Français</option>
+                        <option value="it">🇮🇹 Italiano</option>
+                    </select>
+                </div>
+                <button class="btn-primary" onclick="fetchAlert()">🔍 <span id="btnGet">Empfehlung holen</span></button>
+                <button class="btn-secondary" onclick="useMyLocation()">📍 <span id="btnLoc">Mein Standort</span></button>
             </div>
+            <div id="ai-container"></div>
+        </div>
+        
+        <div class="section-box">
+            <div class="chat-header">
+                <div class="section-header" style="margin-bottom:0;border-bottom:none;padding-bottom:0;">💬 <span id="chatTitle">KI-Assistent</span></div>
+                <span class="chat-clear" onclick="clearChat()" id="clearChat">Verlauf löschen</span>
+            </div>
+            <div class="chat-messages" id="chat-messages"></div>
             <div class="chat-input-row">
-                <input type="text" class="chat-input" id="chat-input" 
-                       placeholder="z.B. Kann ich heute joggen gehen?"
-                       onkeypress="if(event.key==='Enter')sendChat()">
-                <button class="chat-send" onclick="sendChat()" id="chat-send">Senden</button>
+                <input type="text" class="chat-input" id="chat-input" placeholder="z.B. Kann ich heute joggen?" onkeypress="if(event.key==='Enter')sendChat()">
+                <button class="chat-send" onclick="sendChat()" id="btnSend">Senden</button>
             </div>
         </div>
         
-        <div class="grid" id="data-grid"></div>
+        <div class="section-box">
+            <div class="section-header">📡 <span id="dataTitle">Echtzeit-Daten</span></div>
+            <div id="data-grid"></div>
+        </div>
         
-        <footer>
-            <p>Daten: <a href="https://www.swpc.noaa.gov/">NOAA GOES/DSCOVR</a> • 
-               <a href="https://earthquake.usgs.gov/">USGS</a> • 
-               <a href="https://firms.modaps.eosdis.nasa.gov/">NASA FIRMS</a> • 
-               <a href="https://api.nasa.gov/">NASA DONKI</a> •
-               <a href="https://power.larc.nasa.gov/">NASA POWER</a> •
-               <a href="https://www.gdacs.org/">UN GDACS</a> • 
-               <a href="https://open-meteo.com/">Open-Meteo/Copernicus</a></p>
-            <p style="margin-top:4px">KI: <a href="https://www.swiss-ai.org/apertus">Swiss AI Apertus</a> • v7.3 Complete Edition</p>
-        </footer>
+        <footer>v7.3 Complete Edition • 15+ Satellitendatenquellen</footer>
     </div>
 
     <script>
-        const API_BASE = window.location.hostname === 'localhost' 
-            ? 'http://localhost:8000' 
-            : 'https://space-ai-alert-mvp.onrender.com';
-        
+        const API = window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://space-ai-alert-mvp.onrender.com';
         let currentData = null;
+        let chatHistory = JSON.parse(localStorage.getItem('chat_history') || '[]');
         
-        // === TRANSLATIONS ===
-        const i18n = {
+        const T = {
             de: {
-                subtitle: "Weltraumwetter • Erdbeben • Waldbrände • Luftqualität • Wetter",
-                latitude: "Breitengrad",
-                longitude: "Längengrad",
-                profile: "Profil",
-                language: "Sprache",
-                get_alert: "🔍 Empfehlung holen",
-                my_location: "📍 Mein Standort",
-                chat_title: "Fragen Sie die KI",
-                chat_placeholder: "Stellen Sie eine Frage zu den Umweltbedingungen...",
-                chat_input_placeholder: "z.B. Kann ich heute joggen gehen?",
-                send: "Senden",
-                loading: "Analysiere Daten...",
-                
-                // Profiles
-                "General Public": "Allgemein",
-                "Outdoor/Sports": "Outdoor/Sport",
-                "Asthma/Respiratory": "Asthma/Atemwege",
-                "Allergy": "Allergie",
-                "Pilot/Aviation": "Pilot/Luftfahrt",
-                "Aurora Hunter": "Aurora/Nordlichter",
-                "Marine/Sailing": "Marine/Segeln",
-                
-                // Weather conditions
-                "Clear": "Klar",
-                "Partly cloudy": "Teilweise bewölkt",
-                "Overcast": "Bewölkt",
-                "Fog": "Nebel",
-                "Drizzle": "Nieselregen",
-                "Rain": "Regen",
-                "Heavy rain": "Starkregen",
-                "Snow": "Schnee",
-                "Heavy snow": "Starker Schneefall",
-                "Showers": "Schauer",
-                "Thunderstorm": "Gewitter",
-                
-                // Categories
-                "excellent": "Ausgezeichnet",
-                "good": "Gut",
-                "moderate": "Mässig",
-                "poor": "Schlecht",
-                "very_poor": "Sehr schlecht",
-                "hazardous": "Gefährlich",
-                "low": "Niedrig",
-                "high": "Hoch",
-                "very_high": "Sehr hoch",
-                "none": "Keine",
-                "calm": "Ruhig",
-                "rough": "Rau",
-                "dangerous": "Gefährlich",
-                
-                // Risk levels
-                "Low": "Niedrig",
-                "Medium": "Mittel",
-                "High": "Hoch",
-                "Critical": "Kritisch",
-                
-                // Cards
-                weather: "Wetter",
-                temperature: "Temperatur",
-                conditions: "Bedingungen",
-                humidity: "Feuchtigkeit",
-                wind: "Wind",
-                air_quality: "Luftqualität",
-                category: "Kategorie",
-                space_weather: "Weltraumwetter",
-                solar_wind: "Sonnenwind",
-                hazards: "Gefahren",
-                earthquakes: "Erdbeben",
-                wildfires: "Waldbrände",
-                volcanoes: "Vulkane",
-                disasters: "Katastrophen",
-                max_magnitude: "Max. Stärke",
-                flood: "Hochwasser",
-                sea: "See/Marine",
-                pollen: "Pollen",
-                grass: "Gräser",
-                birch: "Birke",
-                alder: "Erle",
-                ragweed: "Ambrosia",
-                aurora: "Aurora",
-                probability: "Wahrscheinlichkeit",
-                visibility: "Sichtbarkeit",
-                required_kp: "Kp benötigt",
-                current_kp: "Aktueller Kp",
-                
-                // Parameter explanations by profile
-                explanations: {
-                    "General Public": {
-                        kp: "Kp-Index zeigt geomagnetische Aktivität. Unter 4 = normal.",
-                        aqi: "Luftqualitätsindex. Unter 50 = gut für alle.",
-                        uv: "UV-Index. Unter 3 = sicher, 3-5 = Sonnenschutz empfohlen.",
-                        temp: "Gefühlte Temperatur für Kleidungswahl.",
-                    },
-                    "Outdoor/Sports": {
-                        kp: "Bei Kp ≥5 können GPS-Geräte ungenau werden.",
-                        aqi: "Unter 50: perfekt für Sport. Über 100: Training reduzieren.",
-                        uv: "Über 6: Sonnencreme alle 2h, Mittagssonne meiden.",
-                        temp: "Ideal für Sport: 10-20°C. Über 25°C: mehr trinken!",
-                    },
-                    "Asthma/Respiratory": {
-                        kp: "Keine direkte Auswirkung auf Atemwege.",
-                        aqi: "WICHTIG! Über 50: Aktivitäten einschränken. Über 100: drinnen bleiben.",
-                        uv: "Kein direkter Einfluss auf Atemwege.",
-                        pollen: "Hohe Werte können Asthma verschlimmern.",
-                    },
-                    "Pilot/Aviation": {
-                        kp: "WICHTIG! Kp ≥5: HF-Funk gestört, GPS ungenau. Kp ≥7: Polarrouten meiden.",
-                        xray: "M/X-Klasse Flares: Kurzwellenfunk-Blackouts möglich.",
-                        solar_wind: "Über 600 km/s: erhöhte Strahlungsbelastung in Reiseflughöhe.",
-                    },
-                    "Aurora Hunter": {
-                        kp: "WICHTIG! Kp ≥4: Aurora möglich in Skandinavien. Kp ≥6: sichtbar in Mitteleuropa!",
-                        aurora: "Wahrscheinlichkeit für Ihren Standort. Über 30% = gute Chancen!",
-                        clouds: "Wolken blockieren die Sicht - klarer Himmel nötig.",
-                    },
-                }
+                subtitle: "Complete Edition - 15+ Satellitendatenquellen",
+                inputsTitle: "Standort & Einstellungen", latLabel: "Breitengrad", lonLabel: "Längengrad",
+                profileLabel: "Profil", langLabel: "Sprache", btnGet: "Empfehlung holen", btnLoc: "Mein Standort",
+                chatTitle: "KI-Assistent", clearChat: "Verlauf löschen", btnSend: "Senden",
+                dataTitle: "Echtzeit-Daten", loading: "Analysiere Daten...",
+                Low: "Niedrig", Medium: "Mittel", High: "Hoch", Critical: "Kritisch", risk: "Risiko",
+                Clear: "Klar", "Partly cloudy": "Teilweise bewölkt", Overcast: "Bewölkt", Cloudy: "Bewölkt",
+                Fog: "Nebel", Rain: "Regen", Snow: "Schnee", Thunderstorm: "Gewitter",
+                good: "Gut", moderate: "Mässig", poor: "Schlecht", hazardous: "Gefährlich",
+                low: "Niedrig", high: "Hoch", none: "Keine",
+                calm: "Ruhig", rough: "Rau", dangerous: "Gefährlich",
+                Quiet: "Ruhig", "Weak Storm": "Schwacher Sturm", "Moderate Storm": "Moderater Sturm",
+                "Strong Storm": "Starker Sturm", "Severe Storm": "Schwerer Sturm",
+                Yes: "Ja", No: "Nein", "None detected": "Keine", "No fires": "Keine",
+                wildfires: "Waldbrände", Earthquake: "Erdbeben", "Earth-directed CME": "CME Richtung Erde",
+                "Forest fires in": "Waldbrände in"
             },
             en: {
-                subtitle: "Space Weather • Earthquakes • Wildfires • Air Quality • Weather",
-                latitude: "Latitude",
-                longitude: "Longitude",
-                profile: "Profile",
-                language: "Language",
-                get_alert: "🔍 Get Recommendation",
-                my_location: "📍 My Location",
-                chat_title: "Ask the AI",
-                chat_placeholder: "Ask a question about environmental conditions...",
-                chat_input_placeholder: "e.g. Can I go jogging today?",
-                send: "Send",
-                loading: "Analyzing data...",
-                
-                "General Public": "General",
-                "Outdoor/Sports": "Outdoor/Sports",
-                "Asthma/Respiratory": "Asthma/Respiratory",
-                "Allergy": "Allergy",
-                "Pilot/Aviation": "Pilot/Aviation",
-                "Aurora Hunter": "Aurora Hunter",
-                "Marine/Sailing": "Marine/Sailing",
-                
-                "Clear": "Clear",
-                "Partly cloudy": "Partly cloudy",
-                "Overcast": "Overcast",
-                "Fog": "Fog",
-                "Rain": "Rain",
-                "Snow": "Snow",
-                "Thunderstorm": "Thunderstorm",
-                
-                "excellent": "Excellent",
-                "good": "Good",
-                "moderate": "Moderate",
-                "poor": "Poor",
-                "low": "Low",
-                "high": "High",
-                "none": "None",
-                "calm": "Calm",
-                
-                "Low": "Low",
-                "Medium": "Medium", 
-                "High": "High",
-                "Critical": "Critical",
-                
-                weather: "Weather",
-                temperature: "Temperature",
-                conditions: "Conditions",
-                humidity: "Humidity",
-                wind: "Wind",
-                air_quality: "Air Quality",
-                space_weather: "Space Weather",
-                hazards: "Hazards",
-                earthquakes: "Earthquakes",
-                wildfires: "Wildfires",
-                pollen: "Pollen",
-                aurora: "Aurora",
-                
-                explanations: {
-                    "General Public": {
-                        kp: "Kp index shows geomagnetic activity. Below 4 = normal.",
-                        aqi: "Air Quality Index. Below 50 = good for everyone.",
-                        uv: "UV Index. Below 3 = safe, 3-5 = sunscreen recommended.",
-                    },
-                    "Outdoor/Sports": {
-                        kp: "Kp ≥5 may affect GPS accuracy.",
-                        aqi: "Below 50: perfect for sports. Above 100: reduce training.",
-                        uv: "Above 6: apply sunscreen every 2h, avoid midday sun.",
-                    },
-                }
+                subtitle: "Complete Edition - 15+ Satellite Data Sources",
+                inputsTitle: "Location & Settings", latLabel: "Latitude", lonLabel: "Longitude",
+                profileLabel: "Profile", langLabel: "Language", btnGet: "Get Recommendation", btnLoc: "My Location",
+                chatTitle: "AI Assistant", clearChat: "Clear history", btnSend: "Send",
+                dataTitle: "Real-time Data", loading: "Analyzing data...", risk: "Risk"
             },
             fr: {
-                subtitle: "Météo spatiale • Séismes • Incendies • Qualité de l'air • Météo",
-                get_alert: "🔍 Obtenir recommandation",
-                my_location: "📍 Ma position",
-                chat_title: "Posez une question à l'IA",
-                send: "Envoyer",
-                loading: "Analyse en cours...",
-                weather: "Météo",
-                temperature: "Température",
-                "Clear": "Dégagé",
-                "Partly cloudy": "Partiellement nuageux",
-                "Overcast": "Couvert",
-                "Low": "Faible",
-                "Medium": "Moyen",
-                "High": "Élevé",
+                subtitle: "Édition Complète - 15+ Sources Satellitaires",
+                inputsTitle: "Localisation", latLabel: "Latitude", lonLabel: "Longitude",
+                profileLabel: "Profil", langLabel: "Langue", btnGet: "Obtenir", btnLoc: "Ma Position",
+                chatTitle: "Assistant IA", clearChat: "Effacer", btnSend: "Envoyer",
+                dataTitle: "Données Temps Réel", loading: "Analyse...",
+                Low: "Faible", Medium: "Moyen", High: "Élevé", Critical: "Critique", risk: "Risque",
+                Yes: "Oui", No: "Non"
             },
             it: {
-                subtitle: "Meteo spaziale • Terremoti • Incendi • Qualità dell'aria • Meteo",
-                get_alert: "🔍 Ottieni raccomandazione",
-                my_location: "📍 La mia posizione",
-                chat_title: "Chiedi all'IA",
-                send: "Invia",
-                loading: "Analisi in corso...",
-                weather: "Meteo",
-                "Clear": "Sereno",
-                "Partly cloudy": "Parzialmente nuvoloso",
-                "Low": "Basso",
-                "Medium": "Medio",
-                "High": "Alto",
+                subtitle: "Edizione Completa - 15+ Fonti Satellitari",
+                inputsTitle: "Posizione", latLabel: "Latitudine", lonLabel: "Longitudine",
+                profileLabel: "Profilo", langLabel: "Lingua", btnGet: "Ottieni", btnLoc: "Mia Posizione",
+                chatTitle: "Assistente IA", clearChat: "Cancella", btnSend: "Invia",
+                dataTitle: "Dati Tempo Reale", loading: "Analisi...",
+                Low: "Basso", Medium: "Medio", High: "Alto", Critical: "Critico", risk: "Rischio",
+                Yes: "Sì", No: "No"
             }
         };
         
-        function getLang() {
-            return document.getElementById('language').value;
-        }
+        const t = k => T[document.getElementById('language').value]?.[k] || T.de[k] || k;
         
-        function t(key) {
-            const lang = getLang();
-            return i18n[lang]?.[key] || i18n.en?.[key] || i18n.de?.[key] || key;
-        }
+        const translateFactor = f => {
+            const lang = document.getElementById('language').value;
+            const p = { de: { wildfires: 'Waldbrände', Earthquake: 'Erdbeben', 'Earth-directed CME': 'CME Richtung Erde', 'Forest fires in': 'Waldbrände in' },
+                        fr: { wildfires: 'incendies', Earthquake: 'Séisme', 'Forest fires in': 'Feux en' },
+                        it: { wildfires: 'incendi', Earthquake: 'Terremoto', 'Forest fires in': 'Incendi in' } };
+            let r = f;
+            for (const [e, tr] of Object.entries(p[lang] || p.de || {})) r = r.replace(new RegExp(e, 'gi'), tr);
+            return r;
+        };
         
-        function getExplanation(param, profile) {
-            const lang = getLang();
-            const explanations = i18n[lang]?.explanations || i18n.de.explanations;
-            return explanations[profile]?.[param] || explanations["General Public"]?.[param] || "";
-        }
-        
-        function updateLanguage() {
-            const lang = getLang();
-            document.getElementById('subtitle').textContent = t('subtitle');
-            document.getElementById('lbl-lat').textContent = t('latitude');
-            document.getElementById('lbl-lon').textContent = t('longitude');
-            document.getElementById('lbl-profile').textContent = t('profile');
-            document.getElementById('lbl-lang').textContent = t('language');
-            document.getElementById('btn-fetch').textContent = t('get_alert');
-            document.getElementById('btn-location').textContent = t('my_location');
-            document.getElementById('chat-title-text').textContent = t('chat_title');
-            document.getElementById('chat-placeholder').textContent = t('chat_placeholder');
-            document.getElementById('chat-input').placeholder = t('chat_input_placeholder') || t('chat_placeholder');
-            document.getElementById('chat-send').textContent = t('send');
-            
-            // Update profile options
-            const profileSelect = document.getElementById('profile');
-            Array.from(profileSelect.options).forEach(opt => {
-                opt.textContent = t(opt.value);
+        const applyT = () => {
+            ['subtitle','inputsTitle','latLabel','lonLabel','profileLabel','langLabel','btnGet','btnLoc','chatTitle','clearChat','btnSend','dataTitle'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = t(id);
             });
-            
-            if (currentData) {
-                renderAIBox(currentData);
-                renderDataCards(currentData);
-            }
-        }
+        };
+        
+        const changeLanguage = () => { applyT(); localStorage.setItem('lang', document.getElementById('language').value); if (currentData) { renderAI(currentData); renderData(currentData); } };
+        
+        const badge = (v, th) => v == null ? '' : v <= th[0] ? 'badge-good' : v <= th[1] ? 'badge-moderate' : 'badge-bad';
+        const fmt = (v, u = '', d = 1) => v == null || v === 'N/A' ? 'N/A' : (typeof v === 'number' ? v.toFixed(d) + u : v + u);
+        
+        const renderChat = () => {
+            const m = document.getElementById('chat-messages');
+            m.innerHTML = chatHistory.map(c => c.role === 'user' ? `<div class="chat-message chat-user">👤 ${c.text}</div>` : `<div class="chat-message chat-ai${c.initial ? ' chat-ai-initial' : ''}">🤖 ${c.text}</div>`).join('');
+            m.scrollTop = m.scrollHeight;
+        };
+        
+        const saveChat = () => { if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20); localStorage.setItem('chat_history', JSON.stringify(chatHistory)); };
+        const clearChat = () => { chatHistory = []; localStorage.removeItem('chat_history'); document.getElementById('chat-messages').innerHTML = ''; fetchInitial(); };
+        
+        const getInputs = () => ({ lat: document.getElementById('lat').value, lon: document.getElementById('lon').value, profile: document.getElementById('profile').value, lang: document.getElementById('language').value });
+        
+        const fetchInitial = async () => {
+            const { lat, lon, profile, lang } = getInputs();
+            const q = { de: 'Gib mir eine kurze Begrüssung und fasse die Umweltbedingungen zusammen.', en: 'Give me a brief greeting and summarize conditions.', fr: 'Donne-moi un résumé des conditions.', it: 'Dammi un riassunto delle condizioni.' }[lang] || 'Zusammenfassung bitte.';
+            const ctx = chatHistory.length > 0 ? '\n\nBisherige Konversation:\n' + chatHistory.slice(-4).map(c => `${c.role === 'user' ? 'Nutzer' : 'KI'}: ${c.text}`).join('\n') : '';
+            try {
+                const res = await fetch(`${API}/chat/?lat=${lat}&lon=${lon}&profile=${encodeURIComponent(profile)}&language=${lang}&question=${encodeURIComponent(q + ctx)}`, { method: 'POST' });
+                const data = await res.json();
+                chatHistory.push({ role: 'ai', text: data.answer, initial: true });
+                saveChat(); renderChat();
+            } catch (e) { console.error(e); }
+        };
         
         async function fetchAlert() {
-            const lat = document.getElementById('lat').value;
-            const lon = document.getElementById('lon').value;
-            const profile = document.getElementById('profile').value;
-            const language = getLang();
-            
+            const { lat, lon, profile, lang } = getInputs();
             document.getElementById('ai-container').innerHTML = `<div class="loading">${t('loading')}</div>`;
             document.getElementById('data-grid').innerHTML = '';
-            
             try {
-                const res = await fetch(`${API_BASE}/alert/?lat=${lat}&lon=${lon}&profile=${encodeURIComponent(profile)}&language=${language}`);
+                const res = await fetch(`${API}/alert/?lat=${lat}&lon=${lon}&profile=${encodeURIComponent(profile)}&language=${lang}`);
                 const data = await res.json();
-                
                 if (data.status === 'success') {
                     currentData = data;
-                    renderAIBox(data);
-                    renderDataCards(data);
-                } else {
-                    throw new Error(data.detail || 'API Error');
+                    renderAI(data);
+                    renderData(data);
+                    if (chatHistory.length === 0) fetchInitial();
                 }
-            } catch (e) {
-                document.getElementById('ai-container').innerHTML = `<div class="error">❌ ${e.message}</div>`;
-            }
+            } catch (e) { document.getElementById('ai-container').innerHTML = `<div class="loading">❌ ${e.message}</div>`; }
         }
         
         async function sendChat() {
             const input = document.getElementById('chat-input');
-            const question = input.value.trim();
-            if (!question) return;
-            
-            const lat = document.getElementById('lat').value;
-            const lon = document.getElementById('lon').value;
-            const profile = document.getElementById('profile').value;
-            const language = getLang();
-            
-            const messagesDiv = document.getElementById('chat-messages');
-            
-            // Remove placeholder
-            const placeholder = document.getElementById('chat-placeholder');
-            if (placeholder) placeholder.remove();
-            
-            // Add user message
-            messagesDiv.innerHTML += `<div class="chat-message chat-user">👤 ${question}</div>`;
-            input.value = '';
-            
-            // Show typing
-            const typingId = 'typing-' + Date.now();
-            messagesDiv.innerHTML += `<div class="chat-message chat-ai" id="${typingId}">💭 ...</div>`;
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            
-            document.getElementById('chat-send').disabled = true;
-            
+            const q = input.value.trim();
+            if (!q) return;
+            const { lat, lon, profile, lang } = getInputs();
+            chatHistory.push({ role: 'user', text: q });
+            saveChat(); renderChat(); input.value = '';
+            const ctx = '\n\nKonversation:\n' + chatHistory.slice(-6).map(c => `${c.role === 'user' ? 'Nutzer' : 'KI'}: ${c.text}`).join('\n');
+            const m = document.getElementById('chat-messages');
+            const tid = 'typing' + Date.now();
+            m.innerHTML += `<div class="chat-message chat-ai" id="${tid}">💭 ...</div>`;
+            m.scrollTop = m.scrollHeight;
             try {
-                const res = await fetch(`${API_BASE}/chat/?lat=${lat}&lon=${lon}&profile=${encodeURIComponent(profile)}&language=${language}&question=${encodeURIComponent(question)}`, {
-                    method: 'POST'
-                });
+                const res = await fetch(`${API}/chat/?lat=${lat}&lon=${lon}&profile=${encodeURIComponent(profile)}&language=${lang}&question=${encodeURIComponent(q + ctx)}`, { method: 'POST' });
                 const data = await res.json();
-                
-                document.getElementById(typingId)?.remove();
-                
-                if (data.status === 'success') {
-                    messagesDiv.innerHTML += `<div class="chat-message chat-ai">🤖 ${data.answer}</div>`;
-                } else {
-                    messagesDiv.innerHTML += `<div class="chat-message chat-ai">❌ Error</div>`;
-                }
-            } catch (e) {
-                document.getElementById(typingId)?.remove();
-                messagesDiv.innerHTML += `<div class="chat-message chat-ai">❌ ${e.message}</div>`;
-            }
-            
-            document.getElementById('chat-send').disabled = false;
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                document.getElementById(tid)?.remove();
+                chatHistory.push({ role: 'ai', text: data.answer });
+                saveChat(); renderChat();
+            } catch (e) { document.getElementById(tid)?.remove(); chatHistory.push({ role: 'ai', text: '❌ ' + e.message }); saveChat(); renderChat(); }
         }
         
-        function getRiskClass(level) {
-            const map = {
-                'Low': 'risk-low',
-                'Medium': 'risk-medium',
-                'High': 'risk-high',
-                'Critical': 'risk-critical'
-            };
-            return map[level] || 'risk-low';
+        function renderAI(data) {
+            const rLvl = t(data.risk.level), rWord = t('risk');
+            const rCls = { Low: 'risk-low', Medium: 'risk-medium', High: 'risk-high', Critical: 'risk-critical' }[data.risk.level] || 'risk-low';
+            const factors = (data.risk.factors || []).map(f => translateFactor(f));
+            const fHtml = factors.length ? `<div class="risk-factors">${factors.map(f => `<span class="risk-factor${f.includes('🔥') || f.includes('CME') ? ' severe' : ''}">${f}</span>`).join('')}</div>` : '';
+            document.getElementById('ai-container').innerHTML = `<div class="ai-box"><div class="ai-recommendation">${data.recommendation}</div><div class="ai-meta"><span class="ai-source">📍 ${data.location.lat.toFixed(4)}, ${data.location.lon.toFixed(4)} • ${data.ai_source}</span><span class="risk-badge ${rCls}">${rLvl} ${rWord}</span></div>${fHtml}</div>`;
         }
         
-        function renderAIBox(data) {
-            const riskLevel = t(data.risk.level);
-            
-            // Build detailed risk factors with explanations
-            let factorsHtml = '';
-            if (data.risk.factors?.length) {
-                factorsHtml = `<div class="risk-factors">`;
-                data.risk.factors.forEach(f => {
-                    const isSevere = f.includes('🔥') || f.includes('Earthquake') || f.includes('Critical');
-                    factorsHtml += `<span class="risk-factor ${isSevere ? 'severe' : ''}">${f}</span>`;
-                });
-                factorsHtml += `</div>`;
-            }
-            
-            // Show disaster details
-            let disasterDetails = '';
-            if (data.data?.gdacs?.alerts?.length) {
-                disasterDetails = '<div style="margin-top: 8px; font-size: 0.8rem; color: var(--warning);">';
-                data.data.gdacs.alerts.forEach(alert => {
-                    disasterDetails += `⚠️ ${alert.type || 'Alert'}: ${alert.name} (${alert.country || 'Global'}) `;
-                });
-                disasterDetails += '</div>';
-            }
-            
-            const aiSourceText = data.ai_source === 'apertus' ? 'Swiss AI Apertus' : 
-                                 data.ai_source === 'rule-based' ? (getLang() === 'de' ? 'Regel-basiert' : 'Rule-based') : 
-                                 data.ai_source;
-            
-            document.getElementById('ai-container').innerHTML = `
-                <div class="ai-box">
-                    <span class="ai-label">🤖 AI</span>
-                    <div class="ai-recommendation">${data.recommendation}</div>
-                    ${disasterDetails}
-                    <div class="ai-meta">
-                        <span class="ai-source">📍 ${data.location.lat.toFixed(4)}, ${data.location.lon.toFixed(4)} • ${t(data.profile)} • ${aiSourceText}</span>
-                        <span class="risk-badge ${getRiskClass(data.risk.level)}">${riskLevel} Risk</span>
-                    </div>
-                    ${factorsHtml}
-                </div>
-            `;
-        }
-        
-        function renderDataCards(data) {
-            const s = data.summary;
+        function renderData(data) {
             const d = data.data;
-            const profile = document.getElementById('profile').value;
-            
-            // Translate values
-            const translateValue = (val) => {
-                if (!val) return 'N/A';
-                return t(val) || val;
-            };
-            
-            const getBadgeClass = (value, thresholds) => {
-                if (value <= thresholds[0]) return 'badge-good';
-                if (value <= thresholds[1]) return 'badge-moderate';
-                return 'badge-bad';
-            };
-            
-            // Pollen level translation
-            const pollenLevel = (level) => translateValue(level);
-            
             document.getElementById('data-grid').innerHTML = `
-                <!-- Weather -->
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-icon">🌤️</span>
-                        <span class="card-title">${t('weather')}</span>
-                        <span class="source-badge">Open-Meteo</span>
-                    </div>
-                    <div class="metric tooltip">
-                        <span class="metric-label">${t('temperature')}</span>
-                        <span class="metric-value">${s.temperature?.toFixed(1) || 'N/A'}°C</span>
-                        <span class="tooltip-text">${getExplanation('temp', profile)}</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">${t('conditions')}</span>
-                        <span class="metric-value">${translateValue(s.weather)}</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">${t('humidity')}</span>
-                        <span class="metric-value">${d.weather?.humidity || 'N/A'}%</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">${t('wind')}</span>
-                        <span class="metric-value">${d.weather?.wind_speed?.toFixed(0) || 'N/A'} km/h</span>
-                    </div>
+                <div class="data-section-title">🌤️ Wetter & Luft</div>
+                <div class="grid">
+                    <div class="card"><div class="card-header"><span class="card-icon">🌤️</span><span class="card-title">Wetter</span><span class="source-badge">ECMWF</span></div>
+                        <div class="metric"><span class="metric-label">Temperatur</span><span class="metric-value">${fmt(d.weather?.temperature, '°C')}</span></div>
+                        <div class="metric"><span class="metric-label">Gefühlt</span><span class="metric-value">${fmt(d.weather?.feels_like, '°C')}</span></div>
+                        <div class="metric"><span class="metric-label">Bedingungen</span><span class="metric-value">${t(d.weather?.weather) || 'N/A'}</span></div>
+                        <div class="metric"><span class="metric-label">Feuchtigkeit</span><span class="metric-value">${fmt(d.weather?.humidity, '%', 0)}</span></div>
+                        <div class="metric"><span class="metric-label">Wind</span><span class="metric-value">${fmt(d.weather?.wind_speed, ' km/h', 0)}</span></div></div>
+                    <div class="card"><div class="card-header"><span class="card-icon">💨</span><span class="card-title">Luftqualität</span><span class="source-badge">Sentinel-5P</span></div>
+                        <div class="metric"><span class="metric-label">EU AQI</span><span class="metric-value"><span class="badge ${badge(d.air_quality?.eu_aqi, [40, 80])}">${d.air_quality?.eu_aqi || 'N/A'}</span></span></div>
+                        <div class="metric"><span class="metric-label">PM2.5</span><span class="metric-value">${fmt(d.air_quality?.pm2_5, ' μg/m³')}</span></div>
+                        <div class="metric"><span class="metric-label">PM10</span><span class="metric-value">${fmt(d.air_quality?.pm10, ' μg/m³')}</span></div>
+                        <div class="metric"><span class="metric-label">NO₂</span><span class="metric-value">${fmt(d.air_quality?.no2, ' μg/m³')}</span></div>
+                        <div class="metric"><span class="metric-label">O₃</span><span class="metric-value">${fmt(d.air_quality?.ozone, ' μg/m³')}</span></div>
+                        <div class="metric"><span class="metric-label">SO₂</span><span class="metric-value">${fmt(d.air_quality?.so2, ' μg/m³')}</span></div>
+                        <div class="metric"><span class="metric-label">CO</span><span class="metric-value">${fmt(d.air_quality?.co, ' μg/m³', 0)}</span></div></div>
+                    <div class="card"><div class="card-header"><span class="card-icon">☀️</span><span class="card-title">UV & Solar</span><span class="source-badge">CAMS</span></div>
+                        <div class="metric"><span class="metric-label">UV-Index</span><span class="metric-value"><span class="badge ${badge(d.air_quality?.uv_index, [3, 6])}">${fmt(d.air_quality?.uv_index, '')}</span></span></div>
+                        <div class="metric"><span class="metric-label">Solar</span><span class="metric-value">${d.solar_radiation?.solar_potential || 'N/A'}</span></div></div>
+                    <div class="card"><div class="card-header"><span class="card-icon">🌸</span><span class="card-title">Pollen</span><span class="source-badge">Open-Meteo</span></div>
+                        <div class="metric"><span class="metric-label">Gräser</span><span class="metric-value">${t(d.pollen?.pollen?.grass?.level) || 'N/A'}</span></div>
+                        <div class="metric"><span class="metric-label">Birke</span><span class="metric-value">${t(d.pollen?.pollen?.birch?.level) || 'N/A'}</span></div>
+                        <div class="metric"><span class="metric-label">Erle</span><span class="metric-value">${t(d.pollen?.pollen?.alder?.level) || 'N/A'}</span></div>
+                        <div class="metric"><span class="metric-label">Ambrosia</span><span class="metric-value">${t(d.pollen?.pollen?.ragweed?.level) || 'N/A'}</span></div></div>
                 </div>
-                
-                <!-- Air Quality -->
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-icon">💨</span>
-                        <span class="card-title">${t('air_quality')}</span>
-                        <span class="source-badge">Copernicus</span>
-                    </div>
-                    <div class="metric tooltip">
-                        <span class="metric-label">EU AQI</span>
-                        <span class="metric-value"><span class="badge ${getBadgeClass(s.air_quality || 0, [40, 80])}">${s.air_quality || 'N/A'}</span></span>
-                        <span class="tooltip-text">${getExplanation('aqi', profile)}</span>
-                    </div>
-                    <div class="metric tooltip">
-                        <span class="metric-label">UV-Index</span>
-                        <span class="metric-value"><span class="badge ${getBadgeClass(s.uv_index || 0, [3, 6])}">${s.uv_index?.toFixed(1) || 'N/A'}</span></span>
-                        <span class="tooltip-text">${getExplanation('uv', profile)}</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">PM2.5</span>
-                        <span class="metric-value">${d.air_quality?.pm2_5?.toFixed(1) || 'N/A'} μg/m³</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">${t('category')}</span>
-                        <span class="metric-value">${translateValue(d.air_quality?.category)}</span>
-                    </div>
+                <div class="data-section-title">🌞 Weltraumwetter</div>
+                <div class="grid">
+                    <div class="card"><div class="card-header"><span class="card-icon">🧲</span><span class="card-title">Geomagnetisch</span><span class="source-badge">GOES/Kyoto</span></div>
+                        <div class="metric"><span class="metric-label">Kp-Index</span><span class="metric-value"><span class="badge ${badge(d.space?.kp?.value, [4, 6])}">${fmt(d.space?.kp?.value, '')}</span></span></div>
+                        <div class="metric"><span class="metric-label">Status</span><span class="metric-value">${t(d.space?.kp?.level) || 'N/A'}</span></div>
+                        <div class="metric"><span class="metric-label">Dst-Index</span><span class="metric-value">${fmt(d.space?.dst?.value, ' nT', 0)}</span></div>
+                        <div class="metric"><span class="metric-label">Dst Status</span><span class="metric-value">${t(d.space?.dst?.level) || 'N/A'}</span></div></div>
+                    <div class="card"><div class="card-header"><span class="card-icon">💨</span><span class="card-title">Sonnenwind</span><span class="source-badge">DSCOVR</span></div>
+                        <div class="metric"><span class="metric-label">Geschwindigkeit</span><span class="metric-value">${fmt(d.space?.solar_wind?.speed, ' km/s', 0)}</span></div>
+                        <div class="metric"><span class="metric-label">Dichte</span><span class="metric-value">${fmt(d.space?.solar_wind?.density, ' p/cm³')}</span></div>
+                        <div class="metric"><span class="metric-label">Bz</span><span class="metric-value">${fmt(d.space?.solar_wind?.bz, ' nT')}</span></div></div>
+                    <div class="card"><div class="card-header"><span class="card-icon">🌞</span><span class="card-title">Sonnenaktivität</span><span class="source-badge">GOES</span></div>
+                        <div class="metric"><span class="metric-label">X-Ray</span><span class="metric-value">${d.space?.xray?.level || 'N/A'}</span></div>
+                        <div class="metric"><span class="metric-label">Proton</span><span class="metric-value">${d.space?.protons?.level || 'N/A'}</span></div></div>
+                    <div class="card"><div class="card-header"><span class="card-icon">🔥</span><span class="card-title">NASA DONKI</span><span class="source-badge">NASA</span></div>
+                        <div class="metric"><span class="metric-label">CMEs (7d)</span><span class="metric-value">${d.donki?.cme?.count || 0}</span></div>
+                        <div class="metric"><span class="metric-label">CME → Erde</span><span class="metric-value"><span class="badge ${d.donki?.cme?.earth_directed ? 'badge-bad' : 'badge-good'}">${d.donki?.cme?.earth_directed ? t('Yes') : t('No')}</span></span></div>
+                        <div class="metric"><span class="metric-label">Flares</span><span class="metric-value">${d.donki?.flares?.count || 0} (${d.donki?.flares?.max_class || '-'})</span></div></div>
+                    <div class="card"><div class="card-header"><span class="card-icon">🌌</span><span class="card-title">Aurora</span><span class="source-badge">OVATION</span></div>
+                        <div class="metric"><span class="metric-label">Wahrscheinlichkeit</span><span class="metric-value">${d.space?.aurora?.probability || 0}%</span></div>
+                        <div class="metric"><span class="metric-label">Sichtbarkeit</span><span class="metric-value">${t(d.space?.aurora?.visibility) || 'N/A'}</span></div>
+                        <div class="metric"><span class="metric-label">Kp aktuell</span><span class="metric-value">${fmt(d.space?.kp?.value, '')}</span></div></div>
                 </div>
-                
-                <!-- Space Weather -->
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-icon">🌞</span>
-                        <span class="card-title">${t('space_weather')}</span>
-                        <span class="source-badge">NOAA GOES</span>
-                    </div>
-                    <div class="metric tooltip">
-                        <span class="metric-label">Kp-Index</span>
-                        <span class="metric-value">${s.kp_index?.toFixed(1) || 'N/A'}</span>
-                        <span class="tooltip-text">${getExplanation('kp', profile)}</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">${t('aurora')}</span>
-                        <span class="metric-value">${d.space?.aurora?.probability || 0}%</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">X-Ray</span>
-                        <span class="metric-value">${d.space?.xray?.level || 'N/A'}</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">${t('solar_wind')}</span>
-                        <span class="metric-value">${d.space?.solar_wind?.speed?.toFixed(0) || 'N/A'} km/s</span>
-                    </div>
-                </div>
-                
-                <!-- Hazards -->
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-icon">⚠️</span>
-                        <span class="card-title">${t('hazards')}</span>
-                        <span class="source-badge">USGS/NASA/GDACS</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">${t('earthquakes')} (500km)</span>
-                        <span class="metric-value">${s.earthquakes_nearby || 0}</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">🔥 ${t('wildfires')} (100km)</span>
-                        <span class="metric-value"><span class="badge ${s.wildfires_nearby > 0 ? 'badge-bad' : 'badge-good'}">${s.wildfires_nearby || 0}</span></span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">⚠️ ${t('disasters')}</span>
-                        <span class="metric-value"><span class="badge ${s.disaster_alerts > 0 ? 'badge-moderate' : 'badge-good'}">${s.disaster_alerts || 0}</span></span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">${t('flood')}</span>
-                        <span class="metric-value"><span class="badge ${d.flood?.risk === 'high' ? 'badge-bad' : 'badge-good'}">${translateValue(d.flood?.risk)}</span></span>
-                    </div>
-                </div>
-                
-                <!-- Pollen -->
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-icon">🌸</span>
-                        <span class="card-title">${t('pollen')}</span>
-                        <span class="source-badge">Open-Meteo</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">${t('grass')}</span>
-                        <span class="metric-value">${pollenLevel(d.pollen?.pollen?.grass?.level)}</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">${t('birch')}</span>
-                        <span class="metric-value">${pollenLevel(d.pollen?.pollen?.birch?.level)}</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">${t('alder')}</span>
-                        <span class="metric-value">${pollenLevel(d.pollen?.pollen?.alder?.level)}</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">${t('ragweed')}</span>
-                        <span class="metric-value">${pollenLevel(d.pollen?.pollen?.ragweed?.level)}</span>
-                    </div>
-                </div>
-                
-                <!-- Aurora -->
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-icon">🌌</span>
-                        <span class="card-title">${t('aurora')}</span>
-                        <span class="source-badge">NOAA OVATION</span>
-                    </div>
-                    <div class="metric tooltip">
-                        <span class="metric-label">${t('probability')}</span>
-                        <span class="metric-value">${d.space?.aurora?.probability || 0}%</span>
-                        <span class="tooltip-text">${getExplanation('aurora', profile)}</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">${t('visibility')}</span>
-                        <span class="metric-value">${translateValue(d.space?.aurora?.visibility)}</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">${t('required_kp')}</span>
-                        <span class="metric-value">≥ 4</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">${t('current_kp')}</span>
-                        <span class="metric-value">${s.kp_index?.toFixed(1) || 'N/A'}</span>
-                    </div>
-                </div>
-            `;
+                <div class="data-section-title">⚠️ Gefahren</div>
+                <div class="grid">
+                    <div class="card"><div class="card-header"><span class="card-icon">🌍</span><span class="card-title">Erdbeben</span><span class="source-badge">USGS</span></div>
+                        <div class="metric"><span class="metric-label">Anzahl (500km)</span><span class="metric-value">${d.earthquakes?.count || 0}</span></div>
+                        <div class="metric"><span class="metric-label">Max. Magnitude</span><span class="metric-value">${d.earthquakes?.max_magnitude || t('None detected')}</span></div></div>
+                    <div class="card"><div class="card-header"><span class="card-icon">🔥</span><span class="card-title">Waldbrände</span><span class="source-badge">VIIRS</span></div>
+                        <div class="metric"><span class="metric-label">Anzahl (100km)</span><span class="metric-value"><span class="badge ${d.wildfires?.count > 0 ? 'badge-bad' : 'badge-good'}">${d.wildfires?.count || 0}</span></span></div>
+                        <div class="metric"><span class="metric-label">Status</span><span class="metric-value">${d.wildfires?.count > 0 ? d.wildfires?.fires?.[0]?.distance_km + 'km' : t('No fires')}</span></div></div>
+                    <div class="card"><div class="card-header"><span class="card-icon">🚨</span><span class="card-title">Katastrophen</span><span class="source-badge">UN GDACS</span></div>
+                        <div class="metric"><span class="metric-label">Warnungen</span><span class="metric-value"><span class="badge ${d.gdacs?.count > 0 ? 'badge-moderate' : 'badge-good'}">${d.gdacs?.count || 0}</span></span></div>
+                        ${d.gdacs?.alerts?.slice(0,2).map(a => `<div class="metric"><span class="metric-label">${a.type}</span><span class="metric-value">${a.alert_level}</span></div>`).join('') || ''}</div>
+                    <div class="card"><div class="card-header"><span class="card-icon">🌊</span><span class="card-title">Wasser</span><span class="source-badge">GloFAS</span></div>
+                        <div class="metric"><span class="metric-label">Hochwasser</span><span class="metric-value"><span class="badge ${d.flood?.risk === 'high' ? 'badge-bad' : 'badge-good'}">${t(d.flood?.risk) || 'N/A'}</span></span></div>
+                        <div class="metric"><span class="metric-label">Wellenhöhe</span><span class="metric-value">${fmt(d.marine?.wave_height, ' m')}</span></div>
+                        <div class="metric"><span class="metric-label">Seezustand</span><span class="metric-value">${t(d.marine?.conditions) || 'N/A'}</span></div></div>
+                </div>`;
         }
         
         function useMyLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    pos => {
-                        document.getElementById('lat').value = pos.coords.latitude.toFixed(4);
-                        document.getElementById('lon').value = pos.coords.longitude.toFixed(4);
-                        fetchAlert();
-                    },
-                    err => alert('Location error: ' + err.message)
-                );
-            }
+            if (navigator.geolocation) navigator.geolocation.getCurrentPosition(p => { document.getElementById('lat').value = p.coords.latitude.toFixed(4); document.getElementById('lon').value = p.coords.longitude.toFixed(4); fetchAlert(); }, e => alert('Fehler: ' + e.message));
         }
         
-        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            updateLanguage();
-            fetchAlert();
+            const savedLang = localStorage.getItem('lang');
+            if (savedLang) document.getElementById('language').value = savedLang;
+            applyT(); renderChat(); fetchAlert();
         });
     </script>
 </body>
