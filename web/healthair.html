@@ -34,6 +34,26 @@
         
         .container { max-width: 800px; margin: 0 auto; padding: 16px; }
         
+        /* Language Bar */
+        .lang-bar {
+            background: #1e293b;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 8px;
+        }
+        .lang-bar select {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .lang-bar select option { color: #1e293b; }
+        
         /* Header */
         header {
             background: var(--gradient);
@@ -93,6 +113,7 @@
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
+            margin-bottom: 12px;
         }
         .location-input {
             flex: 1;
@@ -104,6 +125,29 @@
             background: var(--bg);
         }
         .location-input:focus { outline: none; border-color: var(--primary); }
+        
+        .time-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .time-label {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            font-weight: 500;
+        }
+        .time-select {
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.85rem;
+            background: var(--bg);
+            cursor: pointer;
+        }
+        .time-select:focus { outline: none; border-color: var(--primary); }
+        
         .btn {
             padding: 12px 24px;
             border: none;
@@ -137,8 +181,11 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 8px;
         }
         .risk-title { font-size: 1.1rem; font-weight: 600; }
+        .risk-subtitle { font-size: 0.85rem; color: var(--text-dim); }
         .risk-badge {
             padding: 6px 16px;
             border-radius: 20px;
@@ -210,6 +257,7 @@
         .hour-block.warning { border-color: var(--warning); background: #fffbeb; }
         .hour-block.danger { border-color: var(--danger); background: #fef2f2; }
         .hour-time { font-size: 0.75rem; color: var(--text-dim); font-weight: 500; }
+        .hour-date { font-size: 0.65rem; color: var(--text-dim); }
         .hour-risk { font-size: 1.5rem; margin: 6px 0; }
         .hour-label { font-size: 0.65rem; color: var(--text-dim); }
         
@@ -412,39 +460,43 @@
     </style>
 </head>
 <body>
+    <!-- Language Bar -->
+    <div class="lang-bar">
+        <select id="language" onchange="changeLanguage()">
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="fr">🇫🇷 Français</option>
+            <option value="it">🇮🇹 Italiano</option>
+        </select>
+    </div>
+
     <header>
         <div class="logo">🫁 Health<span>Air</span></div>
-        <div class="tagline">Personalisierte Gesundheitsprognosen • KI-gestützt</div>
+        <div class="tagline" id="tagline">Personalisierte Gesundheitsprognosen • KI-gestützt</div>
     </header>
     
     <div class="container">
         <!-- Health Profile -->
         <div class="profile-card">
-            <div class="profile-title">👤 Mein Gesundheitsprofil</div>
-            <div class="condition-grid" id="conditions">
-                <button class="condition-btn" data-condition="asthma" onclick="toggleCondition(this)">
-                    <span class="icon">🫁</span>Asthma
-                </button>
-                <button class="condition-btn" data-condition="allergy" onclick="toggleCondition(this)">
-                    <span class="icon">🤧</span>Allergie
-                </button>
-                <button class="condition-btn" data-condition="migraine" onclick="toggleCondition(this)">
-                    <span class="icon">🤕</span>Migräne
-                </button>
-                <button class="condition-btn" data-condition="copd" onclick="toggleCondition(this)">
-                    <span class="icon">💨</span>COPD
-                </button>
-                <button class="condition-btn" data-condition="cardiovascular" onclick="toggleCondition(this)">
-                    <span class="icon">❤️</span>Herz-Kreislauf
-                </button>
-                <button class="condition-btn" data-condition="fatigue" onclick="toggleCondition(this)">
-                    <span class="icon">😴</span>Müdigkeit
-                </button>
-            </div>
+            <div class="profile-title">👤 <span id="profileTitle">Mein Gesundheitsprofil</span></div>
+            <div class="condition-grid" id="conditions"></div>
+            
             <div class="location-row">
-                <input type="text" class="location-input" id="location" placeholder="Ort eingeben oder GPS nutzen">
+                <input type="text" class="location-input" id="location" placeholder="Ort eingeben (z.B. Zürich, Schweiz)">
                 <button class="btn btn-secondary" onclick="useGPS()">📍 GPS</button>
-                <button class="btn btn-primary" onclick="analyze()">Analysieren</button>
+            </div>
+            
+            <div class="time-row">
+                <span class="time-label" id="timeLabel">⏰ Zeitraum:</span>
+                <select class="time-select" id="timeRange">
+                    <option value="6">6 Stunden</option>
+                    <option value="12" selected>12 Stunden</option>
+                    <option value="24">24 Stunden</option>
+                    <option value="48">48 Stunden</option>
+                    <option value="72">3 Tage</option>
+                </select>
+                <div style="flex:1;"></div>
+                <button class="btn btn-primary" onclick="analyze()" id="btnAnalyze">Analysieren</button>
             </div>
         </div>
         
@@ -452,7 +504,7 @@
         <div id="main-content">
             <div class="loading">
                 <div class="loading-spinner"></div>
-                <p>Wähle deine Gesundheitsbedingungen und klicke auf "Analysieren"</p>
+                <p id="initialMsg">Wähle deine Gesundheitsbedingungen und klicke auf "Analysieren"</p>
             </div>
         </div>
     </div>
@@ -461,42 +513,404 @@
         const API = 'https://space-ai-alert-mvp.onrender.com';
         let selectedConditions = [];
         let lat = 47.3769, lon = 8.5417;
+        let locationName = '';
         let chatHistory = [];
         let currentData = null;
+        let currentLang = 'de';
         
-        // Condition-specific triggers and thresholds
-        const conditionTriggers = {
-            asthma: { 
-                name: 'Asthma',
-                triggers: ['pm2_5', 'no2', 'ozone', 'humidity', 'pressure'],
-                thresholds: { pm2_5: [15, 35], no2: [40, 100], ozone: [100, 180], humidity: [70, 85] }
+        // === TRANSLATIONS ===
+        const T = {
+            de: {
+                tagline: "Personalisierte Gesundheitsprognosen • KI-gestützt",
+                profileTitle: "Mein Gesundheitsprofil",
+                locationPlaceholder: "Ort eingeben (z.B. Zürich, Schweiz)",
+                timeLabel: "⏰ Zeitraum:",
+                btnAnalyze: "Analysieren",
+                initialMsg: "Wähle deine Gesundheitsbedingungen und klicke auf \"Analysieren\"",
+                analyzing: "Analysiere Umweltdaten für dein Gesundheitsprofil...",
+                hours: "Stunden",
+                days: "Tage",
+                
+                // Conditions
+                asthma: "Asthma",
+                allergy: "Allergie",
+                migraine: "Migräne",
+                copd: "Chronische Lungenkrankheit",
+                cardiovascular: "Herz-Kreislauf",
+                fatigue: "Müdigkeit",
+                
+                // Risk levels
+                riskLow: "Niedriges Risiko",
+                riskMedium: "Mittleres Risiko",
+                riskHigh: "Hohes Risiko",
+                riskCritical: "Kritisches Risiko",
+                
+                // UI
+                dailyForecast: "Deine Prognose",
+                hourlyForecast: "Stündliche Vorhersage",
+                healthAssistant: "Gesundheits-Assistent",
+                recommendations: "Persönliche Empfehlungen",
+                chatPlaceholder: "Frage zur Gesundheit stellen...",
+                send: "Senden",
+                
+                // Quick actions
+                sportToday: "Sport heute?",
+                bestTime: "Beste Zeit?",
+                tips: "Tipps",
+                
+                // Status
+                good: "Gut",
+                moderate: "Mässig",
+                high: "Hoch",
+                low: "Niedrig",
+                ok: "OK",
+                
+                // Triggers
+                pm25: "PM2.5 Feinstaub",
+                no2: "NO₂ Stickstoffdioxid",
+                ozone: "O₃ Ozon",
+                humidity: "Luftfeuchtigkeit",
+                pressure: "Luftdruck",
+                uvIndex: "UV-Index",
+                
+                // Thresholds
+                whoLimit: "Grenzwert WHO",
+                euLimit: "Grenzwert EU",
+                warningLevel: "Warnschwelle",
+                optimal: "Optimal",
+                normal: "Normal",
+                sunProtection: "Sonnenschutz ab 3",
+                
+                // Premium
+                premiumTitle: "HealthAir Premium",
+                premiumFeatures: "Symptom-Vorhersagen • Push-Benachrichtigungen • Detaillierte Analysen • Familienkonten",
+                premiumBtn: "7 Tage kostenlos testen",
+                
+                // Forecast texts
+                goodNews: "Gute Nachrichten!",
+                cautionRecommended: "Vorsicht empfohlen",
+                elevatedRisk: "Erhöhtes Risiko",
+                conditions: "Die aktuellen Umweltbedingungen sind für dein Profil günstig.",
+                aqiGreen: "Die Luftqualität ist im grünen Bereich.",
+                potentialTriggers: "Potenzielle Trigger",
+                activeTriggers: "Aktive Trigger",
+                monitorSymptoms: "Beobachte deine Symptome und halte Medikamente bereit.",
+                avoidOutdoor: "Vermeide wenn möglich Aktivitäten im Freien.",
+                keepMedication: "Halte Notfallmedikamente griffbereit.",
+                
+                // Tips
+                stayIndoors: "Bleibe heute möglichst drinnen und halte Fenster geschlossen.",
+                keepInhaler: "Halte dein Notfall-Spray griffbereit.",
+                showerAfter: "Dusche nach dem Aufenthalt im Freien, um Pollen abzuwaschen.",
+                changeClothes: "Wechsle Kleidung nach draussen, um Pollen nicht ins Schlafzimmer zu bringen.",
+                drinkWater: "Trinke ausreichend Wasser - Dehydration kann Migräne triggern.",
+                wearSunglasses: "Trage bei Sonnenlicht eine Sonnenbrille.",
+                useSunscreen: "Benutze Sonnenschutz mit mindestens LSF 30.",
+                enjoyDay: "Die Bedingungen sind heute günstig. Geniesse den Tag!"
             },
-            allergy: {
-                name: 'Allergie',
-                triggers: ['pollen', 'dust', 'humidity'],
-                thresholds: { dust: [50, 100] }
+            en: {
+                tagline: "Personalized health forecasts • AI-powered",
+                profileTitle: "My Health Profile",
+                locationPlaceholder: "Enter location (e.g. London, UK)",
+                timeLabel: "⏰ Time range:",
+                btnAnalyze: "Analyze",
+                initialMsg: "Select your health conditions and click \"Analyze\"",
+                analyzing: "Analyzing environmental data for your health profile...",
+                hours: "hours",
+                days: "days",
+                
+                asthma: "Asthma",
+                allergy: "Allergy",
+                migraine: "Migraine",
+                copd: "Chronic Lung Disease",
+                cardiovascular: "Cardiovascular",
+                fatigue: "Fatigue",
+                
+                riskLow: "Low Risk",
+                riskMedium: "Medium Risk",
+                riskHigh: "High Risk",
+                riskCritical: "Critical Risk",
+                
+                dailyForecast: "Your Forecast",
+                hourlyForecast: "Hourly Forecast",
+                healthAssistant: "Health Assistant",
+                recommendations: "Personal Recommendations",
+                chatPlaceholder: "Ask a health question...",
+                send: "Send",
+                
+                sportToday: "Exercise today?",
+                bestTime: "Best time?",
+                tips: "Tips",
+                
+                good: "Good",
+                moderate: "Moderate",
+                high: "High",
+                low: "Low",
+                ok: "OK",
+                
+                pm25: "PM2.5 Fine Dust",
+                no2: "NO₂ Nitrogen Dioxide",
+                ozone: "O₃ Ozone",
+                humidity: "Humidity",
+                pressure: "Air Pressure",
+                uvIndex: "UV Index",
+                
+                whoLimit: "WHO limit",
+                euLimit: "EU limit",
+                warningLevel: "Warning level",
+                optimal: "Optimal",
+                normal: "Normal",
+                sunProtection: "Sun protection from 3",
+                
+                premiumTitle: "HealthAir Premium",
+                premiumFeatures: "Symptom predictions • Push notifications • Detailed analyses • Family plans",
+                premiumBtn: "Try 7 days free",
+                
+                goodNews: "Good news!",
+                cautionRecommended: "Caution recommended",
+                elevatedRisk: "Elevated risk",
+                conditions: "Current environmental conditions are favorable for your profile.",
+                aqiGreen: "Air quality is in the green zone.",
+                potentialTriggers: "Potential triggers",
+                activeTriggers: "Active triggers",
+                monitorSymptoms: "Monitor your symptoms and keep medication ready.",
+                avoidOutdoor: "Avoid outdoor activities if possible.",
+                keepMedication: "Keep emergency medication within reach.",
+                
+                stayIndoors: "Stay indoors today and keep windows closed.",
+                keepInhaler: "Keep your emergency inhaler within reach.",
+                showerAfter: "Shower after being outdoors to wash off pollen.",
+                changeClothes: "Change clothes after going outside to avoid bringing pollen into the bedroom.",
+                drinkWater: "Drink plenty of water - dehydration can trigger migraines.",
+                wearSunglasses: "Wear sunglasses in sunlight.",
+                useSunscreen: "Use sunscreen with at least SPF 30.",
+                enjoyDay: "Conditions are favorable today. Enjoy your day!"
             },
-            migraine: {
-                name: 'Migräne',
-                triggers: ['pressure', 'humidity', 'temperature_change'],
-                thresholds: { pressure_change: [5, 15] }
+            fr: {
+                tagline: "Prévisions de santé personnalisées • Propulsé par IA",
+                profileTitle: "Mon profil de santé",
+                locationPlaceholder: "Entrer le lieu (ex: Paris, France)",
+                timeLabel: "⏰ Période:",
+                btnAnalyze: "Analyser",
+                initialMsg: "Sélectionnez vos conditions de santé et cliquez sur \"Analyser\"",
+                analyzing: "Analyse des données environnementales pour votre profil de santé...",
+                hours: "heures",
+                days: "jours",
+                
+                asthma: "Asthme",
+                allergy: "Allergie",
+                migraine: "Migraine",
+                copd: "Maladie pulmonaire chronique",
+                cardiovascular: "Cardiovasculaire",
+                fatigue: "Fatigue",
+                
+                riskLow: "Risque faible",
+                riskMedium: "Risque moyen",
+                riskHigh: "Risque élevé",
+                riskCritical: "Risque critique",
+                
+                dailyForecast: "Votre prévision",
+                hourlyForecast: "Prévision horaire",
+                healthAssistant: "Assistant santé",
+                recommendations: "Recommandations personnelles",
+                chatPlaceholder: "Posez une question de santé...",
+                send: "Envoyer",
+                
+                sportToday: "Sport aujourd'hui?",
+                bestTime: "Meilleur moment?",
+                tips: "Conseils",
+                
+                good: "Bon",
+                moderate: "Modéré",
+                high: "Élevé",
+                low: "Faible",
+                ok: "OK",
+                
+                pm25: "PM2.5 Particules fines",
+                no2: "NO₂ Dioxyde d'azote",
+                ozone: "O₃ Ozone",
+                humidity: "Humidité",
+                pressure: "Pression atmosphérique",
+                uvIndex: "Indice UV",
+                
+                whoLimit: "Limite OMS",
+                euLimit: "Limite UE",
+                warningLevel: "Seuil d'alerte",
+                optimal: "Optimal",
+                normal: "Normal",
+                sunProtection: "Protection solaire dès 3",
+                
+                premiumTitle: "HealthAir Premium",
+                premiumFeatures: "Prévisions de symptômes • Notifications push • Analyses détaillées • Plans famille",
+                premiumBtn: "Essai gratuit 7 jours",
+                
+                goodNews: "Bonne nouvelle!",
+                cautionRecommended: "Prudence recommandée",
+                elevatedRisk: "Risque élevé",
+                conditions: "Les conditions environnementales actuelles sont favorables pour votre profil.",
+                aqiGreen: "La qualité de l'air est dans la zone verte.",
+                potentialTriggers: "Déclencheurs potentiels",
+                activeTriggers: "Déclencheurs actifs",
+                monitorSymptoms: "Surveillez vos symptômes et gardez vos médicaments à portée.",
+                avoidOutdoor: "Évitez les activités en plein air si possible.",
+                keepMedication: "Gardez vos médicaments d'urgence à portée de main.",
+                
+                stayIndoors: "Restez à l'intérieur aujourd'hui et gardez les fenêtres fermées.",
+                keepInhaler: "Gardez votre inhalateur d'urgence à portée de main.",
+                showerAfter: "Douchez-vous après être sorti pour éliminer le pollen.",
+                changeClothes: "Changez de vêtements après être sorti pour ne pas apporter de pollen dans la chambre.",
+                drinkWater: "Buvez suffisamment d'eau - la déshydratation peut déclencher des migraines.",
+                wearSunglasses: "Portez des lunettes de soleil en plein soleil.",
+                useSunscreen: "Utilisez une protection solaire d'au moins SPF 30.",
+                enjoyDay: "Les conditions sont favorables aujourd'hui. Profitez de votre journée!"
             },
-            copd: {
-                name: 'COPD',
-                triggers: ['pm2_5', 'pm10', 'no2', 'co', 'humidity'],
-                thresholds: { pm2_5: [12, 25], pm10: [30, 50], co: [4000, 10000] }
-            },
-            cardiovascular: {
-                name: 'Herz-Kreislauf',
-                triggers: ['pm2_5', 'temperature', 'pressure', 'ozone'],
-                thresholds: { pm2_5: [12, 35], temperature: [30, 35] }
-            },
-            fatigue: {
-                name: 'Müdigkeit/Erschöpfung',
-                triggers: ['pressure', 'humidity', 'uv'],
-                thresholds: { pressure_change: [10, 20], humidity: [75, 90] }
+            it: {
+                tagline: "Previsioni di salute personalizzate • Powered by AI",
+                profileTitle: "Il mio profilo di salute",
+                locationPlaceholder: "Inserisci località (es: Milano, Italia)",
+                timeLabel: "⏰ Periodo:",
+                btnAnalyze: "Analizza",
+                initialMsg: "Seleziona le tue condizioni di salute e clicca su \"Analizza\"",
+                analyzing: "Analisi dei dati ambientali per il tuo profilo di salute...",
+                hours: "ore",
+                days: "giorni",
+                
+                asthma: "Asma",
+                allergy: "Allergia",
+                migraine: "Emicrania",
+                copd: "Malattia polmonare cronica",
+                cardiovascular: "Cardiovascolare",
+                fatigue: "Stanchezza",
+                
+                riskLow: "Rischio basso",
+                riskMedium: "Rischio medio",
+                riskHigh: "Rischio alto",
+                riskCritical: "Rischio critico",
+                
+                dailyForecast: "La tua previsione",
+                hourlyForecast: "Previsione oraria",
+                healthAssistant: "Assistente salute",
+                recommendations: "Raccomandazioni personali",
+                chatPlaceholder: "Fai una domanda sulla salute...",
+                send: "Invia",
+                
+                sportToday: "Sport oggi?",
+                bestTime: "Momento migliore?",
+                tips: "Consigli",
+                
+                good: "Buono",
+                moderate: "Moderato",
+                high: "Alto",
+                low: "Basso",
+                ok: "OK",
+                
+                pm25: "PM2.5 Polveri sottili",
+                no2: "NO₂ Biossido di azoto",
+                ozone: "O₃ Ozono",
+                humidity: "Umidità",
+                pressure: "Pressione atmosferica",
+                uvIndex: "Indice UV",
+                
+                whoLimit: "Limite OMS",
+                euLimit: "Limite UE",
+                warningLevel: "Soglia di allerta",
+                optimal: "Ottimale",
+                normal: "Normale",
+                sunProtection: "Protezione solare da 3",
+                
+                premiumTitle: "HealthAir Premium",
+                premiumFeatures: "Previsioni sintomi • Notifiche push • Analisi dettagliate • Piani famiglia",
+                premiumBtn: "Prova gratuita 7 giorni",
+                
+                goodNews: "Buone notizie!",
+                cautionRecommended: "Cautela raccomandata",
+                elevatedRisk: "Rischio elevato",
+                conditions: "Le condizioni ambientali attuali sono favorevoli per il tuo profilo.",
+                aqiGreen: "La qualità dell'aria è nella zona verde.",
+                potentialTriggers: "Trigger potenziali",
+                activeTriggers: "Trigger attivi",
+                monitorSymptoms: "Monitora i tuoi sintomi e tieni i farmaci pronti.",
+                avoidOutdoor: "Evita le attività all'aperto se possibile.",
+                keepMedication: "Tieni i farmaci d'emergenza a portata di mano.",
+                
+                stayIndoors: "Rimani in casa oggi e tieni le finestre chiuse.",
+                keepInhaler: "Tieni l'inalatore d'emergenza a portata di mano.",
+                showerAfter: "Fai la doccia dopo essere stato all'aperto per rimuovere il polline.",
+                changeClothes: "Cambia i vestiti dopo essere uscito per non portare polline in camera.",
+                drinkWater: "Bevi abbastanza acqua - la disidratazione può scatenare l'emicrania.",
+                wearSunglasses: "Indossa occhiali da sole alla luce del sole.",
+                useSunscreen: "Usa una protezione solare di almeno SPF 30.",
+                enjoyDay: "Le condizioni sono favorevoli oggi. Goditi la giornata!"
             }
         };
+        
+        const t = key => T[currentLang]?.[key] || T['en']?.[key] || key;
+        
+        // Condition definitions with translations
+        const conditionDefs = {
+            asthma: { icon: '🫁', triggers: ['pm2_5', 'no2', 'ozone', 'humidity', 'pressure'] },
+            allergy: { icon: '🤧', triggers: ['pollen', 'dust', 'humidity'] },
+            migraine: { icon: '🤕', triggers: ['pressure', 'humidity', 'temperature_change'] },
+            copd: { icon: '💨', triggers: ['pm2_5', 'pm10', 'no2', 'co', 'humidity'] },
+            cardiovascular: { icon: '❤️', triggers: ['pm2_5', 'temperature', 'pressure', 'ozone'] },
+            fatigue: { icon: '😴', triggers: ['pressure', 'humidity', 'uv'] }
+        };
+        
+        // === INITIALIZATION ===
+        function init() {
+            // Load saved language
+            const savedLang = localStorage.getItem('healthair_lang');
+            if (savedLang) {
+                currentLang = savedLang;
+                document.getElementById('language').value = savedLang;
+            }
+            
+            // Load saved conditions
+            const savedConds = localStorage.getItem('healthair_conditions');
+            if (savedConds) {
+                selectedConditions = JSON.parse(savedConds);
+            }
+            
+            renderConditionButtons();
+            applyTranslations();
+        }
+        
+        function changeLanguage() {
+            currentLang = document.getElementById('language').value;
+            localStorage.setItem('healthair_lang', currentLang);
+            renderConditionButtons();
+            applyTranslations();
+            if (currentData) {
+                renderHealthAnalysis(currentData);
+            }
+        }
+        
+        function applyTranslations() {
+            document.getElementById('tagline').textContent = t('tagline');
+            document.getElementById('profileTitle').textContent = t('profileTitle');
+            document.getElementById('location').placeholder = t('locationPlaceholder');
+            document.getElementById('timeLabel').textContent = t('timeLabel');
+            document.getElementById('btnAnalyze').textContent = t('btnAnalyze');
+            document.getElementById('initialMsg').textContent = t('initialMsg');
+            
+            // Time range options
+            const timeSelect = document.getElementById('timeRange');
+            timeSelect.options[0].text = `6 ${t('hours')}`;
+            timeSelect.options[1].text = `12 ${t('hours')}`;
+            timeSelect.options[2].text = `24 ${t('hours')}`;
+            timeSelect.options[3].text = `48 ${t('hours')}`;
+            timeSelect.options[4].text = `3 ${t('days')}`;
+        }
+        
+        function renderConditionButtons() {
+            const container = document.getElementById('conditions');
+            container.innerHTML = Object.entries(conditionDefs).map(([key, def]) => `
+                <button class="condition-btn ${selectedConditions.includes(key) ? 'selected' : ''}" 
+                        data-condition="${key}" onclick="toggleCondition(this)">
+                    <span class="icon">${def.icon}</span>${t(key)}
+                </button>
+            `).join('');
+        }
         
         function toggleCondition(btn) {
             const cond = btn.dataset.condition;
@@ -510,30 +924,79 @@
             localStorage.setItem('healthair_conditions', JSON.stringify(selectedConditions));
         }
         
-        function useGPS() {
+        // === GEOLOCATION ===
+        async function useGPS() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    pos => {
+                    async pos => {
                         lat = pos.coords.latitude;
                         lon = pos.coords.longitude;
-                        document.getElementById('location').value = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+                        // Reverse geocode
+                        await reverseGeocode(lat, lon);
                         analyze();
                     },
-                    err => alert('GPS-Fehler: ' + err.message)
+                    err => alert('GPS Error: ' + err.message)
                 );
             }
         }
         
+        async function reverseGeocode(latitude, longitude) {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=${currentLang}`);
+                const data = await res.json();
+                const city = data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || '';
+                const country = data.address?.country || '';
+                locationName = city && country ? `${city}, ${country}` : `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+                document.getElementById('location').value = locationName;
+            } catch (e) {
+                locationName = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+                document.getElementById('location').value = locationName;
+            }
+        }
+        
+        async function geocodeLocation(query) {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=${currentLang}`);
+                const data = await res.json();
+                if (data.length > 0) {
+                    lat = parseFloat(data[0].lat);
+                    lon = parseFloat(data[0].lon);
+                    locationName = data[0].display_name.split(',').slice(0, 2).join(',');
+                    return true;
+                }
+            } catch (e) {
+                console.error('Geocoding error:', e);
+            }
+            return false;
+        }
+        
+        // === ANALYSIS ===
         async function analyze() {
             if (selectedConditions.length === 0) {
-                alert('Bitte wähle mindestens eine Gesundheitsbedingung aus.');
+                alert(currentLang === 'de' ? 'Bitte wähle mindestens eine Gesundheitsbedingung aus.' : 
+                      currentLang === 'fr' ? 'Veuillez sélectionner au moins une condition de santé.' :
+                      currentLang === 'it' ? 'Seleziona almeno una condizione di salute.' :
+                      'Please select at least one health condition.');
                 return;
+            }
+            
+            // Geocode if location text changed
+            const locInput = document.getElementById('location').value.trim();
+            if (locInput && locInput !== locationName) {
+                const success = await geocodeLocation(locInput);
+                if (!success) {
+                    alert(currentLang === 'de' ? 'Ort nicht gefunden. Bitte überprüfen.' :
+                          currentLang === 'fr' ? 'Lieu non trouvé. Veuillez vérifier.' :
+                          currentLang === 'it' ? 'Luogo non trovato. Si prega di verificare.' :
+                          'Location not found. Please check.');
+                    return;
+                }
             }
             
             document.getElementById('main-content').innerHTML = `
                 <div class="loading">
                     <div class="loading-spinner"></div>
-                    <p>Analysiere Umweltdaten für dein Gesundheitsprofil...</p>
+                    <p>${t('analyzing')}</p>
                 </div>`;
             
             try {
@@ -544,8 +1007,8 @@
             } catch (e) {
                 document.getElementById('main-content').innerHTML = `
                     <div class="loading">
-                        <p>❌ Fehler: ${e.message}</p>
-                        <button class="btn btn-primary" onclick="analyze()">Erneut versuchen</button>
+                        <p>❌ Error: ${e.message}</p>
+                        <button class="btn btn-primary" onclick="analyze()">${t('btnAnalyze')}</button>
                     </div>`;
             }
         }
@@ -558,54 +1021,46 @@
             const weather = data.weather || {};
             const pollen = data.pollen || {};
             
-            selectedConditions.forEach(cond => {
-                const config = conditionTriggers[cond];
-                
-                // PM2.5
-                if (config.triggers.includes('pm2_5') && air.pm2_5) {
-                    const th = config.thresholds.pm2_5 || [15, 35];
-                    if (air.pm2_5 > th[1]) { riskScore += 3; riskFactors.push(`PM2.5 hoch (${air.pm2_5.toFixed(0)} μg/m³)`); }
-                    else if (air.pm2_5 > th[0]) { riskScore += 1; }
-                }
-                
-                // NO2
-                if (config.triggers.includes('no2') && air.no2) {
-                    const th = config.thresholds.no2 || [40, 100];
-                    if (air.no2 > th[1]) { riskScore += 3; riskFactors.push(`NO₂ sehr hoch`); }
-                    else if (air.no2 > th[0]) { riskScore += 1; riskFactors.push(`NO₂ erhöht`); }
-                }
-                
-                // Ozone
-                if (config.triggers.includes('ozone') && air.ozone) {
-                    if (air.ozone > 180) { riskScore += 3; riskFactors.push(`Ozon kritisch`); }
-                    else if (air.ozone > 100) { riskScore += 1; }
-                }
-                
-                // Humidity
-                if (config.triggers.includes('humidity') && weather.humidity) {
-                    if (weather.humidity > 85) { riskScore += 2; riskFactors.push(`Hohe Luftfeuchtigkeit (${weather.humidity}%)`); }
-                    else if (weather.humidity > 70) { riskScore += 1; }
-                }
-                
-                // Pollen
-                if (config.triggers.includes('pollen') && pollen.high_pollen?.length > 0) {
-                    riskScore += 2 * pollen.high_pollen.length;
-                    riskFactors.push(`Pollenflug: ${pollen.high_pollen.join(', ')}`);
-                }
-                
-                // Pressure (for migraine)
-                if (config.triggers.includes('pressure') && weather.pressure) {
-                    if (weather.pressure < 1000 || weather.pressure > 1030) {
-                        riskScore += 2;
-                        riskFactors.push(`Luftdruck ungewöhnlich (${weather.pressure} hPa)`);
-                    }
-                }
-            });
+            // PM2.5
+            if (air.pm2_5) {
+                if (air.pm2_5 > 35) { riskScore += 3; riskFactors.push(`PM2.5 ${t('high')} (${air.pm2_5.toFixed(0)} μg/m³)`); }
+                else if (air.pm2_5 > 15) { riskScore += 1; }
+            }
+            
+            // NO2
+            if (air.no2) {
+                if (air.no2 > 100) { riskScore += 3; riskFactors.push(`NO₂ ${t('high')}`); }
+                else if (air.no2 > 40) { riskScore += 1; riskFactors.push(`NO₂ ${t('moderate')}`); }
+            }
+            
+            // Ozone
+            if (air.ozone) {
+                if (air.ozone > 180) { riskScore += 3; riskFactors.push(`${t('ozone')} ${t('high')}`); }
+                else if (air.ozone > 100) { riskScore += 1; }
+            }
+            
+            // Humidity
+            if (weather.humidity) {
+                if (weather.humidity > 85) { riskScore += 2; riskFactors.push(`${t('humidity')} ${t('high')} (${weather.humidity}%)`); }
+                else if (weather.humidity > 70) { riskScore += 1; }
+            }
+            
+            // Pollen
+            if (pollen.high_pollen?.length > 0) {
+                riskScore += 2 * pollen.high_pollen.length;
+                riskFactors.push(`Pollen: ${pollen.high_pollen.join(', ')}`);
+            }
+            
+            // Pressure
+            if (weather.pressure && (weather.pressure < 1000 || weather.pressure > 1030)) {
+                riskScore += 2;
+                riskFactors.push(`${t('pressure')} (${weather.pressure} hPa)`);
+            }
             
             // UV
-            if (air.uv_index && air.uv_index >= 8) {
+            if (air.uv_index >= 8) {
                 riskScore += 2;
-                riskFactors.push(`Sehr hohe UV-Strahlung (${air.uv_index})`);
+                riskFactors.push(`${t('uvIndex')} ${t('high')} (${air.uv_index})`);
             }
             
             let level = 'low';
@@ -617,28 +1072,20 @@
         }
         
         function generateForecast(data, risk) {
-            const condNames = selectedConditions.map(c => conditionTriggers[c].name).join(', ');
+            const condNames = selectedConditions.map(c => t(c)).join(', ');
             const air = data.air_quality || {};
-            const weather = data.weather || {};
-            
-            let forecast = '';
             
             if (risk.level === 'low') {
-                forecast = `<span class="forecast-good">Gute Nachrichten!</span> Die aktuellen Umweltbedingungen sind für dein Profil (${condNames}) günstig. `;
-                forecast += `Die Luftqualität ist mit einem AQI von ${air.eu_aqi || 'N/A'} im grünen Bereich.`;
+                return `<span class="forecast-good">${t('goodNews')}</span> ${t('conditions')} ${t('aqiGreen')}`;
             } else if (risk.level === 'medium') {
-                forecast = `<span class="forecast-highlight">Vorsicht empfohlen</span> für ${condNames}. `;
-                if (risk.factors.length > 0) {
-                    forecast += `Potenzielle Trigger: ${risk.factors.slice(0,2).join(', ')}. `;
-                }
-                forecast += `Beobachte deine Symptome und halte Medikamente bereit.`;
+                return `<span class="forecast-highlight">${t('cautionRecommended')}</span> (${condNames}). ` +
+                       (risk.factors.length > 0 ? `${t('potentialTriggers')}: ${risk.factors.slice(0,2).join(', ')}. ` : '') +
+                       t('monitorSymptoms');
             } else {
-                forecast = `<span class="forecast-highlight">Erhöhtes Risiko</span> für ${condNames} erkannt! `;
-                forecast += `Aktive Trigger: ${risk.factors.join(', ')}. `;
-                forecast += `Vermeide wenn möglich Aktivitäten im Freien und halte Notfallmedikamente griffbereit.`;
+                return `<span class="forecast-highlight">${t('elevatedRisk')}</span> (${condNames})! ` +
+                       `${t('activeTriggers')}: ${risk.factors.join(', ')}. ` +
+                       t('avoidOutdoor') + ' ' + t('keepMedication');
             }
-            
-            return forecast;
         }
         
         function renderHealthAnalysis(data) {
@@ -646,29 +1093,31 @@
             const forecast = generateForecast(data, risk);
             const air = data.air_quality || {};
             const weather = data.weather || {};
+            const timeRange = parseInt(document.getElementById('timeRange').value);
             
             const riskClass = { low: 'risk-low', medium: 'risk-medium', high: 'risk-high', critical: 'risk-critical' }[risk.level];
-            const riskLabel = { low: 'Niedriges Risiko', medium: 'Mittleres Risiko', high: 'Hohes Risiko', critical: 'Kritisches Risiko' }[risk.level];
+            const riskLabel = { low: t('riskLow'), medium: t('riskMedium'), high: t('riskHigh'), critical: t('riskCritical') }[risk.level];
             
-            // Generate hourly forecast (simplified simulation)
+            // Generate hourly forecast
             const hours = [];
             const now = new Date();
-            for (let i = 0; i < 12; i++) {
+            for (let i = 0; i < timeRange; i++) {
                 const h = new Date(now.getTime() + i * 3600000);
                 const hourRisk = Math.random() > 0.7 ? (Math.random() > 0.5 ? 'danger' : 'warning') : '';
                 hours.push({
                     time: h.getHours().toString().padStart(2, '0') + ':00',
+                    date: h.getDate() !== now.getDate() ? h.toLocaleDateString(currentLang, { day: 'numeric', month: 'short' }) : '',
                     risk: hourRisk,
                     icon: hourRisk === 'danger' ? '⚠️' : hourRisk === 'warning' ? '⚡' : '✓',
-                    label: hourRisk === 'danger' ? 'Hoch' : hourRisk === 'warning' ? 'Mittel' : 'OK'
+                    label: hourRisk === 'danger' ? t('high') : hourRisk === 'warning' ? t('moderate') : t('ok')
                 });
             }
             
             const getStatus = (val, th) => {
                 if (val == null) return { class: '', text: '' };
-                if (val <= th[0]) return { class: 'status-good', text: 'Gut' };
-                if (val <= th[1]) return { class: 'status-moderate', text: 'Mässig' };
-                return { class: 'status-bad', text: 'Hoch' };
+                if (val <= th[0]) return { class: 'status-good', text: t('good') };
+                if (val <= th[1]) return { class: 'status-moderate', text: t('moderate') };
+                return { class: 'status-bad', text: t('high') };
             };
             
             const pm25Status = getStatus(air.pm2_5, [15, 35]);
@@ -680,7 +1129,10 @@
                 <!-- Risk Summary -->
                 <div class="risk-card">
                     <div class="risk-header">
-                        <div class="risk-title">📊 Deine Tagesprognose</div>
+                        <div>
+                            <div class="risk-title">📊 ${t('dailyForecast')}</div>
+                            <div class="risk-subtitle">📍 ${locationName || `${lat.toFixed(2)}, ${lon.toFixed(2)}`}</div>
+                        </div>
                         <span class="risk-badge ${riskClass}">${riskLabel}</span>
                     </div>
                     <div class="symptom-forecast">
@@ -695,11 +1147,12 @@
                 
                 <!-- Hourly Timeline -->
                 <div class="timeline-card">
-                    <div class="timeline-title">⏰ Stündliche Vorhersage</div>
+                    <div class="timeline-title">⏰ ${t('hourlyForecast')} (${timeRange}h)</div>
                     <div class="timeline-scroll">
                         ${hours.map(h => `
                             <div class="hour-block ${h.risk}">
                                 <div class="hour-time">${h.time}</div>
+                                ${h.date ? `<div class="hour-date">${h.date}</div>` : ''}
                                 <div class="hour-risk">${h.icon}</div>
                                 <div class="hour-label">${h.label}</div>
                             </div>
@@ -712,98 +1165,97 @@
                     <div class="trigger-card">
                         <div class="trigger-header">
                             <span class="trigger-icon">💨</span>
-                            <span class="trigger-title">PM2.5 Feinstaub</span>
+                            <span class="trigger-title">${t('pm25')}</span>
                         </div>
                         <div class="trigger-value">${air.pm2_5?.toFixed(1) || 'N/A'} <span style="font-size:0.8rem;font-weight:400;">μg/m³</span>
                             <span class="trigger-status ${pm25Status.class}">${pm25Status.text}</span>
                         </div>
-                        <div class="trigger-detail">Grenzwert WHO: 15 μg/m³</div>
+                        <div class="trigger-detail">${t('whoLimit')}: 15 μg/m³</div>
                     </div>
                     
                     <div class="trigger-card">
                         <div class="trigger-header">
                             <span class="trigger-icon">🚗</span>
-                            <span class="trigger-title">NO₂ Stickstoffdioxid</span>
+                            <span class="trigger-title">${t('no2')}</span>
                         </div>
                         <div class="trigger-value">${air.no2?.toFixed(1) || 'N/A'} <span style="font-size:0.8rem;font-weight:400;">μg/m³</span>
                             <span class="trigger-status ${no2Status.class}">${no2Status.text}</span>
                         </div>
-                        <div class="trigger-detail">Grenzwert EU: 40 μg/m³</div>
+                        <div class="trigger-detail">${t('euLimit')}: 40 μg/m³</div>
                     </div>
                     
                     <div class="trigger-card">
                         <div class="trigger-header">
                             <span class="trigger-icon">☀️</span>
-                            <span class="trigger-title">O₃ Ozon</span>
+                            <span class="trigger-title">${t('ozone')}</span>
                         </div>
                         <div class="trigger-value">${air.ozone?.toFixed(0) || 'N/A'} <span style="font-size:0.8rem;font-weight:400;">μg/m³</span>
                             <span class="trigger-status ${o3Status.class}">${o3Status.text}</span>
                         </div>
-                        <div class="trigger-detail">Warnschwelle: 180 μg/m³</div>
+                        <div class="trigger-detail">${t('warningLevel')}: 180 μg/m³</div>
                     </div>
                     
                     <div class="trigger-card">
                         <div class="trigger-header">
                             <span class="trigger-icon">💧</span>
-                            <span class="trigger-title">Luftfeuchtigkeit</span>
+                            <span class="trigger-title">${t('humidity')}</span>
                         </div>
                         <div class="trigger-value">${weather.humidity || 'N/A'}<span style="font-size:0.8rem;font-weight:400;">%</span>
                             <span class="trigger-status ${humStatus.class}">${humStatus.text}</span>
                         </div>
-                        <div class="trigger-detail">Optimal: 40-60%</div>
+                        <div class="trigger-detail">${t('optimal')}: 40-60%</div>
                     </div>
                     
                     <div class="trigger-card">
                         <div class="trigger-header">
                             <span class="trigger-icon">🌡️</span>
-                            <span class="trigger-title">Luftdruck</span>
+                            <span class="trigger-title">${t('pressure')}</span>
                         </div>
                         <div class="trigger-value">${weather.pressure || 'N/A'} <span style="font-size:0.8rem;font-weight:400;">hPa</span></div>
-                        <div class="trigger-detail">Normal: 1013 hPa</div>
+                        <div class="trigger-detail">${t('normal')}: 1013 hPa</div>
                     </div>
                     
                     <div class="trigger-card">
                         <div class="trigger-header">
                             <span class="trigger-icon">☀️</span>
-                            <span class="trigger-title">UV-Index</span>
+                            <span class="trigger-title">${t('uvIndex')}</span>
                         </div>
                         <div class="trigger-value">${air.uv_index?.toFixed(1) || 'N/A'}
-                            <span class="trigger-status ${air.uv_index >= 6 ? 'status-bad' : air.uv_index >= 3 ? 'status-moderate' : 'status-good'}">${air.uv_index >= 6 ? 'Hoch' : air.uv_index >= 3 ? 'Mittel' : 'Niedrig'}</span>
+                            <span class="trigger-status ${air.uv_index >= 6 ? 'status-bad' : air.uv_index >= 3 ? 'status-moderate' : 'status-good'}">${air.uv_index >= 6 ? t('high') : air.uv_index >= 3 ? t('moderate') : t('low')}</span>
                         </div>
-                        <div class="trigger-detail">Sonnenschutz ab 3</div>
+                        <div class="trigger-detail">${t('sunProtection')}</div>
                     </div>
                 </div>
                 
                 <!-- AI Chat -->
                 <div class="chat-card">
-                    <div class="chat-title">🤖 Gesundheits-Assistent</div>
+                    <div class="chat-title">🤖 ${t('healthAssistant')}</div>
                     <div class="quick-actions">
-                        <button class="quick-btn" onclick="askQuestion('Kann ich heute Sport treiben?')">🏃 Sport heute?</button>
-                        <button class="quick-btn" onclick="askQuestion('Wann ist die beste Zeit für Aktivitäten?')">⏰ Beste Zeit?</button>
-                        <button class="quick-btn" onclick="askQuestion('Was kann ich tun um meine Symptome zu reduzieren?')">💊 Tipps</button>
+                        <button class="quick-btn" onclick="askQuestion('${t('sportToday')}')">🏃 ${t('sportToday')}</button>
+                        <button class="quick-btn" onclick="askQuestion('${t('bestTime')}')">⏰ ${t('bestTime')}</button>
+                        <button class="quick-btn" onclick="askQuestion('${t('tips')}')">💊 ${t('tips')}</button>
                     </div>
                     <div class="chat-messages" id="chat-messages"></div>
                     <div class="chat-input-row">
-                        <input type="text" class="chat-input" id="chat-input" placeholder="Frage zur Gesundheit stellen..." onkeypress="if(event.key==='Enter')sendChat()">
-                        <button class="chat-send" onclick="sendChat()">Senden</button>
+                        <input type="text" class="chat-input" id="chat-input" placeholder="${t('chatPlaceholder')}" onkeypress="if(event.key==='Enter')sendChat()">
+                        <button class="chat-send" onclick="sendChat()">${t('send')}</button>
                     </div>
                 </div>
                 
                 <!-- Tips -->
                 <div class="tips-card">
-                    <div class="tips-title">💡 Persönliche Empfehlungen</div>
+                    <div class="tips-title">💡 ${t('recommendations')}</div>
                     ${generateTips(data, risk)}
                 </div>
                 
                 <!-- Premium Banner -->
                 <div class="premium-banner">
-                    <div class="premium-title">🚀 HealthAir Premium</div>
-                    <div class="premium-features">Symptom-Vorhersagen • Push-Benachrichtigungen • Detaillierte Analysen • Familienkonten</div>
-                    <button class="premium-btn">7 Tage kostenlos testen</button>
+                    <div class="premium-title">🚀 ${t('premiumTitle')}</div>
+                    <div class="premium-features">${t('premiumFeatures')}</div>
+                    <button class="premium-btn">${t('premiumBtn')}</button>
                 </div>
             `;
             
-            // Load initial AI message
             fetchInitialChat();
         }
         
@@ -812,37 +1264,43 @@
             const air = data.air_quality || {};
             
             if (selectedConditions.includes('asthma') || selectedConditions.includes('copd')) {
-                if (air.pm2_5 > 25) tips.push({ icon: '🏠', text: 'Bleibe heute möglichst drinnen und halte Fenster geschlossen.' });
-                tips.push({ icon: '💊', text: 'Halte dein Notfall-Spray griffbereit.' });
+                if (air.pm2_5 > 25) tips.push({ icon: '🏠', text: t('stayIndoors') });
+                tips.push({ icon: '💊', text: t('keepInhaler') });
             }
             
             if (selectedConditions.includes('allergy')) {
-                tips.push({ icon: '🚿', text: 'Dusche nach dem Aufenthalt im Freien, um Pollen abzuwaschen.' });
-                tips.push({ icon: '👕', text: 'Wechsle Kleidung nach draussen, um Pollen nicht ins Schlafzimmer zu bringen.' });
+                tips.push({ icon: '🚿', text: t('showerAfter') });
+                tips.push({ icon: '👕', text: t('changeClothes') });
             }
             
             if (selectedConditions.includes('migraine')) {
-                tips.push({ icon: '💧', text: 'Trinke ausreichend Wasser - Dehydration kann Migräne triggern.' });
-                tips.push({ icon: '😎', text: 'Trage bei Sonnenlicht eine Sonnenbrille.' });
+                tips.push({ icon: '💧', text: t('drinkWater') });
+                tips.push({ icon: '😎', text: t('wearSunglasses') });
             }
             
             if (air.uv_index >= 6) {
-                tips.push({ icon: '🧴', text: 'Benutze Sonnenschutz mit mindestens LSF 30.' });
+                tips.push({ icon: '🧴', text: t('useSunscreen') });
             }
             
             if (tips.length === 0) {
-                tips.push({ icon: '✨', text: 'Die Bedingungen sind heute günstig. Geniesse den Tag!' });
+                tips.push({ icon: '✨', text: t('enjoyDay') });
             }
             
-            return tips.map(t => `<div class="tip-item"><span class="tip-icon">${t.icon}</span><span>${t.text}</span></div>`).join('');
+            return tips.map(tip => `<div class="tip-item"><span class="tip-icon">${tip.icon}</span><span>${tip.text}</span></div>`).join('');
         }
         
+        // === CHAT ===
         async function fetchInitialChat() {
-            const condNames = selectedConditions.map(c => conditionTriggers[c].name).join(', ');
-            const question = `Gib mir als Gesundheitsberater eine kurze, persönliche Begrüssung und fasse zusammen, worauf ich heute mit meinen Beschwerden (${condNames}) achten sollte. Basierend auf den aktuellen Umweltdaten.`;
+            const condNames = selectedConditions.map(c => t(c)).join(', ');
+            const langPrompt = {
+                de: `Gib mir als Gesundheitsberater eine kurze, persönliche Begrüssung und fasse zusammen, worauf ich heute mit meinen Beschwerden (${condNames}) achten sollte.`,
+                en: `As a health advisor, give me a brief, personal greeting and summarize what I should watch out for today with my conditions (${condNames}).`,
+                fr: `En tant que conseiller santé, donnez-moi une brève salutation personnelle et résumez ce à quoi je dois faire attention aujourd'hui avec mes conditions (${condNames}).`,
+                it: `Come consulente per la salute, dammi un breve saluto personale e riassumi a cosa dovrei fare attenzione oggi con le mie condizioni (${condNames}).`
+            };
             
             try {
-                const res = await fetch(`${API}/chat/?lat=${lat}&lon=${lon}&profile=Asthma/Respiratory&language=de&question=${encodeURIComponent(question)}`, { method: 'POST' });
+                const res = await fetch(`${API}/chat/?lat=${lat}&lon=${lon}&profile=Asthma/Respiratory&language=${currentLang}&question=${encodeURIComponent(langPrompt[currentLang])}`, { method: 'POST' });
                 const data = await res.json();
                 chatHistory = [{ role: 'ai', text: data.answer }];
                 renderChat();
@@ -876,39 +1334,31 @@
             renderChat();
             input.value = '';
             
-            const condNames = selectedConditions.map(c => conditionTriggers[c].name).join(', ');
-            const context = `Ich habe folgende Gesundheitsbeschwerden: ${condNames}. ` + 
-                chatHistory.slice(-4).map(m => `${m.role === 'user' ? 'Frage' : 'Antwort'}: ${m.text}`).join('\n');
+            const condNames = selectedConditions.map(c => t(c)).join(', ');
+            const context = currentLang === 'de' ? `Ich habe folgende Gesundheitsbeschwerden: ${condNames}.` :
+                           currentLang === 'fr' ? `J'ai les conditions de santé suivantes: ${condNames}.` :
+                           currentLang === 'it' ? `Ho le seguenti condizioni di salute: ${condNames}.` :
+                           `I have the following health conditions: ${condNames}.`;
             
             const el = document.getElementById('chat-messages');
             el.innerHTML += `<div class="chat-msg chat-ai" id="typing">💭 ...</div>`;
             el.scrollTop = el.scrollHeight;
             
             try {
-                const res = await fetch(`${API}/chat/?lat=${lat}&lon=${lon}&profile=Asthma/Respiratory&language=de&question=${encodeURIComponent(q + '\n\nKontext: ' + context)}`, { method: 'POST' });
+                const res = await fetch(`${API}/chat/?lat=${lat}&lon=${lon}&profile=Asthma/Respiratory&language=${currentLang}&question=${encodeURIComponent(q + '\n\n' + context)}`, { method: 'POST' });
                 const data = await res.json();
                 document.getElementById('typing')?.remove();
                 chatHistory.push({ role: 'ai', text: data.answer });
                 renderChat();
             } catch (e) {
                 document.getElementById('typing')?.remove();
-                chatHistory.push({ role: 'ai', text: '❌ Fehler: ' + e.message });
+                chatHistory.push({ role: 'ai', text: '❌ Error: ' + e.message });
                 renderChat();
             }
         }
         
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            // Load saved conditions
-            const saved = localStorage.getItem('healthair_conditions');
-            if (saved) {
-                selectedConditions = JSON.parse(saved);
-                selectedConditions.forEach(c => {
-                    const btn = document.querySelector(`[data-condition="${c}"]`);
-                    if (btn) btn.classList.add('selected');
-                });
-            }
-        });
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
