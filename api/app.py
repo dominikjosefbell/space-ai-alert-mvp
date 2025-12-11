@@ -1652,6 +1652,41 @@ def get_solar_radiation(lat: float = Query(DEFAULT_LAT), lon: float = Query(DEFA
     return fetch_solar_radiation(lat, lon)
 
 
+# === STATIC FILES (HTML Frontend) ===
+# This serves the HTML files from the web/ directory
+
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import pathlib
+
+# Get the directory where this script is located
+BASE_DIR = pathlib.Path(__file__).parent.parent
+
+# Serve specific HTML files
+@app.get("/healthair")
+@app.get("/healthair.html")
+async def serve_healthair():
+    """Serve HealthAir frontend"""
+    html_path = BASE_DIR / "web" / "healthair.html"
+    if html_path.exists():
+        return FileResponse(html_path, media_type="text/html")
+    return {"error": "healthair.html not found", "path": str(html_path)}
+
+@app.get("/")
+async def serve_index():
+    """Serve main Environmental Monitor frontend"""
+    html_path = BASE_DIR / "web" / "index.html"
+    if html_path.exists():
+        return FileResponse(html_path, media_type="text/html")
+    # Fallback to API info if no HTML
+    return {
+        "name": "Environmental Monitor API",
+        "version": "7.3.0",
+        "endpoints": ["/data/", "/alert/", "/chat/", "/space-weather/", "/healthair"],
+        "docs": "/docs"
+    }
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
