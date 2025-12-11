@@ -1290,17 +1290,36 @@
         }
         
         // === CHAT ===
+        
+        // Map selected conditions to a profile string for the API
+        function getHealthProfile() {
+            // Create a descriptive profile based on selected conditions
+            const profileMap = {
+                asthma: 'Asthma',
+                allergy: 'Allergy',
+                migraine: 'Migraine',
+                copd: 'COPD/Respiratory',
+                cardiovascular: 'Cardiovascular',
+                fatigue: 'Fatigue/Sleep'
+            };
+            const profiles = selectedConditions.map(c => profileMap[c] || c);
+            return profiles.join(', ') || 'General Health';
+        }
+        
         async function fetchInitialChat() {
             const condNames = selectedConditions.map(c => t(c)).join(', ');
+            const healthProfile = getHealthProfile();
+            
+            // IMPORTANT: Include explicit instruction about which conditions the user has
             const langPrompt = {
-                de: `Gib mir als Gesundheitsberater eine kurze, persönliche Begrüssung und fasse zusammen, worauf ich heute mit meinen Beschwerden (${condNames}) achten sollte.`,
-                en: `As a health advisor, give me a brief, personal greeting and summarize what I should watch out for today with my conditions (${condNames}).`,
-                fr: `En tant que conseiller santé, donnez-moi une brève salutation personnelle et résumez ce à quoi je dois faire attention aujourd'hui avec mes conditions (${condNames}).`,
-                it: `Come consulente per la salute, dammi un breve saluto personale e riassumi a cosa dovrei fare attenzione oggi con le mie condizioni (${condNames}).`
+                de: `WICHTIG: Der Nutzer hat NUR folgende Gesundheitsbeschwerden ausgewählt: ${condNames}. Beziehe dich AUSSCHLIESSLICH auf diese Beschwerden, nicht auf andere! Gib eine kurze, persönliche Begrüssung und fasse zusammen, worauf der Nutzer heute mit diesen spezifischen Beschwerden achten sollte.`,
+                en: `IMPORTANT: The user has ONLY selected these health conditions: ${condNames}. Refer EXCLUSIVELY to these conditions, not others! Give a brief, personal greeting and summarize what the user should watch out for today with these specific conditions.`,
+                fr: `IMPORTANT: L'utilisateur a UNIQUEMENT sélectionné ces conditions de santé: ${condNames}. Référez-vous EXCLUSIVEMENT à ces conditions, pas à d'autres! Donnez une brève salutation personnelle et résumez ce à quoi l'utilisateur doit faire attention aujourd'hui avec ces conditions spécifiques.`,
+                it: `IMPORTANTE: L'utente ha selezionato SOLO queste condizioni di salute: ${condNames}. Riferisciti ESCLUSIVAMENTE a queste condizioni, non ad altre! Dai un breve saluto personale e riassumi a cosa l'utente dovrebbe fare attenzione oggi con queste condizioni specifiche.`
             };
             
             try {
-                const res = await fetch(`${API}/chat/?lat=${lat}&lon=${lon}&profile=Asthma/Respiratory&language=${currentLang}&question=${encodeURIComponent(langPrompt[currentLang])}`, { method: 'POST' });
+                const res = await fetch(`${API}/chat/?lat=${lat}&lon=${lon}&profile=${encodeURIComponent(healthProfile)}&language=${currentLang}&question=${encodeURIComponent(langPrompt[currentLang])}`, { method: 'POST' });
                 const data = await res.json();
                 chatHistory = [{ role: 'ai', text: data.answer }];
                 renderChat();
@@ -1335,17 +1354,23 @@
             input.value = '';
             
             const condNames = selectedConditions.map(c => t(c)).join(', ');
-            const context = currentLang === 'de' ? `Ich habe folgende Gesundheitsbeschwerden: ${condNames}.` :
-                           currentLang === 'fr' ? `J'ai les conditions de santé suivantes: ${condNames}.` :
-                           currentLang === 'it' ? `Ho le seguenti condizioni di salute: ${condNames}.` :
-                           `I have the following health conditions: ${condNames}.`;
+            const healthProfile = getHealthProfile();
+            
+            // Strong context about selected conditions
+            const contextIntro = {
+                de: `WICHTIG: Ich habe NUR diese Gesundheitsbeschwerden: ${condNames}. Beantworte meine Frage nur in Bezug auf diese Beschwerden.`,
+                en: `IMPORTANT: I ONLY have these health conditions: ${condNames}. Answer my question only regarding these conditions.`,
+                fr: `IMPORTANT: J'ai UNIQUEMENT ces conditions de santé: ${condNames}. Répondez à ma question uniquement concernant ces conditions.`,
+                it: `IMPORTANTE: Ho SOLO queste condizioni di salute: ${condNames}. Rispondi alla mia domanda solo riguardo a queste condizioni.`
+            };
+            const context = contextIntro[currentLang] || contextIntro.en;
             
             const el = document.getElementById('chat-messages');
             el.innerHTML += `<div class="chat-msg chat-ai" id="typing">💭 ...</div>`;
             el.scrollTop = el.scrollHeight;
             
             try {
-                const res = await fetch(`${API}/chat/?lat=${lat}&lon=${lon}&profile=Asthma/Respiratory&language=${currentLang}&question=${encodeURIComponent(q + '\n\n' + context)}`, { method: 'POST' });
+                const res = await fetch(`${API}/chat/?lat=${lat}&lon=${lon}&profile=${encodeURIComponent(healthProfile)}&language=${currentLang}&question=${encodeURIComponent(context + '\n\nMeine Frage: ' + q)}`, { method: 'POST' });
                 const data = await res.json();
                 document.getElementById('typing')?.remove();
                 chatHistory.push({ role: 'ai', text: data.answer });

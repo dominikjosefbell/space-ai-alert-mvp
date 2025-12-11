@@ -23,9 +23,29 @@
             background: linear-gradient(135deg, var(--bg) 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
             color: var(--text);
-            padding: 12px;
+            padding: 0;
         }
-        .container { max-width: 1600px; margin: 0 auto; }
+        .container { max-width: 1600px; margin: 0 auto; padding: 12px; }
+        
+        /* Language Bar */
+        .lang-bar {
+            background: rgba(0,0,0,0.4);
+            padding: 8px 16px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 8px;
+        }
+        .lang-bar select {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .lang-bar select option { color: #1e293b; background: white; }
         
         header {
             text-align: center;
@@ -95,8 +115,8 @@
             background: rgba(0,0,0,0.4);
             color: #fff;
             font-size: 0.85rem;
-            min-width: 100px;
         }
+        input[type="text"] { min-width: 220px; }
         button {
             padding: 8px 16px;
             border: none;
@@ -235,10 +255,21 @@
         @media (max-width: 768px) {
             .grid { grid-template-columns: 1fr 1fr; }
             .controls { flex-direction: column; align-items: stretch; }
+            input[type="text"] { min-width: 100%; }
         }
     </style>
 </head>
 <body>
+    <!-- Language Bar -->
+    <div class="lang-bar">
+        <select id="language" onchange="changeLanguage()">
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="fr">🇫🇷 Français</option>
+            <option value="it">🇮🇹 Italiano</option>
+        </select>
+    </div>
+
     <div class="container">
         <header>
             <h1>🌍 Environmental Monitor</h1>
@@ -256,12 +287,8 @@
             <div class="section-header">📊 <span id="inputsTitle">Standort & Einstellungen</span></div>
             <div class="controls">
                 <div class="control-group">
-                    <label id="latLabel">Breitengrad</label>
-                    <input type="number" id="lat" value="47.3769" step="0.0001">
-                </div>
-                <div class="control-group">
-                    <label id="lonLabel">Längengrad</label>
-                    <input type="number" id="lon" value="8.5417" step="0.0001">
+                    <label id="locationLabel">Standort</label>
+                    <input type="text" id="location" placeholder="z.B. Zürich, Schweiz">
                 </div>
                 <div class="control-group">
                     <label id="profileLabel">Profil</label>
@@ -273,15 +300,6 @@
                         <option value="Pilot/Aviation">Pilot/Luftfahrt</option>
                         <option value="Aurora Hunter">Aurora/Nordlichter</option>
                         <option value="Marine/Sailing">Marine/Segeln</option>
-                    </select>
-                </div>
-                <div class="control-group">
-                    <label id="langLabel">Sprache</label>
-                    <select id="language" onchange="changeLanguage()">
-                        <option value="de">🇩🇪 Deutsch</option>
-                        <option value="en">🇬🇧 English</option>
-                        <option value="fr">🇫🇷 Français</option>
-                        <option value="it">🇮🇹 Italiano</option>
                     </select>
                 </div>
                 <button class="btn-primary" onclick="fetchAlert()">🔍 <span id="btnGet">Empfehlung holen</span></button>
@@ -307,19 +325,22 @@
             <div id="data-grid"></div>
         </div>
         
-        <footer>v7.3 Complete Edition • 15+ Satellitendatenquellen</footer>
+        <footer>v7.4 Complete Edition • 15+ Satellitendatenquellen</footer>
     </div>
 
     <script>
         const API = window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://space-ai-alert-mvp.onrender.com';
         let currentData = null;
         let chatHistory = JSON.parse(localStorage.getItem('chat_history') || '[]');
+        let lat = 47.3769, lon = 8.5417;
+        let locationName = 'Zürich, Schweiz';
+        let currentLang = 'de';
         
         const T = {
             de: {
                 subtitle: "Complete Edition - 15+ Satellitendatenquellen",
-                inputsTitle: "Standort & Einstellungen", latLabel: "Breitengrad", lonLabel: "Längengrad",
-                profileLabel: "Profil", langLabel: "Sprache", btnGet: "Empfehlung holen", btnLoc: "Mein Standort",
+                inputsTitle: "Standort & Einstellungen", locationLabel: "Standort", locationPlaceholder: "z.B. Zürich, Schweiz",
+                profileLabel: "Profil", btnGet: "Empfehlung holen", btnLoc: "Mein Standort",
                 chatTitle: "KI-Assistent", clearChat: "Verlauf löschen", btnSend: "Senden",
                 dataTitle: "Echtzeit-Daten", loading: "Analysiere Daten...",
                 Low: "Niedrig", Medium: "Mittel", High: "Hoch", Critical: "Kritisch", risk: "Risiko",
@@ -332,55 +353,90 @@
                 "Strong Storm": "Starker Sturm", "Severe Storm": "Schwerer Sturm",
                 Yes: "Ja", No: "Nein", "None detected": "Keine", "No fires": "Keine",
                 wildfires: "Waldbrände", Earthquake: "Erdbeben", "Earth-directed CME": "CME Richtung Erde",
-                "Forest fires in": "Waldbrände in"
+                "Forest fires in": "Waldbrände in", locationNotFound: "Ort nicht gefunden. Bitte überprüfen."
             },
             en: {
                 subtitle: "Complete Edition - 15+ Satellite Data Sources",
-                inputsTitle: "Location & Settings", latLabel: "Latitude", lonLabel: "Longitude",
-                profileLabel: "Profile", langLabel: "Language", btnGet: "Get Recommendation", btnLoc: "My Location",
+                inputsTitle: "Location & Settings", locationLabel: "Location", locationPlaceholder: "e.g. London, UK",
+                profileLabel: "Profile", btnGet: "Get Recommendation", btnLoc: "My Location",
                 chatTitle: "AI Assistant", clearChat: "Clear history", btnSend: "Send",
-                dataTitle: "Real-time Data", loading: "Analyzing data...", risk: "Risk"
+                dataTitle: "Real-time Data", loading: "Analyzing data...", risk: "Risk",
+                locationNotFound: "Location not found. Please check."
             },
             fr: {
                 subtitle: "Édition Complète - 15+ Sources Satellitaires",
-                inputsTitle: "Localisation", latLabel: "Latitude", lonLabel: "Longitude",
-                profileLabel: "Profil", langLabel: "Langue", btnGet: "Obtenir", btnLoc: "Ma Position",
+                inputsTitle: "Localisation", locationLabel: "Lieu", locationPlaceholder: "ex: Paris, France",
+                profileLabel: "Profil", btnGet: "Obtenir", btnLoc: "Ma Position",
                 chatTitle: "Assistant IA", clearChat: "Effacer", btnSend: "Envoyer",
                 dataTitle: "Données Temps Réel", loading: "Analyse...",
                 Low: "Faible", Medium: "Moyen", High: "Élevé", Critical: "Critique", risk: "Risque",
-                Yes: "Oui", No: "Non"
+                Yes: "Oui", No: "Non", locationNotFound: "Lieu non trouvé. Veuillez vérifier."
             },
             it: {
                 subtitle: "Edizione Completa - 15+ Fonti Satellitari",
-                inputsTitle: "Posizione", latLabel: "Latitudine", lonLabel: "Longitudine",
-                profileLabel: "Profilo", langLabel: "Lingua", btnGet: "Ottieni", btnLoc: "Mia Posizione",
+                inputsTitle: "Posizione", locationLabel: "Luogo", locationPlaceholder: "es: Milano, Italia",
+                profileLabel: "Profilo", btnGet: "Ottieni", btnLoc: "Mia Posizione",
                 chatTitle: "Assistente IA", clearChat: "Cancella", btnSend: "Invia",
                 dataTitle: "Dati Tempo Reale", loading: "Analisi...",
                 Low: "Basso", Medium: "Medio", High: "Alto", Critical: "Critico", risk: "Rischio",
-                Yes: "Sì", No: "No"
+                Yes: "Sì", No: "No", locationNotFound: "Luogo non trovato. Si prega di verificare."
             }
         };
         
-        const t = k => T[document.getElementById('language').value]?.[k] || T.de[k] || k;
+        const t = k => T[currentLang]?.[k] || T.de[k] || k;
         
         const translateFactor = f => {
-            const lang = document.getElementById('language').value;
             const p = { de: { wildfires: 'Waldbrände', Earthquake: 'Erdbeben', 'Earth-directed CME': 'CME Richtung Erde', 'Forest fires in': 'Waldbrände in' },
                         fr: { wildfires: 'incendies', Earthquake: 'Séisme', 'Forest fires in': 'Feux en' },
                         it: { wildfires: 'incendi', Earthquake: 'Terremoto', 'Forest fires in': 'Incendi in' } };
             let r = f;
-            for (const [e, tr] of Object.entries(p[lang] || p.de || {})) r = r.replace(new RegExp(e, 'gi'), tr);
+            for (const [e, tr] of Object.entries(p[currentLang] || p.de || {})) r = r.replace(new RegExp(e, 'gi'), tr);
             return r;
         };
         
         const applyT = () => {
-            ['subtitle','inputsTitle','latLabel','lonLabel','profileLabel','langLabel','btnGet','btnLoc','chatTitle','clearChat','btnSend','dataTitle'].forEach(id => {
+            currentLang = document.getElementById('language').value;
+            ['subtitle','inputsTitle','locationLabel','profileLabel','btnGet','btnLoc','chatTitle','clearChat','btnSend','dataTitle'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.textContent = t(id);
             });
+            document.getElementById('location').placeholder = t('locationPlaceholder');
         };
         
-        const changeLanguage = () => { applyT(); localStorage.setItem('lang', document.getElementById('language').value); if (currentData) { renderAI(currentData); renderData(currentData); } };
+        const changeLanguage = () => { 
+            applyT(); 
+            localStorage.setItem('envmonitor_lang', currentLang); 
+            if (currentData) { renderAI(currentData); renderData(currentData); } 
+        };
+        
+        // === GEOCODING ===
+        async function geocodeLocation(query) {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=${currentLang}`);
+                const data = await res.json();
+                if (data.length > 0) {
+                    lat = parseFloat(data[0].lat);
+                    lon = parseFloat(data[0].lon);
+                    locationName = data[0].display_name.split(',').slice(0, 2).join(', ');
+                    return true;
+                }
+            } catch (e) { console.error('Geocoding error:', e); }
+            return false;
+        }
+        
+        async function reverseGeocode(latitude, longitude) {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=${currentLang}`);
+                const data = await res.json();
+                const city = data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || '';
+                const country = data.address?.country || '';
+                locationName = city && country ? `${city}, ${country}` : `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+                document.getElementById('location').value = locationName;
+            } catch (e) {
+                locationName = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+                document.getElementById('location').value = locationName;
+            }
+        }
         
         const badge = (v, th) => v == null ? '' : v <= th[0] ? 'badge-good' : v <= th[1] ? 'badge-moderate' : 'badge-bad';
         const fmt = (v, u = '', d = 1) => v == null || v === 'N/A' ? 'N/A' : (typeof v === 'number' ? v.toFixed(d) + u : v + u);
@@ -394,7 +450,7 @@
         const saveChat = () => { if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20); localStorage.setItem('chat_history', JSON.stringify(chatHistory)); };
         const clearChat = () => { chatHistory = []; localStorage.removeItem('chat_history'); document.getElementById('chat-messages').innerHTML = ''; fetchInitial(); };
         
-        const getInputs = () => ({ lat: document.getElementById('lat').value, lon: document.getElementById('lon').value, profile: document.getElementById('profile').value, lang: document.getElementById('language').value });
+        const getInputs = () => ({ lat, lon, profile: document.getElementById('profile').value, lang: currentLang });
         
         const fetchInitial = async () => {
             const { lat, lon, profile, lang } = getInputs();
@@ -409,6 +465,16 @@
         };
         
         async function fetchAlert() {
+            // Check if location input changed
+            const locInput = document.getElementById('location').value.trim();
+            if (locInput && locInput !== locationName) {
+                const success = await geocodeLocation(locInput);
+                if (!success) {
+                    alert(t('locationNotFound'));
+                    return;
+                }
+            }
+            
             const { lat, lon, profile, lang } = getInputs();
             document.getElementById('ai-container').innerHTML = `<div class="loading">${t('loading')}</div>`;
             document.getElementById('data-grid').innerHTML = '';
@@ -450,7 +516,7 @@
             const rCls = { Low: 'risk-low', Medium: 'risk-medium', High: 'risk-high', Critical: 'risk-critical' }[data.risk.level] || 'risk-low';
             const factors = (data.risk.factors || []).map(f => translateFactor(f));
             const fHtml = factors.length ? `<div class="risk-factors">${factors.map(f => `<span class="risk-factor${f.includes('🔥') || f.includes('CME') ? ' severe' : ''}">${f}</span>`).join('')}</div>` : '';
-            document.getElementById('ai-container').innerHTML = `<div class="ai-box"><div class="ai-recommendation">${data.recommendation}</div><div class="ai-meta"><span class="ai-source">📍 ${data.location.lat.toFixed(4)}, ${data.location.lon.toFixed(4)} • ${data.ai_source}</span><span class="risk-badge ${rCls}">${rLvl} ${rWord}</span></div>${fHtml}</div>`;
+            document.getElementById('ai-container').innerHTML = `<div class="ai-box"><div class="ai-recommendation">${data.recommendation}</div><div class="ai-meta"><span class="ai-source">📍 ${locationName} • ${data.ai_source}</span><span class="risk-badge ${rCls}">${rLvl} ${rWord}</span></div>${fHtml}</div>`;
         }
         
         function renderData(data) {
@@ -523,13 +589,29 @@
         }
         
         function useMyLocation() {
-            if (navigator.geolocation) navigator.geolocation.getCurrentPosition(p => { document.getElementById('lat').value = p.coords.latitude.toFixed(4); document.getElementById('lon').value = p.coords.longitude.toFixed(4); fetchAlert(); }, e => alert('Fehler: ' + e.message));
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    async pos => {
+                        lat = pos.coords.latitude;
+                        lon = pos.coords.longitude;
+                        await reverseGeocode(lat, lon);
+                        fetchAlert();
+                    },
+                    e => alert('GPS Error: ' + e.message)
+                );
+            }
         }
         
         document.addEventListener('DOMContentLoaded', () => {
-            const savedLang = localStorage.getItem('lang');
-            if (savedLang) document.getElementById('language').value = savedLang;
-            applyT(); renderChat(); fetchAlert();
+            const savedLang = localStorage.getItem('envmonitor_lang');
+            if (savedLang) {
+                currentLang = savedLang;
+                document.getElementById('language').value = savedLang;
+            }
+            applyT();
+            renderChat();
+            document.getElementById('location').value = locationName;
+            fetchAlert();
         });
     </script>
 </body>
