@@ -964,6 +964,41 @@ def build_ai_prompt(data: dict, profile: str, language: str, user_question: str 
         "it": "Rispondi in italiano."
     }
     
+    # Get current month and season for context
+    current_month = datetime.now().month
+    if current_month in [12, 1, 2]:
+        season = "Winter"
+        season_context = {
+            "de": "Es ist Winter. In beheizten Innenräumen ist die Luftfeuchtigkeit typischerweise NIEDRIG (20-40%), auch wenn draussen hohe Feuchtigkeit herrscht. Luftbefeuchter (nicht Entfeuchter!) können bei trockener Heizungsluft helfen.",
+            "en": "It's winter. Indoor humidity in heated rooms is typically LOW (20-40%), even when outdoor humidity is high. Humidifiers (not dehumidifiers!) can help with dry heating air.",
+            "fr": "C'est l'hiver. L'humidité intérieure dans les pièces chauffées est généralement BASSE (20-40%), même si l'humidité extérieure est élevée. Les humidificateurs (pas les déshumidificateurs!) peuvent aider.",
+            "it": "È inverno. L'umidità interna nelle stanze riscaldate è tipicamente BASSA (20-40%), anche quando l'umidità esterna è alta. Gli umidificatori (non i deumidificatori!) possono aiutare."
+        }
+    elif current_month in [3, 4, 5]:
+        season = "Frühling"
+        season_context = {
+            "de": "Es ist Frühling. Pollenbelastung ist oft hoch. Allergiker sollten Pollenprognosen beachten.",
+            "en": "It's spring. Pollen levels are often high. Allergy sufferers should check pollen forecasts.",
+            "fr": "C'est le printemps. Les niveaux de pollen sont souvent élevés. Les personnes allergiques doivent vérifier les prévisions polliniques.",
+            "it": "È primavera. I livelli di polline sono spesso alti. Chi soffre di allergie dovrebbe controllare le previsioni sui pollini."
+        }
+    elif current_month in [6, 7, 8]:
+        season = "Sommer"
+        season_context = {
+            "de": "Es ist Sommer. UV-Strahlung und Ozon können hoch sein. Bei hoher Luftfeuchtigkeit kann schwüle Hitze belastend sein.",
+            "en": "It's summer. UV radiation and ozone can be high. High humidity can make heat feel oppressive.",
+            "fr": "C'est l'été. Les rayons UV et l'ozone peuvent être élevés. Une humidité élevée peut rendre la chaleur oppressante.",
+            "it": "È estate. I raggi UV e l'ozono possono essere alti. L'alta umidità può rendere il caldo opprimente."
+        }
+    else:
+        season = "Herbst"
+        season_context = {
+            "de": "Es ist Herbst. Feuchtigkeit und Nebel sind häufig. Schimmelpilzsporen können bei Allergikern Probleme verursachen.",
+            "en": "It's autumn. Humidity and fog are common. Mold spores can cause problems for allergy sufferers.",
+            "fr": "C'est l'automne. L'humidité et le brouillard sont fréquents. Les spores de moisissure peuvent causer des problèmes aux personnes allergiques.",
+            "it": "È autunno. Umidità e nebbia sono comuni. Le spore di muffa possono causare problemi a chi soffre di allergie."
+        }
+    
     # Extract all data with safe defaults
     weather = data.get("weather", {})
     air = data.get("air_quality", {})
@@ -979,19 +1014,23 @@ def build_ai_prompt(data: dict, profile: str, language: str, user_question: str 
     
     # Build detailed data summary - exactly what UI shows
     data_summary = f"""
-=== AKTUELLE UMWELTDATEN (wie im Dashboard angezeigt) ===
+=== AKTUELLE UMWELTDATEN (GEMESSEN DRAUSSEN/AUSSENLUFT) ===
 
-🌤️ WETTER (Open-Meteo/ECMWF):
+⚠️ WICHTIGER HINWEIS: Alle Wetter- und Luftqualitätsdaten werden DRAUSSEN gemessen!
+- Luftfeuchtigkeit bezieht sich auf die AUSSENLUFT, nicht auf Innenräume
+- {season_context.get(language, season_context['de'])}
+
+🌤️ WETTER (Open-Meteo/ECMWF) - AUSSEN:
 - Temperatur: {weather.get('temperature', 'N/A')}°C
 - Gefühlt wie: {weather.get('feels_like', 'N/A')}°C
 - Bedingungen: {weather.get('weather', 'N/A')}
-- Feuchtigkeit: {weather.get('humidity', 'N/A')}%
+- Feuchtigkeit DRAUSSEN: {weather.get('humidity', 'N/A')}%
 - Wind: {weather.get('wind_speed', 'N/A')} km/h
 - Windböen: {weather.get('wind_gusts', 'N/A')} km/h
 - Bewölkung: {weather.get('cloud_cover', 'N/A')}%
 - Luftdruck: {weather.get('pressure', 'N/A')} hPa
 
-💨 LUFTQUALITÄT (Copernicus CAMS):
+💨 LUFTQUALITÄT (Copernicus CAMS) - AUSSEN:
 - EU AQI: {air.get('eu_aqi', 'N/A')} (Kategorie: {air.get('category', 'N/A')})
 - US AQI: {air.get('us_aqi', 'N/A')}
 - PM2.5: {air.get('pm2_5', 'N/A')} μg/m³
@@ -1067,8 +1106,44 @@ def build_ai_prompt(data: dict, profile: str, language: str, user_question: str 
     
     profile_context = profile_contexts.get(profile, "eine normale Person")
 
+    # Smart instructions that emphasize context
+    smart_context = {
+        "de": """
+KRITISCH - BEACHTE:
+- Alle Wetterdaten sind AUSSENMESSUNGEN (nicht Innenraum!)
+- Hohe Aussenfeuchtigkeit im Winter ≠ hohe Innenfeuchtigkeit (Heizung trocknet die Luft!)
+- Im Winter: LUFTBEFEUCHTER empfehlen (nicht Entfeuchter!)
+- Unterscheide klar zwischen Innen- und Aussenbereich
+- Gib saisongerechte, logisch sinnvolle Ratschläge
+""",
+        "en": """
+CRITICAL - NOTE:
+- All weather data are OUTDOOR measurements (not indoor!)
+- High outdoor humidity in winter ≠ high indoor humidity (heating dries the air!)
+- In winter: Recommend HUMIDIFIERS (not dehumidifiers!)
+- Clearly distinguish between indoor and outdoor
+- Give seasonally appropriate, logical advice
+""",
+        "fr": """
+CRITIQUE - À NOTER:
+- Toutes les données météo sont des MESURES EXTÉRIEURES (pas intérieures!)
+- Humidité extérieure élevée en hiver ≠ humidité intérieure élevée (le chauffage assèche l'air!)
+- En hiver: Recommander des HUMIDIFICATEURS (pas des déshumidificateurs!)
+- Distinguer clairement entre intérieur et extérieur
+- Donner des conseils saisonniers et logiques
+""",
+        "it": """
+CRITICO - NOTA:
+- Tutti i dati meteo sono MISURAZIONI ESTERNE (non interne!)
+- Alta umidità esterna in inverno ≠ alta umidità interna (il riscaldamento asciuga l'aria!)
+- In inverno: Raccomandare UMIDIFICATORI (non deumidificatori!)
+- Distinguere chiaramente tra interno ed esterno
+- Dare consigli stagionali e logici
+"""
+    }
+
     if user_question:
-        instruction = f"""Du bist ein hilfreicher Umweltberater. Beantworte die Frage des Nutzers basierend auf den aktuellen Daten.
+        instruction = f"""Du bist ein intelligenter Umwelt- und Gesundheitsberater. Beantworte die Frage des Nutzers basierend auf den aktuellen Daten.
 
 PROFIL: {profile} ({profile_context})
 
@@ -1076,21 +1151,25 @@ FRAGE: {user_question}
 
 {data_summary}
 
+{smart_context.get(language, smart_context['de'])}
+
 WICHTIG:
 - {lang_instructions.get(language, lang_instructions['de'])}
 - Beziehe dich auf die KONKRETEN WERTE aus den Daten oben
 - Wenn ein Wert als "N/A" oder "None" angezeigt wird, sage dass diese Daten nicht verfügbar sind
 - Sei präzise und hilfreich (2-4 Sätze)
 - Nutze passende Emojis
-- Gib praktische Empfehlungen
+- Gib SAISONGERECHTE, LOGISCHE Empfehlungen (keine generischen Ratschläge!)
 
 Antwort:"""
     else:
-        instruction = f"""Du bist ein hilfreicher Umweltberater. Gib eine personalisierte Empfehlung basierend auf den aktuellen Daten.
+        instruction = f"""Du bist ein intelligenter Umwelt- und Gesundheitsberater. Gib eine personalisierte Empfehlung basierend auf den aktuellen Daten.
 
 PROFIL: {profile} ({profile_context})
 
 {data_summary}
+
+{smart_context.get(language, smart_context['de'])}
 
 WICHTIG:
 - {lang_instructions.get(language, lang_instructions['de'])}
@@ -1098,6 +1177,7 @@ WICHTIG:
 - Beziehe dich auf konkrete Werte (Temperatur, AQI, UV, etc.)
 - Warne bei Gefahren (schlechte Luft, hohe UV, Waldbrände, Erdbeben)
 - Nutze passende Emojis
+- Gib SAISONGERECHTE, LOGISCHE Empfehlungen
 - Ende positiv wenn die Bedingungen gut sind
 
 Empfehlung:"""
