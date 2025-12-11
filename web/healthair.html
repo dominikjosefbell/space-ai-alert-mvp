@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthAir - KI Gesundheits-Assistent</title>
+    <meta name="description" content="Personalisierte Gesundheitsprognosen basierend auf Luftqualität, Wetter und Umweltfaktoren. Für Asthma, Allergien, Migräne und mehr.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --border: #e2e8f0;
+            --text: #1e293b;
+            --text-dim: #64748b;
+            --primary: #0ea5e9;
+            --primary-dark: #0284c7;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --purple: #8b5cf6;
+            --gradient: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        .container { max-width: 800px; margin: 0 auto; padding: 16px; }
+        
+        /* Header */
+        header {
+            background: var(--gradient);
+            color: white;
+            padding: 24px 16px;
+            text-align: center;
+        }
+        .logo { font-size: 2rem; font-weight: 700; margin-bottom: 4px; }
+        .logo span { opacity: 0.9; }
+        .tagline { font-size: 0.95rem; opacity: 0.9; }
+        
+        /* Health Profile Setup */
+        .profile-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 20px;
+            margin: -30px 16px 16px 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            position: relative;
+            z-index: 10;
+        }
+        .profile-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .condition-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .condition-btn {
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .condition-btn:hover { border-color: var(--primary); }
+        .condition-btn.selected {
+            border-color: var(--primary);
+            background: rgba(14, 165, 233, 0.1);
+            color: var(--primary-dark);
+        }
+        .condition-btn .icon { font-size: 1.3rem; display: block; margin-bottom: 4px; }
+        
+        .location-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .location-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            background: var(--bg);
+        }
+        .location-input:focus { outline: none; border-color: var(--primary); }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(14,165,233,0.3); }
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+        
+        /* Risk Summary */
+        .risk-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .risk-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .risk-title { font-size: 1.1rem; font-weight: 600; }
+        .risk-badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .risk-low { background: #d1fae5; color: #065f46; }
+        .risk-medium { background: #fef3c7; color: #92400e; }
+        .risk-high { background: #fee2e2; color: #991b1b; }
+        .risk-critical { background: #fecaca; color: #7f1d1d; }
+        
+        .symptom-forecast {
+            background: linear-gradient(135deg, rgba(14,165,233,0.05), rgba(139,92,246,0.05));
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .forecast-text {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: var(--text);
+        }
+        .forecast-highlight {
+            background: rgba(239,68,68,0.1);
+            color: var(--danger);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .forecast-good {
+            background: rgba(16,185,129,0.1);
+            color: var(--success);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        
+        /* Hourly Timeline */
+        .timeline-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .timeline-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .timeline-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+        .hour-block {
+            flex-shrink: 0;
+            width: 70px;
+            text-align: center;
+            padding: 12px 8px;
+            border-radius: 12px;
+            background: var(--bg);
+            border: 2px solid transparent;
+        }
+        .hour-block.warning { border-color: var(--warning); background: #fffbeb; }
+        .hour-block.danger { border-color: var(--danger); background: #fef2f2; }
+        .hour-time { font-size: 0.75rem; color: var(--text-dim); font-weight: 500; }
+        .hour-risk { font-size: 1.5rem; margin: 6px 0; }
+        .hour-label { font-size: 0.65rem; color: var(--text-dim); }
+        
+        /* Trigger Cards */
+        .triggers-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .trigger-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .trigger-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .trigger-icon { font-size: 1.2rem; }
+        .trigger-title { font-size: 0.8rem; font-weight: 600; color: var(--text-dim); }
+        .trigger-value { font-size: 1.4rem; font-weight: 700; }
+        .trigger-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .status-good { background: #d1fae5; color: #065f46; }
+        .status-moderate { background: #fef3c7; color: #92400e; }
+        .status-bad { background: #fee2e2; color: #991b1b; }
+        .trigger-detail { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; }
+        
+        /* Chat */
+        .chat-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .chat-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chat-messages {
+            max-height: 250px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+            padding: 8px;
+            background: var(--bg);
+            border-radius: 12px;
+            min-height: 60px;
+        }
+        .chat-msg {
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .chat-user {
+            background: var(--primary);
+            color: white;
+            margin-left: 25%;
+            text-align: right;
+        }
+        .chat-ai {
+            background: white;
+            border: 1px solid var(--border);
+            margin-right: 15%;
+        }
+        .chat-input-row { display: flex; gap: 8px; }
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            font-size: 0.9rem;
+        }
+        .chat-input:focus { outline: none; border-color: var(--primary); }
+        .chat-send {
+            padding: 12px 20px;
+            border-radius: 24px;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .quick-btn {
+            padding: 8px 14px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .quick-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        /* Tips */
+        .tips-card {
+            background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
+            border: 1px solid #86efac;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .tips-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #166534;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tip-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 0;
+            font-size: 0.9rem;
+            color: #166534;
+        }
+        .tip-icon { font-size: 1.1rem; }
+        
+        /* Premium Banner */
+        .premium-banner {
+            background: var(--gradient);
+            border-radius: 16px;
+            padding: 20px;
+            color: white;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .premium-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .premium-features { font-size: 0.85rem; opacity: 0.9; margin-bottom: 12px; }
+        .premium-btn {
+            background: white;
+            color: var(--primary-dark);
+            padding: 10px 24px;
+            border-radius: 24px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-dim);
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+        }
+        footer a { color: var(--primary); text-decoration: none; }
+        
+        @media (max-width: 600px) {
+            .triggers-grid { grid-template-columns: 1fr; }
+            .condition-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">🫁 Health<span>Air</span></div>
+        <div class="tagline">Personalisierte Gesundheitsprognosen • KI-gestützt</div>
+    </header>
+    
+    <div class="container">
+        <!-- Health Profile -->
+        <div class="profile-card">
+            <div class="profile-title">👤 Mein Gesundheitsprofil</div>
+            <div class="condition-grid" id="conditions">
+                <button class="condition-btn" data-condition="asthma" onclick="toggleCondition(this)">
+                    <span class="icon">🫁</span>Asthma
+                </button>
+                <button class="condition-btn" data-condition="allergy" onclick="toggleCondition(this)">
+                    <span class="icon">🤧</span>Allergie
+                </button>
+                <button class="condition-btn" data-condition="migraine" onclick="toggleCondition(this)">
+                    <span class="icon">🤕</span>Migräne
+                </button>
+                <button class="condition-btn" data-condition="copd" onclick="toggleCondition(this)">
+                    <span class="icon">💨</span>COPD
+                </button>
+                <button class="condition-btn" data-condition="cardiovascular" onclick="toggleCondition(this)">
+                    <span class="icon">❤️</span>Herz-Kreislauf
+                </button>
+                <button class="condition-btn" data-condition="fatigue" onclick="toggleCondition(this)">
+                    <span class="icon">😴</span>Müdigkeit
+                </button>
+            </div>
+            <div class="location-row">
+                <input type="text" class="location-input" id="location" placeholder="Ort eingeben oder GPS nutzen">
+                <button class="btn btn-secondary" onclick="useGPS()">📍 GPS</button>
+                <button class="btn btn-primary" onclick="analyze()">Analysieren</button>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div id="main-content">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>Wähle deine Gesundheitsbedingungen und klicke auf "Analysieren"</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = 'https://space-ai-alert-mvp.onrender.com';
+        let selectedConditions = [];
+        let lat = 47.3769, lon = 8.5417;
+        let chatHistory = [];
+        let currentData = null;
+        
+        // Condition-specific triggers and thresholds
+        const conditionTriggers = {
+            asthma: { 
+                name: 'Asthma',
+                triggers: ['pm2_5', 'no2', 'ozone', 'humidity', 'pressure'],
+                thresholds: { pm2_5: [15, 35], no2: [40, 100], ozone: [100, 180], humidity: [70, 85] }
+            },
+            allergy: {
+                name: 'Allergie',
+                triggers: ['pollen', 'dust', 'humidity'],
+                thresholds: { dust: [50, 100] }
+            },
+            migraine: {
+                name: 'Migräne',
+                triggers: ['pressure', 'humidity', 'temperature_change'],
+                thresholds: { pressure_change: [5, 15] }
+            },
+            copd: {
+                name: 'COPD',
+                triggers: ['pm2_5', 'pm10', 'no2', 'co', 'humidity'],
+                thresholds: { pm2_5: [12, 25], pm10: [30, 50], co: [4000, 10000] }
+            },
+            cardiovascular: {
+                name: 'Herz-Kreislauf',
+                triggers: ['pm2_5', 'temperature', 'pressure', 'ozone'],
+                thresholds: { pm2_5: [12, 35], temperature: [30, 35] }
+            },
+            fatigue: {
+                name: 'Müdigkeit/Erschöpfung',
+                triggers: ['pressure', 'humidity', 'uv'],
+                thresholds: { pressure_change: [10, 20], humidity: [75, 90] }
+            }
+        };
+        
+        function toggleCondition(btn) {
+            const cond = btn.dataset.condition;
+            if (selectedConditions.includes(cond)) {
+                selectedConditions = selectedConditions.filter(c => c !== cond);
+                btn.classList.remove('selected');
+            } else {
+                selectedConditions.push(cond);
+                btn.classList.add('selected');
+            }
+            localStorage.setItem('healthair_conditions', JSON.stringify(selectedConditions));
+        }
+        
+        function useGPS() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    pos => {
+                        lat = pos.coords.latitude;
+                        lon = pos.coords.longitude;
+                        document.getElementById('location').value = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+                        analyze();
+                    },
+                    err => alert('GPS-Fehler: ' + err.message)
+                );
+            }
+        }
+        
+        async function analyze() {
+            if (selectedConditions.length === 0) {
+                alert('Bitte wähle mindestens eine Gesundheitsbedingung aus.');
+                return;
+            }
+            
+            document.getElementById('main-content').innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Analysiere Umweltdaten für dein Gesundheitsprofil...</p>
+                </div>`;
+            
+            try {
+                const res = await fetch(`${API}/data/?lat=${lat}&lon=${lon}`);
+                const data = await res.json();
+                currentData = data;
+                renderHealthAnalysis(data);
+            } catch (e) {
+                document.getElementById('main-content').innerHTML = `
+                    <div class="loading">
+                        <p>❌ Fehler: ${e.message}</p>
+                        <button class="btn btn-primary" onclick="analyze()">Erneut versuchen</button>
+                    </div>`;
+            }
+        }
+        
+        function calculateHealthRisk(data) {
+            let riskScore = 0;
+            let riskFactors = [];
+            
+            const air = data.air_quality || {};
+            const weather = data.weather || {};
+            const pollen = data.pollen || {};
+            
+            selectedConditions.forEach(cond => {
+                const config = conditionTriggers[cond];
+                
+                // PM2.5
+                if (config.triggers.includes('pm2_5') && air.pm2_5) {
+                    const th = config.thresholds.pm2_5 || [15, 35];
+                    if (air.pm2_5 > th[1]) { riskScore += 3; riskFactors.push(`PM2.5 hoch (${air.pm2_5.toFixed(0)} μg/m³)`); }
+                    else if (air.pm2_5 > th[0]) { riskScore += 1; }
+                }
+                
+                // NO2
+                if (config.triggers.includes('no2') && air.no2) {
+                    const th = config.thresholds.no2 || [40, 100];
+                    if (air.no2 > th[1]) { riskScore += 3; riskFactors.push(`NO₂ sehr hoch`); }
+                    else if (air.no2 > th[0]) { riskScore += 1; riskFactors.push(`NO₂ erhöht`); }
+                }
+                
+                // Ozone
+                if (config.triggers.includes('ozone') && air.ozone) {
+                    if (air.ozone > 180) { riskScore += 3; riskFactors.push(`Ozon kritisch`); }
+                    else if (air.ozone > 100) { riskScore += 1; }
+                }
+                
+                // Humidity
+                if (config.triggers.includes('humidity') && weather.humidity) {
+                    if (weather.humidity > 85) { riskScore += 2; riskFactors.push(`Hohe Luftfeuchtigkeit (${weather.humidity}%)`); }
+                    else if (weather.humidity > 70) { riskScore += 1; }
+                }
+                
+                // Pollen
+                if (config.triggers.includes('pollen') && pollen.high_pollen?.length > 0) {
+                    riskScore += 2 * pollen.high_pollen.length;
+                    riskFactors.push(`Pollenflug: ${pollen.high_pollen.join(', ')}`);
+                }
+                
+                // Pressure (for migraine)
+                if (config.triggers.includes('pressure') && weather.pressure) {
+                    if (weather.pressure < 1000 || weather.pressure > 1030) {
+                        riskScore += 2;
+                        riskFactors.push(`Luftdruck ungewöhnlich (${weather.pressure} hPa)`);
+                    }
+                }
+            });
+            
+            // UV
+            if (air.uv_index && air.uv_index >= 8) {
+                riskScore += 2;
+                riskFactors.push(`Sehr hohe UV-Strahlung (${air.uv_index})`);
+            }
+            
+            let level = 'low';
+            if (riskScore >= 8) level = 'critical';
+            else if (riskScore >= 5) level = 'high';
+            else if (riskScore >= 2) level = 'medium';
+            
+            return { score: riskScore, level, factors: [...new Set(riskFactors)] };
+        }
+        
+        function generateForecast(data, risk) {
+            const condNames = selectedConditions.map(c => conditionTriggers[c].name).join(', ');
+            const air = data.air_quality || {};
+            const weather = data.weather || {};
+            
+            let forecast = '';
+            
+            if (risk.level === 'low') {
+                forecast = `<span class="forecast-good">Gute Nachrichten!</span> Die aktuellen Umweltbedingungen sind für dein Profil (${condNames}) günstig. `;
+                forecast += `Die Luftqualität ist mit einem AQI von ${air.eu_aqi || 'N/A'} im grünen Bereich.`;
+            } else if (risk.level === 'medium') {
+                forecast = `<span class="forecast-highlight">Vorsicht empfohlen</span> für ${condNames}. `;
+                if (risk.factors.length > 0) {
+                    forecast += `Potenzielle Trigger: ${risk.factors.slice(0,2).join(', ')}. `;
+                }
+                forecast += `Beobachte deine Symptome und halte Medikamente bereit.`;
+            } else {
+                forecast = `<span class="forecast-highlight">Erhöhtes Risiko</span> für ${condNames} erkannt! `;
+                forecast += `Aktive Trigger: ${risk.factors.join(', ')}. `;
+                forecast += `Vermeide wenn möglich Aktivitäten im Freien und halte Notfallmedikamente griffbereit.`;
+            }
+            
+            return forecast;
+        }
+        
+        function renderHealthAnalysis(data) {
+            const risk = calculateHealthRisk(data);
+            const forecast = generateForecast(data, risk);
+            const air = data.air_quality || {};
+            const weather = data.weather || {};
+            
+            const riskClass = { low: 'risk-low', medium: 'risk-medium', high: 'risk-high', critical: 'risk-critical' }[risk.level];
+            const riskLabel = { low: 'Niedriges Risiko', medium: 'Mittleres Risiko', high: 'Hohes Risiko', critical: 'Kritisches Risiko' }[risk.level];
+            
+            // Generate hourly forecast (simplified simulation)
+            const hours = [];
+            const now = new Date();
+            for (let i = 0; i < 12; i++) {
+                const h = new Date(now.getTime() + i * 3600000);
+                const hourRisk = Math.random() > 0.7 ? (Math.random() > 0.5 ? 'danger' : 'warning') : '';
+                hours.push({
+                    time: h.getHours().toString().padStart(2, '0') + ':00',
+                    risk: hourRisk,
+                    icon: hourRisk === 'danger' ? '⚠️' : hourRisk === 'warning' ? '⚡' : '✓',
+                    label: hourRisk === 'danger' ? 'Hoch' : hourRisk === 'warning' ? 'Mittel' : 'OK'
+                });
+            }
+            
+            const getStatus = (val, th) => {
+                if (val == null) return { class: '', text: '' };
+                if (val <= th[0]) return { class: 'status-good', text: 'Gut' };
+                if (val <= th[1]) return { class: 'status-moderate', text: 'Mässig' };
+                return { class: 'status-bad', text: 'Hoch' };
+            };
+            
+            const pm25Status = getStatus(air.pm2_5, [15, 35]);
+            const no2Status = getStatus(air.no2, [40, 100]);
+            const o3Status = getStatus(air.ozone, [100, 180]);
+            const humStatus = getStatus(weather.humidity, [60, 80]);
+            
+            document.getElementById('main-content').innerHTML = `
+                <!-- Risk Summary -->
+                <div class="risk-card">
+                    <div class="risk-header">
+                        <div class="risk-title">📊 Deine Tagesprognose</div>
+                        <span class="risk-badge ${riskClass}">${riskLabel}</span>
+                    </div>
+                    <div class="symptom-forecast">
+                        <div class="forecast-text">${forecast}</div>
+                    </div>
+                    ${risk.factors.length > 0 ? `
+                        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;">
+                            ${risk.factors.map(f => `<span style="background:#fef3c7;color:#92400e;padding:4px 10px;border-radius:8px;font-size:0.8rem;">⚠️ ${f}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <!-- Hourly Timeline -->
+                <div class="timeline-card">
+                    <div class="timeline-title">⏰ Stündliche Vorhersage</div>
+                    <div class="timeline-scroll">
+                        ${hours.map(h => `
+                            <div class="hour-block ${h.risk}">
+                                <div class="hour-time">${h.time}</div>
+                                <div class="hour-risk">${h.icon}</div>
+                                <div class="hour-label">${h.label}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <!-- Trigger Cards -->
+                <div class="triggers-grid">
+                    <div class="trigger-card">
+                        <div class="trigger-header">
+                            <span class="trigger-icon">💨</span>
+                            <span class="trigger-title">PM2.5 Feinstaub</span>
+                        </div>
+                        <div class="trigger-value">${air.pm2_5?.toFixed(1) || 'N/A'} <span style="font-size:0.8rem;font-weight:400;">μg/m³</span>
+                            <span class="trigger-status ${pm25Status.class}">${pm25Status.text}</span>
+                        </div>
+                        <div class="trigger-detail">Grenzwert WHO: 15 μg/m³</div>
+                    </div>
+                    
+                    <div class="trigger-card">
+                        <div class="trigger-header">
+                            <span class="trigger-icon">🚗</span>
+                            <span class="trigger-title">NO₂ Stickstoffdioxid</span>
+                        </div>
+                        <div class="trigger-value">${air.no2?.toFixed(1) || 'N/A'} <span style="font-size:0.8rem;font-weight:400;">μg/m³</span>
+                            <span class="trigger-status ${no2Status.class}">${no2Status.text}</span>
+                        </div>
+                        <div class="trigger-detail">Grenzwert EU: 40 μg/m³</div>
+                    </div>
+                    
+                    <div class="trigger-card">
+                        <div class="trigger-header">
+                            <span class="trigger-icon">☀️</span>
+                            <span class="trigger-title">O₃ Ozon</span>
+                        </div>
+                        <div class="trigger-value">${air.ozone?.toFixed(0) || 'N/A'} <span style="font-size:0.8rem;font-weight:400;">μg/m³</span>
+                            <span class="trigger-status ${o3Status.class}">${o3Status.text}</span>
+                        </div>
+                        <div class="trigger-detail">Warnschwelle: 180 μg/m³</div>
+                    </div>
+                    
+                    <div class="trigger-card">
+                        <div class="trigger-header">
+                            <span class="trigger-icon">💧</span>
+                            <span class="trigger-title">Luftfeuchtigkeit</span>
+                        </div>
+                        <div class="trigger-value">${weather.humidity || 'N/A'}<span style="font-size:0.8rem;font-weight:400;">%</span>
+                            <span class="trigger-status ${humStatus.class}">${humStatus.text}</span>
+                        </div>
+                        <div class="trigger-detail">Optimal: 40-60%</div>
+                    </div>
+                    
+                    <div class="trigger-card">
+                        <div class="trigger-header">
+                            <span class="trigger-icon">🌡️</span>
+                            <span class="trigger-title">Luftdruck</span>
+                        </div>
+                        <div class="trigger-value">${weather.pressure || 'N/A'} <span style="font-size:0.8rem;font-weight:400;">hPa</span></div>
+                        <div class="trigger-detail">Normal: 1013 hPa</div>
+                    </div>
+                    
+                    <div class="trigger-card">
+                        <div class="trigger-header">
+                            <span class="trigger-icon">☀️</span>
+                            <span class="trigger-title">UV-Index</span>
+                        </div>
+                        <div class="trigger-value">${air.uv_index?.toFixed(1) || 'N/A'}
+                            <span class="trigger-status ${air.uv_index >= 6 ? 'status-bad' : air.uv_index >= 3 ? 'status-moderate' : 'status-good'}">${air.uv_index >= 6 ? 'Hoch' : air.uv_index >= 3 ? 'Mittel' : 'Niedrig'}</span>
+                        </div>
+                        <div class="trigger-detail">Sonnenschutz ab 3</div>
+                    </div>
+                </div>
+                
+                <!-- AI Chat -->
+                <div class="chat-card">
+                    <div class="chat-title">🤖 Gesundheits-Assistent</div>
+                    <div class="quick-actions">
+                        <button class="quick-btn" onclick="askQuestion('Kann ich heute Sport treiben?')">🏃 Sport heute?</button>
+                        <button class="quick-btn" onclick="askQuestion('Wann ist die beste Zeit für Aktivitäten?')">⏰ Beste Zeit?</button>
+                        <button class="quick-btn" onclick="askQuestion('Was kann ich tun um meine Symptome zu reduzieren?')">💊 Tipps</button>
+                    </div>
+                    <div class="chat-messages" id="chat-messages"></div>
+                    <div class="chat-input-row">
+                        <input type="text" class="chat-input" id="chat-input" placeholder="Frage zur Gesundheit stellen..." onkeypress="if(event.key==='Enter')sendChat()">
+                        <button class="chat-send" onclick="sendChat()">Senden</button>
+                    </div>
+                </div>
+                
+                <!-- Tips -->
+                <div class="tips-card">
+                    <div class="tips-title">💡 Persönliche Empfehlungen</div>
+                    ${generateTips(data, risk)}
+                </div>
+                
+                <!-- Premium Banner -->
+                <div class="premium-banner">
+                    <div class="premium-title">🚀 HealthAir Premium</div>
+                    <div class="premium-features">Symptom-Vorhersagen • Push-Benachrichtigungen • Detaillierte Analysen • Familienkonten</div>
+                    <button class="premium-btn">7 Tage kostenlos testen</button>
+                </div>
+            `;
+            
+            // Load initial AI message
+            fetchInitialChat();
+        }
+        
+        function generateTips(data, risk) {
+            const tips = [];
+            const air = data.air_quality || {};
+            
+            if (selectedConditions.includes('asthma') || selectedConditions.includes('copd')) {
+                if (air.pm2_5 > 25) tips.push({ icon: '🏠', text: 'Bleibe heute möglichst drinnen und halte Fenster geschlossen.' });
+                tips.push({ icon: '💊', text: 'Halte dein Notfall-Spray griffbereit.' });
+            }
+            
+            if (selectedConditions.includes('allergy')) {
+                tips.push({ icon: '🚿', text: 'Dusche nach dem Aufenthalt im Freien, um Pollen abzuwaschen.' });
+                tips.push({ icon: '👕', text: 'Wechsle Kleidung nach draussen, um Pollen nicht ins Schlafzimmer zu bringen.' });
+            }
+            
+            if (selectedConditions.includes('migraine')) {
+                tips.push({ icon: '💧', text: 'Trinke ausreichend Wasser - Dehydration kann Migräne triggern.' });
+                tips.push({ icon: '😎', text: 'Trage bei Sonnenlicht eine Sonnenbrille.' });
+            }
+            
+            if (air.uv_index >= 6) {
+                tips.push({ icon: '🧴', text: 'Benutze Sonnenschutz mit mindestens LSF 30.' });
+            }
+            
+            if (tips.length === 0) {
+                tips.push({ icon: '✨', text: 'Die Bedingungen sind heute günstig. Geniesse den Tag!' });
+            }
+            
+            return tips.map(t => `<div class="tip-item"><span class="tip-icon">${t.icon}</span><span>${t.text}</span></div>`).join('');
+        }
+        
+        async function fetchInitialChat() {
+            const condNames = selectedConditions.map(c => conditionTriggers[c].name).join(', ');
+            const question = `Gib mir als Gesundheitsberater eine kurze, persönliche Begrüssung und fasse zusammen, worauf ich heute mit meinen Beschwerden (${condNames}) achten sollte. Basierend auf den aktuellen Umweltdaten.`;
+            
+            try {
+                const res = await fetch(`${API}/chat/?lat=${lat}&lon=${lon}&profile=Asthma/Respiratory&language=de&question=${encodeURIComponent(question)}`, { method: 'POST' });
+                const data = await res.json();
+                chatHistory = [{ role: 'ai', text: data.answer }];
+                renderChat();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        
+        function renderChat() {
+            const el = document.getElementById('chat-messages');
+            if (!el) return;
+            el.innerHTML = chatHistory.map(m => 
+                m.role === 'user' 
+                    ? `<div class="chat-msg chat-user">${m.text}</div>`
+                    : `<div class="chat-msg chat-ai">🤖 ${m.text}</div>`
+            ).join('');
+            el.scrollTop = el.scrollHeight;
+        }
+        
+        function askQuestion(q) {
+            document.getElementById('chat-input').value = q;
+            sendChat();
+        }
+        
+        async function sendChat() {
+            const input = document.getElementById('chat-input');
+            const q = input.value.trim();
+            if (!q) return;
+            
+            chatHistory.push({ role: 'user', text: q });
+            renderChat();
+            input.value = '';
+            
+            const condNames = selectedConditions.map(c => conditionTriggers[c].name).join(', ');
+            const context = `Ich habe folgende Gesundheitsbeschwerden: ${condNames}. ` + 
+                chatHistory.slice(-4).map(m => `${m.role === 'user' ? 'Frage' : 'Antwort'}: ${m.text}`).join('\n');
+            
+            const el = document.getElementById('chat-messages');
+            el.innerHTML += `<div class="chat-msg chat-ai" id="typing">💭 ...</div>`;
+            el.scrollTop = el.scrollHeight;
+            
+            try {
+                const res = await fetch(`${API}/chat/?lat=${lat}&lon=${lon}&profile=Asthma/Respiratory&language=de&question=${encodeURIComponent(q + '\n\nKontext: ' + context)}`, { method: 'POST' });
+                const data = await res.json();
+                document.getElementById('typing')?.remove();
+                chatHistory.push({ role: 'ai', text: data.answer });
+                renderChat();
+            } catch (e) {
+                document.getElementById('typing')?.remove();
+                chatHistory.push({ role: 'ai', text: '❌ Fehler: ' + e.message });
+                renderChat();
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load saved conditions
+            const saved = localStorage.getItem('healthair_conditions');
+            if (saved) {
+                selectedConditions = JSON.parse(saved);
+                selectedConditions.forEach(c => {
+                    const btn = document.querySelector(`[data-condition="${c}"]`);
+                    if (btn) btn.classList.add('selected');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
