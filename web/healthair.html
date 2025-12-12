@@ -101,6 +101,7 @@
             transition: all 0.2s;
             text-align: center;
             font-size: 0.9rem;
+            position: relative;
         }
         .condition-btn:hover { border-color: var(--primary); }
         .condition-btn.active {
@@ -109,6 +110,23 @@
             color: var(--primary-dark);
         }
         .condition-icon { font-size: 1.3rem; display: block; margin-bottom: 4px; }
+        .condition-btn.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+        .condition-priority {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 22px;
+            height: 22px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .profile-hint { font-size: 0.8rem; color: var(--text-dim); font-weight: 400; margin-left: 8px; }
         
         .location-row {
             display: flex;
@@ -667,6 +685,42 @@
         .feedback-btn:hover { transform: scale(1.05); }
         .feedback-btn.yes:hover { border-color: var(--danger); background: var(--danger-bg); }
         .feedback-btn.no:hover { border-color: var(--success); background: var(--success-bg); }
+        .feedback-severity {
+            display: none;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+        .feedback-severity.show { display: block; }
+        .feedback-severity-label { font-size: 0.9rem; margin-bottom: 12px; }
+        .feedback-slider-row { display: flex; align-items: center; gap: 12px; }
+        .feedback-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(to right, var(--success), var(--warning), var(--danger));
+        }
+        .feedback-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid var(--primary);
+            cursor: pointer;
+        }
+        .feedback-slider-value { font-weight: 700; font-size: 1.2rem; min-width: 30px; }
+        .feedback-submit {
+            margin-top: 16px;
+            padding: 12px 24px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
         .feedback-thanks {
             padding: 16px;
             background: var(--success-bg);
@@ -764,7 +818,7 @@
     </header>
     
     <div class="profile-card">
-        <div class="profile-title">👤 <span id="profileTitle">Mein Gesundheitsprofil</span></div>
+        <div class="profile-title">👤 <span id="profileTitle">Mein Gesundheitsprofil</span><span class="profile-hint" id="profileHint">(max. 3)</span></div>
         
         <div class="condition-grid" id="conditions">
             <button class="condition-btn" data-condition="asthma" onclick="toggleCondition(this)">
@@ -846,7 +900,7 @@
                 
                 healthScore: "Health Impact Score",
                 scoreVeryLow: "Sehr niedrig", scoreLow: "Niedrig", scoreModerate: "Moderat",
-                scoreHigh: "Hoch", scoreVeryHigh: "Sehr hoch",
+                scoreHigh: "Erhöht", scoreVeryHigh: "Sehr hoch", scoreCritical: "Hoch",
                 
                 riskLow: "Entspannter Tag",
                 riskMedium: "Leichte Belastung",
@@ -901,7 +955,10 @@
                 feedbackSubtitle: "Dein Feedback hilft, die Vorhersagen zu verbessern.",
                 feedbackYes: "😔 Ja, leider",
                 feedbackNo: "😊 Nein, alles gut",
+                feedbackSeverity: "Wie stark waren die Beschwerden? (0 = leicht, 10 = stark)",
+                feedbackSubmit: "Feedback senden",
                 feedbackThanks: "Danke! Dein Feedback wurde gespeichert.",
+                feedbackLearning: "🧠 Wir passen deine Prognosen künftig an.",
                 
                 premiumTitle: "⭐ HealthAir Premium",
                 premiumFeature1: "Frühwarnungen bei erhöhtem Risiko",
@@ -1063,14 +1120,45 @@
             if (currentData) renderResults(currentData);
         }
         
+        const MAX_CONDITIONS = 3;
+        
         function toggleCondition(btn) {
-            btn.classList.toggle('active');
             const cond = btn.dataset.condition;
-            if (btn.classList.contains('active')) {
-                if (!selectedConditions.includes(cond)) selectedConditions.push(cond);
-            } else {
-                selectedConditions = selectedConditions.filter(c => c !== cond);
+            const idx = selectedConditions.indexOf(cond);
+            
+            if (idx !== -1) {
+                // Remove
+                selectedConditions.splice(idx, 1);
+                btn.classList.remove('active');
+                btn.querySelector('.condition-priority')?.remove();
+            } else if (selectedConditions.length < MAX_CONDITIONS) {
+                // Add
+                selectedConditions.push(cond);
+                btn.classList.add('active');
+                const priority = document.createElement('span');
+                priority.className = 'condition-priority';
+                priority.textContent = selectedConditions.length;
+                btn.appendChild(priority);
             }
+            
+            // Update all priority numbers
+            document.querySelectorAll('.condition-btn.active').forEach(b => {
+                const c = b.dataset.condition;
+                const i = selectedConditions.indexOf(c);
+                const p = b.querySelector('.condition-priority');
+                if (p) p.textContent = i + 1;
+            });
+            
+            // Update disabled state
+            document.querySelectorAll('.condition-btn').forEach(b => {
+                const c = b.dataset.condition;
+                if (!selectedConditions.includes(c) && selectedConditions.length >= MAX_CONDITIONS) {
+                    b.classList.add('disabled');
+                } else {
+                    b.classList.remove('disabled');
+                }
+            });
+            
             localStorage.setItem('healthair_conditions', JSON.stringify(selectedConditions));
         }
         
@@ -1155,53 +1243,130 @@
             }
         }
         
+        // ==================== SYMPTOM-SPECIFIC WEIGHTS ====================
+        const SYMPTOM_WEIGHTS = {
+            asthma:        { pm25: 0.30, no2: 0.25, ozone: 0.20, humidity: 0.15, pressure: 0.05, uv: 0.05 },
+            allergy:       { pm25: 0.20, no2: 0.10, ozone: 0.10, humidity: 0.25, pressure: 0.10, uv: 0.15 },
+            migraine:      { pm25: 0.10, no2: 0.10, ozone: 0.15, humidity: 0.20, pressure: 0.35, uv: 0.10 },
+            copd:          { pm25: 0.35, no2: 0.25, ozone: 0.20, humidity: 0.10, pressure: 0.05, uv: 0.05 },
+            cardiovascular:{ pm25: 0.20, no2: 0.15, ozone: 0.10, humidity: 0.20, pressure: 0.20, uv: 0.15 },
+            fatigue:       { pm25: 0.10, no2: 0.05, ozone: 0.10, humidity: 0.30, pressure: 0.30, uv: 0.15 }
+        };
+        
+        function calculateSubscore(type, value) {
+            if (type === 'pm25') {
+                if (value <= 10) return value * 2;
+                if (value <= 25) return 20 + (value - 10) * 2;
+                return Math.min(100, 50 + (value - 25) * 2);
+            }
+            if (type === 'no2') {
+                if (value <= 20) return value;
+                if (value <= 40) return 20 + (value - 20) * 1.5;
+                return Math.min(100, 50 + (value - 40) * 0.8);
+            }
+            if (type === 'ozone') {
+                if (value <= 60) return value * 0.33;
+                if (value <= 120) return 20 + (value - 60) * 0.5;
+                return Math.min(100, 50 + (value - 120) * 0.8);
+            }
+            if (type === 'humidity') {
+                if (value >= 40 && value <= 60) return 0;
+                if (value >= 30 && value <= 70) return 25;
+                if (value >= 20 && value <= 80) return 50;
+                return 80;
+            }
+            if (type === 'pressure') {
+                const diff = Math.abs(value - 1013);
+                if (diff <= 5) return 0;
+                if (diff <= 15) return diff * 3;
+                return Math.min(100, 45 + (diff - 15) * 3);
+            }
+            if (type === 'uv') {
+                if (value <= 2) return value * 5;
+                if (value <= 5) return 10 + (value - 2) * 13;
+                return Math.min(100, 50 + (value - 5) * 10);
+            }
+            return 0;
+        }
+        
         // ==================== HEALTH SCORE ====================
         function calculateHealthScore(data, hourOffset = 0) {
-            let score = 0;
-            const triggers = [];
             const air = data.air_quality || {};
             const weather = data.weather || {};
+            const variation = Math.sin(hourOffset * 0.3) * 8;
             
-            // Simulate variation based on hour
-            const variation = Math.sin(hourOffset * 0.3) * 10;
+            // Get environmental values
+            const envValues = {
+                pm25: Math.max(0, (air.pm2_5 || 5) + variation * 0.5),
+                no2: Math.max(0, (air.no2 || 10) + variation * 0.3),
+                ozone: Math.max(0, (air.ozone || 30) + variation * 0.6),
+                humidity: weather.humidity || 50,
+                pressure: weather.pressure || 1013,
+                uv: Math.max(0, (air.uv_index || 1) + (hourOffset < 12 ? 1 : -0.5))
+            };
             
-            const pm25 = (air.pm2_5 || 0) + variation * 0.5;
-            if (pm25 > 35) { score += 25; triggers.push({ name: 'PM2.5', value: pm25.toFixed(1), unit: 'μg/m³', severity: 'high' }); }
-            else if (pm25 > 15) { score += 12; triggers.push({ name: 'PM2.5', value: pm25.toFixed(1), unit: 'μg/m³', severity: 'medium' }); }
-            else if (pm25 > 10) { score += 5; }
+            // Calculate subscores
+            const subscores = {};
+            Object.keys(envValues).forEach(key => {
+                subscores[key] = calculateSubscore(key, envValues[key]);
+            });
             
-            const no2 = (air.no2 || 0) + variation * 0.3;
-            if (no2 > 100) { score += 20; triggers.push({ name: 'NO₂', value: no2.toFixed(1), unit: 'μg/m³', severity: 'high' }); }
-            else if (no2 > 40) { score += 10; triggers.push({ name: 'NO₂', value: no2.toFixed(1), unit: 'μg/m³', severity: 'medium' }); }
+            // Calculate weighted score based on selected conditions
+            let totalWeight = 0;
+            let weightedSum = 0;
+            const triggerContributions = [];
             
-            const ozone = (air.ozone || 0) + variation * 0.4;
-            if (ozone > 180) { score += 15; triggers.push({ name: 'Ozon', value: ozone.toFixed(1), unit: 'μg/m³', severity: 'high' }); }
-            else if (ozone > 100) { score += 8; }
+            selectedConditions.forEach(cond => {
+                const weights = SYMPTOM_WEIGHTS[cond] || {};
+                Object.keys(weights).forEach(factor => {
+                    const weight = weights[factor] || 0;
+                    const subscore = subscores[factor] || 0;
+                    const contribution = weight * subscore;
+                    weightedSum += contribution;
+                    totalWeight += weight;
+                    
+                    if (contribution > 3) {
+                        triggerContributions.push({
+                            name: factor,
+                            value: envValues[factor],
+                            subscore,
+                            contribution
+                        });
+                    }
+                });
+            });
             
-            const humidity = weather.humidity || 0;
-            if (humidity > 85) { score += 15; triggers.push({ name: t('humidity'), value: humidity, unit: '%', severity: 'high' }); }
-            else if (humidity > 70) { score += 8; }
-            else if (humidity < 30) { score += 10; }
+            // Calculate final score
+            let score = totalWeight > 0 ? Math.round(weightedSum / totalWeight) : 0;
+            score = Math.max(0, Math.min(100, score + Math.round(variation * 0.5)));
             
-            const pressure = weather.pressure || 1013;
-            if (pressure < 1000 || pressure > 1030) { score += 10; triggers.push({ name: t('pressure'), value: pressure, unit: 'hPa', severity: 'medium' }); }
-            else if (pressure < 1005 || pressure > 1025) { score += 5; }
-            
-            const uv = air.uv_index || 0;
-            if (uv >= 8) { score += 15; triggers.push({ name: 'UV', value: uv, unit: '', severity: 'high' }); }
-            else if (uv >= 6) { score += 8; }
-            else if (uv >= 3) { score += 3; }
-            
-            score = Math.max(0, Math.min(100, Math.round(score + variation)));
+            // Top triggers (sorted by contribution)
+            triggerContributions.sort((a, b) => b.contribution - a.contribution);
+            const triggers = triggerContributions.slice(0, 3).map(tr => ({
+                name: getFactorDisplayName(tr.name),
+                rawName: tr.name,
+                value: typeof tr.value === 'number' ? tr.value.toFixed(1) : tr.value,
+                unit: getFactorUnit(tr.name),
+                severity: tr.subscore > 60 ? 'high' : tr.subscore > 30 ? 'medium' : 'low'
+            }));
             
             let level, levelKey, riskClass;
-            if (score <= 20) { level = t('scoreVeryLow'); levelKey = 'low'; riskClass = 'risk-low'; }
-            else if (score <= 40) { level = t('scoreLow'); levelKey = 'low'; riskClass = 'risk-low'; }
-            else if (score <= 60) { level = t('scoreModerate'); levelKey = 'medium'; riskClass = 'risk-medium'; }
-            else if (score <= 80) { level = t('scoreHigh'); levelKey = 'high'; riskClass = 'risk-high'; }
-            else { level = t('scoreVeryHigh'); levelKey = 'critical'; riskClass = 'risk-critical'; }
+            if (score <= 25) { level = t('scoreLow'); levelKey = 'low'; riskClass = 'risk-low'; }
+            else if (score <= 50) { level = t('scoreModerate'); levelKey = 'medium'; riskClass = 'risk-medium'; }
+            else if (score <= 75) { level = t('scoreHigh'); levelKey = 'high'; riskClass = 'risk-high'; }
+            else { level = t('scoreCritical'); levelKey = 'critical'; riskClass = 'risk-critical'; }
             
-            return { score, level, levelKey, riskClass, triggers };
+            return { score, level, levelKey, riskClass, triggers, envValues, subscores };
+        }
+        
+        function getFactorDisplayName(factor) {
+            const names = { pm25: 'PM2.5', no2: 'NO₂', ozone: 'Ozon', humidity: t('humidity'), pressure: t('pressure'), uv: 'UV' };
+            return names[factor] || factor;
+        }
+        
+        function getFactorUnit(factor) {
+            const units = { pm25: 'μg/m³', no2: 'μg/m³', ozone: 'μg/m³', humidity: '%', pressure: 'hPa', uv: '' };
+            return units[factor] || '';
         }
         
         // ==================== RENDER ====================
@@ -1373,8 +1538,18 @@
                     <div class="feedback-title">${t('feedbackTitle')}</div>
                     <div class="feedback-subtitle">${t('feedbackSubtitle')}</div>
                     <div class="feedback-btns">
-                        <button class="feedback-btn yes" onclick="submitFeedback(true)">${t('feedbackYes')}</button>
-                        <button class="feedback-btn no" onclick="submitFeedback(false)">${t('feedbackNo')}</button>
+                        <button class="feedback-btn yes" onclick="selectFeedback(true, this)">${t('feedbackYes')}</button>
+                        <button class="feedback-btn no" onclick="selectFeedback(false, this)">${t('feedbackNo')}</button>
+                    </div>
+                    <div class="feedback-severity" id="feedback-severity">
+                        <div class="feedback-severity-label">${t('feedbackSeverity')}</div>
+                        <div class="feedback-slider-row">
+                            <span>😊</span>
+                            <input type="range" class="feedback-slider" id="severity-slider" min="0" max="10" value="5" oninput="document.getElementById('severity-value').textContent=this.value">
+                            <span>😣</span>
+                            <span class="feedback-slider-value" id="severity-value">5</span>
+                        </div>
+                        <button class="feedback-submit" onclick="submitFeedbackWithSeverity()">${t('feedbackSubmit')}</button>
                     </div>
                 </div>
                 
@@ -1622,21 +1797,57 @@
         function showInfo(key) { document.getElementById('info-' + key).classList.add('show'); }
         function hideInfo(key) { document.getElementById('info-' + key).classList.remove('show'); }
         
-        function submitFeedback(hadSymptoms) {
+        let feedbackHadSymptoms = null;
+        
+        function selectFeedback(hadSymptoms, btn) {
+            feedbackHadSymptoms = hadSymptoms;
+            
+            // Update button states
+            document.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            if (hadSymptoms) {
+                // Show severity slider
+                document.getElementById('feedback-severity').classList.add('show');
+            } else {
+                // Submit directly
+                submitFeedbackWithSeverity();
+            }
+        }
+        
+        function submitFeedbackWithSeverity() {
+            const severity = feedbackHadSymptoms ? parseInt(document.getElementById('severity-slider')?.value || 5) : 0;
+            
             const feedback = {
                 date: new Date().toISOString(),
                 conditions: selectedConditions,
-                hadSymptoms,
+                hadSymptoms: feedbackHadSymptoms,
+                severity: severity,
                 score: currentData ? calculateHealthScore(currentData).score : null,
-                location: locationName
+                location: locationName,
+                envSnapshot: currentData ? {
+                    pm25: currentData.air_quality?.pm2_5,
+                    no2: currentData.air_quality?.no2,
+                    ozone: currentData.air_quality?.ozone,
+                    humidity: currentData.weather?.humidity,
+                    pressure: currentData.weather?.pressure,
+                    uv: currentData.air_quality?.uv_index
+                } : null
             };
+            
             const history = JSON.parse(localStorage.getItem('healthair_feedback') || '[]');
             history.push(feedback);
             localStorage.setItem('healthair_feedback', JSON.stringify(history.slice(-100)));
             
             document.getElementById('feedback-card').innerHTML = `
                 <div class="feedback-thanks">✓ ${t('feedbackThanks')}</div>
+                <div class="feedback-learning">${t('feedbackLearning')}</div>
             `;
+        }
+        
+        function submitFeedback(hadSymptoms) {
+            feedbackHadSymptoms = hadSymptoms;
+            submitFeedbackWithSeverity();
         }
         
         // ==================== CHAT ====================
