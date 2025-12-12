@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HealthAir - KI Gesundheits-Assistent</title>
-    <meta name="description" content="Personalisierte Gesundheitsprognosen basierend auf Luftqualität, Wetter und Umweltfaktoren. Für Asthma, Allergien, Migräne und mehr.">
+    <title>HealthAir - Dein Umwelt-Gesundheitscoach</title>
+    <meta name="description" content="Personalisierte Gesundheitsprognosen basierend auf Luftqualität, Wetter und Umweltfaktoren.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -19,8 +18,13 @@
             --primary: #0ea5e9;
             --primary-dark: #0284c7;
             --success: #10b981;
+            --success-bg: #ecfdf5;
             --warning: #f59e0b;
+            --warning-bg: #fffbeb;
             --danger: #ef4444;
+            --danger-bg: #fef2f2;
+            --orange: #f97316;
+            --orange-bg: #fff7ed;
             --purple: #8b5cf6;
             --gradient: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
         }
@@ -41,7 +45,6 @@
             display: flex;
             justify-content: flex-end;
             align-items: center;
-            gap: 8px;
         }
         .lang-bar select {
             background: transparent;
@@ -62,10 +65,9 @@
             text-align: center;
         }
         .logo { font-size: 2rem; font-weight: 700; margin-bottom: 4px; }
-        .logo span { opacity: 0.9; }
-        .tagline { font-size: 0.95rem; opacity: 0.9; }
+        .tagline { font-size: 0.9rem; opacity: 0.9; }
         
-        /* Health Profile Setup */
+        /* Profile Card */
         .profile-card {
             background: var(--card);
             border-radius: 16px;
@@ -98,170 +100,364 @@
             cursor: pointer;
             transition: all 0.2s;
             text-align: center;
-            font-size: 0.85rem;
-            font-weight: 500;
+            font-size: 0.9rem;
         }
         .condition-btn:hover { border-color: var(--primary); }
-        .condition-btn.selected {
+        .condition-btn.active {
             border-color: var(--primary);
             background: rgba(14, 165, 233, 0.1);
             color: var(--primary-dark);
         }
-        .condition-btn .icon { font-size: 1.3rem; display: block; margin-bottom: 4px; }
+        .condition-icon { font-size: 1.3rem; display: block; margin-bottom: 4px; }
         
         .location-row {
             display: flex;
             gap: 8px;
-            flex-wrap: wrap;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
         .location-input {
             flex: 1;
-            min-width: 200px;
             padding: 12px 16px;
             border: 2px solid var(--border);
             border-radius: 12px;
-            font-size: 0.9rem;
-            background: var(--bg);
+            font-size: 1rem;
         }
         .location-input:focus { outline: none; border-color: var(--primary); }
+        .gps-btn {
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--card);
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+        .gps-btn:hover { border-color: var(--primary); }
         
         .time-row {
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
             align-items: center;
+            gap: 12px;
             margin-bottom: 16px;
         }
-        .time-label {
-            font-size: 0.85rem;
-            color: var(--text-dim);
-            font-weight: 500;
-        }
+        .time-label { font-size: 0.9rem; color: var(--text-dim); }
         .time-select {
-            padding: 10px 14px;
+            padding: 8px 12px;
             border: 2px solid var(--border);
-            border-radius: 12px;
-            font-size: 0.85rem;
-            background: var(--bg);
-            cursor: pointer;
-        }
-        .time-select:focus { outline: none; border-color: var(--primary); }
-        
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
+            border-radius: 8px;
             font-size: 0.9rem;
+            background: var(--card);
         }
-        .btn-primary {
+        
+        .analyze-btn {
+            width: 100%;
+            padding: 14px;
             background: var(--gradient);
             color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(14,165,233,0.3); }
-        .btn-secondary {
-            background: var(--bg);
-            color: var(--text);
-            border: 2px solid var(--border);
+        .analyze-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3); }
+        
+        /* ==================== */
+        /* HEALTH IMPACT SCORE  */
+        /* ==================== */
+        .health-score-card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        .score-header {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+        .score-circle {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .score-circle::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            padding: 6px;
+            background: conic-gradient(var(--score-color) calc(var(--score-pct) * 3.6deg), #e2e8f0 0);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
+        .score-value {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .score-max {
+            font-size: 1rem;
+            color: var(--text-dim);
+        }
+        .score-label {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .score-location {
+            font-size: 0.9rem;
+            color: var(--text-dim);
         }
         
-        /* Risk Summary */
-        .risk-card {
-            background: var(--card);
+        /* Health Bar */
+        .health-bar {
+            height: 12px;
+            border-radius: 6px;
+            background: linear-gradient(to right, #10b981 0%, #10b981 25%, #f59e0b 25%, #f59e0b 50%, #f97316 50%, #f97316 75%, #ef4444 75%, #ef4444 100%);
+            margin: 16px 0;
+            position: relative;
+        }
+        .health-bar-marker {
+            position: absolute;
+            top: -4px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 3px solid var(--text);
+            border-radius: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .health-bar-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+        
+        /* ==================== */
+        /* PROGNOSIS BOX        */
+        /* ==================== */
+        .prognosis-card {
             border-radius: 16px;
             padding: 20px;
             margin-bottom: 16px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            border-left: 5px solid;
         }
-        .risk-header {
+        .prognosis-card.risk-low {
+            background: var(--success-bg);
+            border-color: var(--success);
+        }
+        .prognosis-card.risk-medium {
+            background: var(--warning-bg);
+            border-color: var(--warning);
+        }
+        .prognosis-card.risk-high {
+            background: var(--orange-bg);
+            border-color: var(--orange);
+        }
+        .prognosis-card.risk-critical {
+            background: var(--danger-bg);
+            border-color: var(--danger);
+        }
+        .prognosis-header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .prognosis-icon {
+            font-size: 2rem;
+        }
+        .prognosis-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        .prognosis-main {
+            font-size: 1.05rem;
+            font-weight: 500;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+        .prognosis-recommendation {
+            background: rgba(255,255,255,0.7);
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+        }
+        .prognosis-recommendation strong {
+            color: var(--primary-dark);
+        }
+        .prognosis-details {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+        .prognosis-toggle {
+            font-size: 0.85rem;
+            color: var(--primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .prognosis-expanded {
+            margin-top: 12px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        .prognosis-expanded.show { display: block; }
+        .trigger-list {
+            display: flex;
             flex-wrap: wrap;
             gap: 8px;
+            margin-top: 8px;
         }
-        .risk-title { font-size: 1.1rem; font-weight: 600; }
-        .risk-subtitle { font-size: 0.85rem; color: var(--text-dim); }
-        .risk-badge {
-            padding: 6px 16px;
+        .trigger-chip {
+            background: rgba(0,0,0,0.08);
+            padding: 6px 12px;
             border-radius: 20px;
-            font-weight: 700;
             font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .risk-low { background: #d1fae5; color: #065f46; }
-        .risk-medium { background: #fef3c7; color: #92400e; }
-        .risk-high { background: #fee2e2; color: #991b1b; }
-        .risk-critical { background: #fecaca; color: #7f1d1d; }
+        .trigger-chip.high { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
         
-        .symptom-forecast {
-            background: linear-gradient(135deg, rgba(14,165,233,0.05), rgba(139,92,246,0.05));
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-        .forecast-text {
-            font-size: 1.05rem;
-            line-height: 1.7;
-            color: var(--text);
-        }
-        .forecast-highlight {
-            background: rgba(239,68,68,0.1);
-            color: var(--danger);
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-weight: 600;
-        }
-        .forecast-good {
-            background: rgba(16,185,129,0.1);
-            color: var(--success);
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-weight: 600;
-        }
-        
-        /* Hourly Timeline */
+        /* ==================== */
+        /* HOURLY TIMELINE      */
+        /* ==================== */
         .timeline-card {
             background: var(--card);
             border-radius: 16px;
-            padding: 20px;
+            padding: 16px;
             margin-bottom: 16px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
         }
         .timeline-title {
-            font-size: 1rem;
             font-weight: 600;
-            margin-bottom: 16px;
+            font-size: 0.95rem;
+        }
+        .timeline-nav {
             display: flex;
-            align-items: center;
             gap: 8px;
         }
+        .timeline-nav-btn {
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        .timeline-nav-btn:hover { background: var(--bg); }
         .timeline-scroll {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             overflow-x: auto;
-            padding-bottom: 8px;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding: 8px 0;
         }
-        .hour-block {
-            flex-shrink: 0;
-            width: 70px;
+        .timeline-scroll::-webkit-scrollbar { display: none; }
+        .timeline-hour {
+            flex: 0 0 70px;
             text-align: center;
             padding: 12px 8px;
             border-radius: 12px;
             background: var(--bg);
-            border: 2px solid transparent;
+            scroll-snap-align: start;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
         }
-        .hour-block.warning { border-color: var(--warning); background: #fffbeb; }
-        .hour-block.danger { border-color: var(--danger); background: #fef2f2; }
-        .hour-time { font-size: 0.75rem; color: var(--text-dim); font-weight: 500; }
-        .hour-date { font-size: 0.65rem; color: var(--text-dim); }
-        .hour-risk { font-size: 1.5rem; margin: 6px 0; }
-        .hour-label { font-size: 0.65rem; color: var(--text-dim); }
+        .timeline-hour:hover { background: #e2e8f0; }
+        .timeline-hour.now {
+            background: var(--primary);
+            color: white;
+        }
+        .timeline-hour .time {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .timeline-hour .date {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+        .timeline-hour.now .date { color: rgba(255,255,255,0.8); }
+        .timeline-hour .risk-indicator {
+            margin-top: 8px;
+            font-size: 1.2rem;
+        }
+        .timeline-hour .trend {
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+        .trend-up { color: var(--danger); }
+        .trend-down { color: var(--success); }
+        .trend-stable { color: var(--text-dim); }
         
-        /* Trigger Cards */
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+            z-index: 100;
+            margin-bottom: 8px;
+        }
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #1e293b;
+        }
+        .timeline-hour:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* ==================== */
+        /* TRIGGER CARDS        */
+        /* ==================== */
         .triggers-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -270,76 +466,237 @@
         }
         .trigger-card {
             background: var(--card);
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 16px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: relative;
         }
-        .trigger-header {
+        .trigger-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        .trigger-card-title {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .trigger-card-icon { font-size: 1rem; }
+        .info-btn {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            font-size: 0.7rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dim);
+        }
+        .info-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+        .trigger-card-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .trigger-card-unit {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: var(--text-dim);
+        }
+        .trigger-card-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+        .badge-good { background: var(--success-bg); color: var(--success); }
+        .badge-moderate { background: var(--warning-bg); color: var(--warning); }
+        .badge-high { background: var(--orange-bg); color: var(--orange); }
+        .badge-bad { background: var(--danger-bg); color: var(--danger); }
+        .trigger-card-limit {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 8px;
+        }
+        
+        /* Info Popup */
+        .info-popup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #1e293b;
+            color: white;
+            padding: 12px;
+            border-radius: 14px;
+            font-size: 0.85rem;
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+        }
+        .info-popup.show { opacity: 1; visibility: visible; }
+        .info-popup-close {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        /* ==================== */
+        /* MICRO RECOMMENDATIONS */
+        /* ==================== */
+        .micro-recs {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .micro-recs-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 10px;
         }
-        .trigger-icon { font-size: 1.2rem; }
-        .trigger-title { font-size: 0.8rem; font-weight: 600; color: var(--text-dim); }
-        .trigger-value { font-size: 1.4rem; font-weight: 700; }
-        .trigger-status {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-size: 0.7rem;
+        .micro-rec-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        .micro-rec-item:last-child { margin-bottom: 0; }
+        .micro-rec-icon {
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+        .micro-rec-text {
+            flex: 1;
+        }
+        .micro-rec-highlight {
             font-weight: 600;
-            margin-left: 8px;
+            color: var(--primary-dark);
         }
-        .status-good { background: #d1fae5; color: #065f46; }
-        .status-moderate { background: #fef3c7; color: #92400e; }
-        .status-bad { background: #fee2e2; color: #991b1b; }
-        .trigger-detail { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; }
         
-        /* Chat */
+        /* ==================== */
+        /* CHAT / COACH         */
+        /* ==================== */
         .chat-card {
             background: var(--card);
             border-radius: 16px;
-            padding: 20px;
+            padding: 16px;
             margin-bottom: 16px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
-        .chat-title {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 12px;
+        .chat-header {
             display: flex;
             align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        .chat-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+        .chat-header-text h3 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        .chat-header-text p {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+        .chat-quick-btns {
+            display: flex;
             gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .chat-quick-btn {
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: var(--card);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .chat-quick-btn:hover {
+            border-color: var(--primary);
+            background: rgba(14, 165, 233, 0.05);
         }
         .chat-messages {
-            max-height: 250px;
+            max-height: 280px;
             overflow-y: auto;
             margin-bottom: 12px;
-            padding: 8px;
-            background: var(--bg);
-            border-radius: 12px;
-            min-height: 60px;
         }
         .chat-msg {
-            padding: 10px 14px;
-            border-radius: 12px;
-            margin-bottom: 8px;
+            padding: 12px 16px;
+            border-radius: 16px;
+            margin-bottom: 10px;
             font-size: 0.9rem;
             line-height: 1.5;
         }
         .chat-user {
             background: var(--primary);
             color: white;
-            margin-left: 25%;
-            text-align: right;
+            margin-left: 20%;
+            border-bottom-right-radius: 4px;
         }
         .chat-ai {
-            background: white;
-            border: 1px solid var(--border);
-            margin-right: 15%;
+            background: var(--bg);
+            margin-right: 10%;
+            border-bottom-left-radius: 4px;
         }
-        .chat-input-row { display: flex; gap: 8px; }
+        .chat-ai-structured {
+            padding: 0;
+            background: none;
+        }
+        .chat-section {
+            background: var(--bg);
+            padding: 10px 14px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+        .chat-section:last-child { margin-bottom: 0; }
+        .chat-section-title {
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--primary-dark);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .chat-input-row {
+            display: flex;
+            gap: 8px;
+        }
         .chat-input {
             flex: 1;
             padding: 12px 16px;
@@ -350,66 +707,50 @@
         .chat-input:focus { outline: none; border-color: var(--primary); }
         .chat-send {
             padding: 12px 20px;
-            border-radius: 24px;
             background: var(--gradient);
             color: white;
             border: none;
+            border-radius: 24px;
             font-weight: 600;
             cursor: pointer;
         }
         
-        /* Quick Actions */
-        .quick-actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
+        /* ==================== */
+        /* SYMPTOM FEEDBACK     */
+        /* ==================== */
+        .feedback-card {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid var(--primary);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .feedback-title {
+            font-weight: 600;
             margin-bottom: 12px;
         }
-        .quick-btn {
-            padding: 8px 14px;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            font-size: 0.8rem;
+        .feedback-btns {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+        .feedback-btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            background: white;
             cursor: pointer;
+            font-size: 0.9rem;
             transition: all 0.2s;
         }
-        .quick-btn:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-        
-        /* Tips */
-        .tips-card {
-            background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
-            border: 1px solid #86efac;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-        }
-        .tips-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #166534;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .tip-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            padding: 8px 0;
-            font-size: 0.9rem;
-            color: #166534;
-        }
-        .tip-icon { font-size: 1.1rem; }
+        .feedback-btn:hover { transform: scale(1.05); }
+        .feedback-btn.yes:hover { border-color: var(--danger); background: var(--danger-bg); }
+        .feedback-btn.no:hover { border-color: var(--success); background: var(--success-bg); }
         
         /* Premium Banner */
         .premium-banner {
-            background: var(--gradient);
+            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
             border-radius: 16px;
             padding: 20px;
             color: white;
@@ -419,21 +760,16 @@
         .premium-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
         .premium-features { font-size: 0.85rem; opacity: 0.9; margin-bottom: 12px; }
         .premium-btn {
-            background: white;
-            color: var(--primary-dark);
+            display: inline-block;
             padding: 10px 24px;
+            background: white;
+            color: var(--purple);
             border-radius: 24px;
-            border: none;
             font-weight: 600;
-            cursor: pointer;
+            text-decoration: none;
         }
         
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-dim);
-        }
+        .loading { text-align: center; padding: 40px; color: var(--text-dim); }
         .loading-spinner {
             width: 40px;
             height: 40px;
@@ -445,15 +781,7 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        footer {
-            text-align: center;
-            padding: 24px;
-            color: var(--text-dim);
-            font-size: 0.8rem;
-        }
-        footer a { color: var(--primary); text-decoration: none; }
-        
-        @media (max-width: 600px) {
+        @media (max-width: 500px) {
             .triggers-grid { grid-template-columns: 1fr; }
             .condition-grid { grid-template-columns: repeat(2, 1fr); }
         }
@@ -471,418 +799,327 @@
     </div>
 
     <header>
-        <div class="logo">🫁 Health<span>Air</span></div>
-        <div class="tagline" id="tagline">Personalisierte Gesundheitsprognosen • KI-gestützt</div>
+        <div class="logo">🫁 HealthAir</div>
+        <p class="tagline" id="tagline">Dein persönlicher Umwelt-Gesundheitscoach</p>
     </header>
     
-    <div class="container">
-        <!-- Health Profile -->
-        <div class="profile-card">
-            <div class="profile-title">👤 <span id="profileTitle">Mein Gesundheitsprofil</span></div>
-            <div class="condition-grid" id="conditions"></div>
-            
-            <div class="location-row">
-                <input type="text" class="location-input" id="location" placeholder="Ort eingeben (z.B. Zürich, Schweiz)">
-                <button class="btn btn-secondary" onclick="useGPS()">📍 GPS</button>
-            </div>
-            
-            <div class="time-row">
-                <span class="time-label" id="timeLabel">⏰ Zeitraum:</span>
-                <select class="time-select" id="timeRange">
-                    <option value="6">6 Stunden</option>
-                    <option value="12" selected>12 Stunden</option>
-                    <option value="24">24 Stunden</option>
-                    <option value="48">48 Stunden</option>
-                    <option value="72">3 Tage</option>
-                </select>
-                <div style="flex:1;"></div>
-                <button class="btn btn-primary" onclick="analyze()" id="btnAnalyze">Analysieren</button>
-            </div>
+    <div class="profile-card">
+        <div class="profile-title">👤 <span id="profileTitle">Mein Gesundheitsprofil</span></div>
+        
+        <div class="condition-grid" id="conditions">
+            <button class="condition-btn" data-condition="asthma" onclick="toggleCondition(this)">
+                <span class="condition-icon">🫁</span>
+                <span class="condition-name">Asthma</span>
+            </button>
+            <button class="condition-btn" data-condition="allergy" onclick="toggleCondition(this)">
+                <span class="condition-icon">🤧</span>
+                <span class="condition-name">Allergie</span>
+            </button>
+            <button class="condition-btn" data-condition="migraine" onclick="toggleCondition(this)">
+                <span class="condition-icon">🤕</span>
+                <span class="condition-name">Migräne</span>
+            </button>
+            <button class="condition-btn" data-condition="copd" onclick="toggleCondition(this)">
+                <span class="condition-icon">💨</span>
+                <span class="condition-name">Chron. Lungenkrankheit</span>
+            </button>
+            <button class="condition-btn" data-condition="cardiovascular" onclick="toggleCondition(this)">
+                <span class="condition-icon">❤️</span>
+                <span class="condition-name">Herz-Kreislauf</span>
+            </button>
+            <button class="condition-btn" data-condition="fatigue" onclick="toggleCondition(this)">
+                <span class="condition-icon">😴</span>
+                <span class="condition-name">Müdigkeit</span>
+            </button>
         </div>
         
-        <!-- Main Content -->
-        <div id="main-content">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-                <p id="initialMsg">Wähle deine Gesundheitsbedingungen und klicke auf "Analysieren"</p>
-            </div>
+        <div class="location-row">
+            <input type="text" class="location-input" id="location" placeholder="Ort eingeben (z.B. Zürich, Schweiz)">
+            <button class="gps-btn" onclick="useGPS()" title="GPS">📍</button>
+        </div>
+        
+        <div class="time-row">
+            <span class="time-label" id="timeLabel">⏰ Prognose:</span>
+            <select class="time-select" id="timeRange">
+                <option value="6">6 Stunden</option>
+                <option value="12" selected>12 Stunden</option>
+                <option value="24">24 Stunden</option>
+                <option value="48">48 Stunden</option>
+                <option value="72">3 Tage</option>
+            </select>
+        </div>
+        
+        <button class="analyze-btn" onclick="analyze()" id="btnAnalyze">🔍 Analyse starten</button>
+    </div>
+    
+    <div class="container" id="results">
+        <div class="loading" id="initial-msg">
+            <p id="initialText">Wähle deine Beschwerden und klicke auf "Analyse starten"</p>
         </div>
     </div>
 
     <script>
-        const API = 'https://space-ai-alert-mvp.onrender.com';
-        let selectedConditions = [];
+        const API = window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://space-ai-alert-mvp.onrender.com';
         let lat = 47.3769, lon = 8.5417;
         let locationName = '';
-        let chatHistory = [];
-        let currentData = null;
         let currentLang = 'de';
+        let selectedConditions = [];
+        let currentData = null;
+        let chatHistory = [];
         
-        // === TRANSLATIONS ===
+        // ==================== TRANSLATIONS ====================
         const T = {
             de: {
-                tagline: "Personalisierte Gesundheitsprognosen • KI-gestützt",
+                tagline: "Dein persönlicher Umwelt-Gesundheitscoach",
                 profileTitle: "Mein Gesundheitsprofil",
                 locationPlaceholder: "Ort eingeben (z.B. Zürich, Schweiz)",
-                timeLabel: "⏰ Zeitraum:",
-                btnAnalyze: "Analysieren",
-                initialMsg: "Wähle deine Gesundheitsbedingungen und klicke auf \"Analysieren\"",
+                timeLabel: "⏰ Prognose:",
+                btnAnalyze: "🔍 Analyse starten",
+                initialText: "Wähle deine Beschwerden und klicke auf \"Analyse starten\"",
                 analyzing: "Analysiere Umweltdaten für dein Gesundheitsprofil...",
-                hours: "Stunden",
-                days: "Tage",
+                hours: "Stunden", days: "Tage",
                 
-                // Conditions
-                asthma: "Asthma",
-                allergy: "Allergie",
-                migraine: "Migräne",
-                copd: "Chronische Lungenkrankheit",
-                cardiovascular: "Herz-Kreislauf",
-                fatigue: "Müdigkeit",
+                asthma: "Asthma", allergy: "Allergie", migraine: "Migräne",
+                copd: "Chron. Lungenkrankheit", cardiovascular: "Herz-Kreislauf", fatigue: "Müdigkeit",
                 
-                // Risk levels
-                riskLow: "Niedriges Risiko",
-                riskMedium: "Mittleres Risiko",
-                riskHigh: "Hohes Risiko",
-                riskCritical: "Kritisches Risiko",
+                healthScore: "Health Impact Score",
+                scoreVeryLow: "Sehr niedrig", scoreLow: "Niedrig", scoreModerate: "Moderat",
+                scoreHigh: "Hoch", scoreVeryHigh: "Sehr hoch",
                 
-                // UI
-                dailyForecast: "Deine Prognose",
-                hourlyForecast: "Stündliche Vorhersage",
-                healthAssistant: "Gesundheits-Assistent",
-                recommendations: "Persönliche Empfehlungen",
-                chatPlaceholder: "Frage zur Gesundheit stellen...",
-                send: "Senden",
+                riskLow: "Gute Bedingungen",
+                riskMedium: "Vorsicht empfohlen",
+                riskHigh: "Erhöhtes Risiko",
+                riskCritical: "Hohes Risiko",
                 
-                // Quick actions
-                sportToday: "Sport heute?",
-                bestTime: "Beste Zeit?",
-                tips: "Tipps",
+                showDetails: "Details anzeigen",
+                hideDetails: "Details ausblenden",
+                triggers: "Aktive Trigger",
                 
-                // Status
-                good: "Gut",
-                moderate: "Mässig",
-                high: "Hoch",
-                low: "Niedrig",
-                ok: "OK",
+                hourlyForecast: "Stündliche Prognose",
                 
-                // Triggers
-                pm25: "PM2.5 Feinstaub",
-                no2: "NO₂ Stickstoffdioxid",
-                ozone: "O₃ Ozon",
-                humidity: "Luftfeuchtigkeit",
-                pressure: "Luftdruck",
-                uvIndex: "UV-Index",
+                pm25: "PM2.5 Feinstaub", no2: "NO₂ Stickstoffdioxid", ozone: "O₃ Ozon",
+                humidity: "Luftfeuchtigkeit", pressure: "Luftdruck", uvIndex: "UV-Index",
                 
-                // Thresholds
-                whoLimit: "Grenzwert WHO",
-                euLimit: "Grenzwert EU",
-                warningLevel: "Warnschwelle",
-                optimal: "Optimal",
-                normal: "Normal",
-                sunProtection: "Sonnenschutz ab 3",
+                pm25Info: "Feinstaub kann Atemwege reizen und Müdigkeit verstärken.",
+                no2Info: "Stickstoffdioxid reizt die Atemwege, besonders bei Asthma.",
+                ozoneInfo: "Hohe Ozonwerte können Kopfschmerzen und Atembeschwerden auslösen.",
+                humidityInfo: "Hohe Außenfeuchtigkeit. Innen ist es im Winter oft zu trocken!",
+                pressureInfo: "Luftdruckschwankungen können Migräne und Müdigkeit auslösen.",
+                uvInfo: "UV-Strahlung kann Erschöpfung verstärken. Sonnenschutz ab Index 3.",
                 
-                // Premium
+                whoLimit: "WHO-Grenze", euLimit: "EU-Grenze", warningLevel: "Warnschwelle",
+                optimal: "Optimal", normal: "Normal", sunProtection: "Sonnenschutz ab 3",
+                
+                good: "Gut", moderate: "Moderat", high: "Hoch", low: "Niedrig", ok: "OK",
+                
+                microRecs: "Persönliche Empfehlungen",
+                
+                coachTitle: "HealthAir Coach",
+                coachSubtitle: "Ich erkläre, wie Umweltfaktoren deine Symptome beeinflussen.",
+                sportToday: "Sport heute?", bestTime: "Beste Zeit?", tips: "Tipps",
+                
+                feedbackTitle: "Hattest du heute Beschwerden?",
+                feedbackYes: "😔 Ja, leider",
+                feedbackNo: "😊 Nein, alles gut",
+                
                 premiumTitle: "HealthAir Premium",
-                premiumFeatures: "Symptom-Vorhersagen • Push-Benachrichtigungen • Detaillierte Analysen • Familienkonten",
-                premiumBtn: "7 Tage kostenlos testen",
-                
-                // Forecast texts
-                goodNews: "Gute Nachrichten!",
-                cautionRecommended: "Vorsicht empfohlen",
-                elevatedRisk: "Erhöhtes Risiko",
-                conditions: "Die aktuellen Umweltbedingungen sind für dein Profil günstig.",
-                aqiGreen: "Die Luftqualität ist im grünen Bereich.",
-                potentialTriggers: "Potenzielle Trigger",
-                activeTriggers: "Aktive Trigger",
-                monitorSymptoms: "Beobachte deine Symptome und halte Medikamente bereit.",
-                avoidOutdoor: "Vermeide wenn möglich Aktivitäten im Freien.",
-                keepMedication: "Halte Notfallmedikamente griffbereit.",
-                
-                // Tips
-                stayIndoors: "Bleibe heute möglichst drinnen und halte Fenster geschlossen.",
-                keepInhaler: "Halte dein Notfall-Spray griffbereit.",
-                showerAfter: "Dusche nach dem Aufenthalt im Freien, um Pollen abzuwaschen.",
-                changeClothes: "Wechsle Kleidung nach draussen, um Pollen nicht ins Schlafzimmer zu bringen.",
-                drinkWater: "Trinke ausreichend Wasser - Dehydration kann Migräne triggern.",
-                wearSunglasses: "Trage bei Sonnenlicht eine Sonnenbrille.",
-                useSunscreen: "Benutze Sonnenschutz mit mindestens LSF 30.",
-                enjoyDay: "Die Bedingungen sind heute günstig. Geniesse den Tag!"
+                premiumFeatures: "Push-Benachrichtigungen • Symptom-Tracking • Persönliche Muster",
+                premiumBtn: "7 Tage kostenlos testen"
             },
             en: {
-                tagline: "Personalized health forecasts • AI-powered",
+                tagline: "Your personal environmental health coach",
                 profileTitle: "My Health Profile",
                 locationPlaceholder: "Enter location (e.g. London, UK)",
-                timeLabel: "⏰ Time range:",
-                btnAnalyze: "Analyze",
-                initialMsg: "Select your health conditions and click \"Analyze\"",
+                timeLabel: "⏰ Forecast:",
+                btnAnalyze: "🔍 Start Analysis",
+                initialText: "Select your conditions and click \"Start Analysis\"",
                 analyzing: "Analyzing environmental data for your health profile...",
-                hours: "hours",
-                days: "days",
+                hours: "hours", days: "days",
                 
-                asthma: "Asthma",
-                allergy: "Allergy",
-                migraine: "Migraine",
-                copd: "Chronic Lung Disease",
-                cardiovascular: "Cardiovascular",
-                fatigue: "Fatigue",
+                asthma: "Asthma", allergy: "Allergy", migraine: "Migraine",
+                copd: "Chronic Lung Disease", cardiovascular: "Cardiovascular", fatigue: "Fatigue",
                 
-                riskLow: "Low Risk",
-                riskMedium: "Medium Risk",
-                riskHigh: "High Risk",
-                riskCritical: "Critical Risk",
+                healthScore: "Health Impact Score",
+                scoreVeryLow: "Very Low", scoreLow: "Low", scoreModerate: "Moderate",
+                scoreHigh: "High", scoreVeryHigh: "Very High",
                 
-                dailyForecast: "Your Forecast",
+                riskLow: "Good conditions",
+                riskMedium: "Caution advised",
+                riskHigh: "Elevated risk",
+                riskCritical: "High risk",
+                
+                showDetails: "Show details",
+                hideDetails: "Hide details",
+                triggers: "Active triggers",
+                
                 hourlyForecast: "Hourly Forecast",
-                healthAssistant: "Health Assistant",
-                recommendations: "Personal Recommendations",
-                chatPlaceholder: "Ask a health question...",
-                send: "Send",
                 
-                sportToday: "Exercise today?",
-                bestTime: "Best time?",
-                tips: "Tips",
+                pm25: "PM2.5 Fine Particles", no2: "NO₂ Nitrogen Dioxide", ozone: "O₃ Ozone",
+                humidity: "Humidity", pressure: "Air Pressure", uvIndex: "UV Index",
                 
-                good: "Good",
-                moderate: "Moderate",
-                high: "High",
-                low: "Low",
-                ok: "OK",
+                pm25Info: "Fine particles can irritate airways and increase fatigue.",
+                no2Info: "Nitrogen dioxide irritates airways, especially with asthma.",
+                ozoneInfo: "High ozone can cause headaches and breathing problems.",
+                humidityInfo: "High outdoor humidity. Indoors it's often too dry in winter!",
+                pressureInfo: "Pressure changes can trigger migraines and fatigue.",
+                uvInfo: "UV radiation can increase exhaustion. Sun protection from index 3.",
                 
-                pm25: "PM2.5 Fine Dust",
-                no2: "NO₂ Nitrogen Dioxide",
-                ozone: "O₃ Ozone",
-                humidity: "Humidity",
-                pressure: "Air Pressure",
-                uvIndex: "UV Index",
+                whoLimit: "WHO limit", euLimit: "EU limit", warningLevel: "Warning level",
+                optimal: "Optimal", normal: "Normal", sunProtection: "Sun protection from 3",
                 
-                whoLimit: "WHO limit",
-                euLimit: "EU limit",
-                warningLevel: "Warning level",
-                optimal: "Optimal",
-                normal: "Normal",
-                sunProtection: "Sun protection from 3",
+                good: "Good", moderate: "Moderate", high: "High", low: "Low", ok: "OK",
+                
+                microRecs: "Personal Recommendations",
+                
+                coachTitle: "HealthAir Coach",
+                coachSubtitle: "I explain how environmental factors affect your symptoms.",
+                sportToday: "Exercise today?", bestTime: "Best time?", tips: "Tips",
+                
+                feedbackTitle: "Did you have symptoms today?",
+                feedbackYes: "😔 Yes, unfortunately",
+                feedbackNo: "😊 No, all good",
                 
                 premiumTitle: "HealthAir Premium",
-                premiumFeatures: "Symptom predictions • Push notifications • Detailed analyses • Family plans",
-                premiumBtn: "Try 7 days free",
-                
-                goodNews: "Good news!",
-                cautionRecommended: "Caution recommended",
-                elevatedRisk: "Elevated risk",
-                conditions: "Current environmental conditions are favorable for your profile.",
-                aqiGreen: "Air quality is in the green zone.",
-                potentialTriggers: "Potential triggers",
-                activeTriggers: "Active triggers",
-                monitorSymptoms: "Monitor your symptoms and keep medication ready.",
-                avoidOutdoor: "Avoid outdoor activities if possible.",
-                keepMedication: "Keep emergency medication within reach.",
-                
-                stayIndoors: "Stay indoors today and keep windows closed.",
-                keepInhaler: "Keep your emergency inhaler within reach.",
-                showerAfter: "Shower after being outdoors to wash off pollen.",
-                changeClothes: "Change clothes after going outside to avoid bringing pollen into the bedroom.",
-                drinkWater: "Drink plenty of water - dehydration can trigger migraines.",
-                wearSunglasses: "Wear sunglasses in sunlight.",
-                useSunscreen: "Use sunscreen with at least SPF 30.",
-                enjoyDay: "Conditions are favorable today. Enjoy your day!"
+                premiumFeatures: "Push notifications • Symptom tracking • Personal patterns",
+                premiumBtn: "Try 7 days free"
             },
             fr: {
-                tagline: "Prévisions de santé personnalisées • Propulsé par IA",
+                tagline: "Votre coach santé environnemental personnel",
                 profileTitle: "Mon profil de santé",
-                locationPlaceholder: "Entrer le lieu (ex: Paris, France)",
-                timeLabel: "⏰ Période:",
-                btnAnalyze: "Analyser",
-                initialMsg: "Sélectionnez vos conditions de santé et cliquez sur \"Analyser\"",
-                analyzing: "Analyse des données environnementales pour votre profil de santé...",
-                hours: "heures",
-                days: "jours",
+                locationPlaceholder: "Entrez le lieu (ex: Paris, France)",
+                timeLabel: "⏰ Prévision:",
+                btnAnalyze: "🔍 Lancer l'analyse",
+                initialText: "Sélectionnez vos conditions et cliquez sur \"Lancer l'analyse\"",
+                analyzing: "Analyse des données environnementales...",
+                hours: "heures", days: "jours",
                 
-                asthma: "Asthme",
-                allergy: "Allergie",
-                migraine: "Migraine",
-                copd: "Maladie pulmonaire chronique",
-                cardiovascular: "Cardiovasculaire",
-                fatigue: "Fatigue",
+                asthma: "Asthme", allergy: "Allergie", migraine: "Migraine",
+                copd: "Maladie pulmonaire", cardiovascular: "Cardiovasculaire", fatigue: "Fatigue",
                 
-                riskLow: "Risque faible",
-                riskMedium: "Risque moyen",
+                healthScore: "Score d'Impact Santé",
+                scoreVeryLow: "Très faible", scoreLow: "Faible", scoreModerate: "Modéré",
+                scoreHigh: "Élevé", scoreVeryHigh: "Très élevé",
+                
+                riskLow: "Bonnes conditions",
+                riskMedium: "Prudence conseillée",
                 riskHigh: "Risque élevé",
-                riskCritical: "Risque critique",
+                riskCritical: "Risque très élevé",
                 
-                dailyForecast: "Votre prévision",
-                hourlyForecast: "Prévision horaire",
-                healthAssistant: "Assistant santé",
-                recommendations: "Recommandations personnelles",
-                chatPlaceholder: "Posez une question de santé...",
-                send: "Envoyer",
+                showDetails: "Voir détails",
+                hideDetails: "Masquer détails",
+                triggers: "Déclencheurs actifs",
                 
-                sportToday: "Sport aujourd'hui?",
-                bestTime: "Meilleur moment?",
-                tips: "Conseils",
+                hourlyForecast: "Prévisions horaires",
                 
-                good: "Bon",
-                moderate: "Modéré",
-                high: "Élevé",
-                low: "Faible",
-                ok: "OK",
+                pm25: "PM2.5 Particules fines", no2: "NO₂ Dioxyde d'azote", ozone: "O₃ Ozone",
+                humidity: "Humidité", pressure: "Pression", uvIndex: "Indice UV",
                 
-                pm25: "PM2.5 Particules fines",
-                no2: "NO₂ Dioxyde d'azote",
-                ozone: "O₃ Ozone",
-                humidity: "Humidité",
-                pressure: "Pression atmosphérique",
-                uvIndex: "Indice UV",
+                pm25Info: "Les particules fines irritent les voies respiratoires.",
+                no2Info: "Le dioxyde d'azote irrite les voies respiratoires.",
+                ozoneInfo: "L'ozone élevé peut causer maux de tête et difficultés respiratoires.",
+                humidityInfo: "Humidité extérieure élevée. À l'intérieur c'est souvent trop sec en hiver!",
+                pressureInfo: "Les variations de pression peuvent déclencher migraines et fatigue.",
+                uvInfo: "Les UV peuvent augmenter la fatigue. Protection solaire dès indice 3.",
                 
-                whoLimit: "Limite OMS",
-                euLimit: "Limite UE",
-                warningLevel: "Seuil d'alerte",
-                optimal: "Optimal",
-                normal: "Normal",
-                sunProtection: "Protection solaire dès 3",
+                whoLimit: "Limite OMS", euLimit: "Limite UE", warningLevel: "Seuil d'alerte",
+                optimal: "Optimal", normal: "Normal", sunProtection: "Protection solaire dès 3",
+                
+                good: "Bon", moderate: "Modéré", high: "Élevé", low: "Faible", ok: "OK",
+                
+                microRecs: "Recommandations personnelles",
+                
+                coachTitle: "Coach HealthAir",
+                coachSubtitle: "J'explique comment l'environnement affecte vos symptômes.",
+                sportToday: "Sport aujourd'hui?", bestTime: "Meilleur moment?", tips: "Conseils",
+                
+                feedbackTitle: "Avez-vous eu des symptômes aujourd'hui?",
+                feedbackYes: "😔 Oui, malheureusement",
+                feedbackNo: "😊 Non, tout va bien",
                 
                 premiumTitle: "HealthAir Premium",
-                premiumFeatures: "Prévisions de symptômes • Notifications push • Analyses détaillées • Plans famille",
-                premiumBtn: "Essai gratuit 7 jours",
-                
-                goodNews: "Bonne nouvelle!",
-                cautionRecommended: "Prudence recommandée",
-                elevatedRisk: "Risque élevé",
-                conditions: "Les conditions environnementales actuelles sont favorables pour votre profil.",
-                aqiGreen: "La qualité de l'air est dans la zone verte.",
-                potentialTriggers: "Déclencheurs potentiels",
-                activeTriggers: "Déclencheurs actifs",
-                monitorSymptoms: "Surveillez vos symptômes et gardez vos médicaments à portée.",
-                avoidOutdoor: "Évitez les activités en plein air si possible.",
-                keepMedication: "Gardez vos médicaments d'urgence à portée de main.",
-                
-                stayIndoors: "Restez à l'intérieur aujourd'hui et gardez les fenêtres fermées.",
-                keepInhaler: "Gardez votre inhalateur d'urgence à portée de main.",
-                showerAfter: "Douchez-vous après être sorti pour éliminer le pollen.",
-                changeClothes: "Changez de vêtements après être sorti pour ne pas apporter de pollen dans la chambre.",
-                drinkWater: "Buvez suffisamment d'eau - la déshydratation peut déclencher des migraines.",
-                wearSunglasses: "Portez des lunettes de soleil en plein soleil.",
-                useSunscreen: "Utilisez une protection solaire d'au moins SPF 30.",
-                enjoyDay: "Les conditions sont favorables aujourd'hui. Profitez de votre journée!"
+                premiumFeatures: "Notifications push • Suivi des symptômes • Patterns personnels",
+                premiumBtn: "Essai gratuit 7 jours"
             },
             it: {
-                tagline: "Previsioni di salute personalizzate • Powered by AI",
+                tagline: "Il tuo coach personale per la salute ambientale",
                 profileTitle: "Il mio profilo di salute",
                 locationPlaceholder: "Inserisci località (es: Milano, Italia)",
-                timeLabel: "⏰ Periodo:",
-                btnAnalyze: "Analizza",
-                initialMsg: "Seleziona le tue condizioni di salute e clicca su \"Analizza\"",
-                analyzing: "Analisi dei dati ambientali per il tuo profilo di salute...",
-                hours: "ore",
-                days: "giorni",
+                timeLabel: "⏰ Previsione:",
+                btnAnalyze: "🔍 Avvia analisi",
+                initialText: "Seleziona le tue condizioni e clicca su \"Avvia analisi\"",
+                analyzing: "Analisi dei dati ambientali...",
+                hours: "ore", days: "giorni",
                 
-                asthma: "Asma",
-                allergy: "Allergia",
-                migraine: "Emicrania",
-                copd: "Malattia polmonare cronica",
-                cardiovascular: "Cardiovascolare",
-                fatigue: "Stanchezza",
+                asthma: "Asma", allergy: "Allergia", migraine: "Emicrania",
+                copd: "Malattia polmonare", cardiovascular: "Cardiovascolare", fatigue: "Stanchezza",
                 
-                riskLow: "Rischio basso",
-                riskMedium: "Rischio medio",
-                riskHigh: "Rischio alto",
-                riskCritical: "Rischio critico",
+                healthScore: "Punteggio Impatto Salute",
+                scoreVeryLow: "Molto basso", scoreLow: "Basso", scoreModerate: "Moderato",
+                scoreHigh: "Alto", scoreVeryHigh: "Molto alto",
                 
-                dailyForecast: "La tua previsione",
+                riskLow: "Buone condizioni",
+                riskMedium: "Cautela consigliata",
+                riskHigh: "Rischio elevato",
+                riskCritical: "Rischio alto",
+                
+                showDetails: "Mostra dettagli",
+                hideDetails: "Nascondi dettagli",
+                triggers: "Trigger attivi",
+                
                 hourlyForecast: "Previsione oraria",
-                healthAssistant: "Assistente salute",
-                recommendations: "Raccomandazioni personali",
-                chatPlaceholder: "Fai una domanda sulla salute...",
-                send: "Invia",
                 
-                sportToday: "Sport oggi?",
-                bestTime: "Momento migliore?",
-                tips: "Consigli",
+                pm25: "PM2.5 Polveri sottili", no2: "NO₂ Biossido di azoto", ozone: "O₃ Ozono",
+                humidity: "Umidità", pressure: "Pressione", uvIndex: "Indice UV",
                 
-                good: "Buono",
-                moderate: "Moderato",
-                high: "Alto",
-                low: "Basso",
-                ok: "OK",
+                pm25Info: "Le polveri sottili irritano le vie respiratorie.",
+                no2Info: "Il biossido di azoto irrita le vie respiratorie.",
+                ozoneInfo: "L'ozono alto può causare mal di testa e problemi respiratori.",
+                humidityInfo: "Alta umidità esterna. All'interno è spesso troppo secco in inverno!",
+                pressureInfo: "I cambiamenti di pressione possono causare emicranie e stanchezza.",
+                uvInfo: "I raggi UV possono aumentare la stanchezza. Protezione solare da indice 3.",
                 
-                pm25: "PM2.5 Polveri sottili",
-                no2: "NO₂ Biossido di azoto",
-                ozone: "O₃ Ozono",
-                humidity: "Umidità",
-                pressure: "Pressione atmosferica",
-                uvIndex: "Indice UV",
+                whoLimit: "Limite OMS", euLimit: "Limite UE", warningLevel: "Soglia di allerta",
+                optimal: "Ottimale", normal: "Normale", sunProtection: "Protezione solare da 3",
                 
-                whoLimit: "Limite OMS",
-                euLimit: "Limite UE",
-                warningLevel: "Soglia di allerta",
-                optimal: "Ottimale",
-                normal: "Normale",
-                sunProtection: "Protezione solare da 3",
+                good: "Buono", moderate: "Moderato", high: "Alto", low: "Basso", ok: "OK",
+                
+                microRecs: "Raccomandazioni personali",
+                
+                coachTitle: "Coach HealthAir",
+                coachSubtitle: "Spiego come l'ambiente influisce sui tuoi sintomi.",
+                sportToday: "Sport oggi?", bestTime: "Momento migliore?", tips: "Consigli",
+                
+                feedbackTitle: "Hai avuto sintomi oggi?",
+                feedbackYes: "😔 Sì, purtroppo",
+                feedbackNo: "😊 No, tutto bene",
                 
                 premiumTitle: "HealthAir Premium",
-                premiumFeatures: "Previsioni sintomi • Notifiche push • Analisi dettagliate • Piani famiglia",
-                premiumBtn: "Prova gratuita 7 giorni",
-                
-                goodNews: "Buone notizie!",
-                cautionRecommended: "Cautela raccomandata",
-                elevatedRisk: "Rischio elevato",
-                conditions: "Le condizioni ambientali attuali sono favorevoli per il tuo profilo.",
-                aqiGreen: "La qualità dell'aria è nella zona verde.",
-                potentialTriggers: "Trigger potenziali",
-                activeTriggers: "Trigger attivi",
-                monitorSymptoms: "Monitora i tuoi sintomi e tieni i farmaci pronti.",
-                avoidOutdoor: "Evita le attività all'aperto se possibile.",
-                keepMedication: "Tieni i farmaci d'emergenza a portata di mano.",
-                
-                stayIndoors: "Rimani in casa oggi e tieni le finestre chiuse.",
-                keepInhaler: "Tieni l'inalatore d'emergenza a portata di mano.",
-                showerAfter: "Fai la doccia dopo essere stato all'aperto per rimuovere il polline.",
-                changeClothes: "Cambia i vestiti dopo essere uscito per non portare polline in camera.",
-                drinkWater: "Bevi abbastanza acqua - la disidratazione può scatenare l'emicrania.",
-                wearSunglasses: "Indossa occhiali da sole alla luce del sole.",
-                useSunscreen: "Usa una protezione solare di almeno SPF 30.",
-                enjoyDay: "Le condizioni sono favorevoli oggi. Goditi la giornata!"
+                premiumFeatures: "Notifiche push • Tracciamento sintomi • Pattern personali",
+                premiumBtn: "Prova gratis 7 giorni"
             }
         };
         
         const t = key => T[currentLang]?.[key] || T['en']?.[key] || key;
         
-        // Condition definitions with translations
-        const conditionDefs = {
-            asthma: { icon: '🫁', triggers: ['pm2_5', 'no2', 'ozone', 'humidity', 'pressure'] },
-            allergy: { icon: '🤧', triggers: ['pollen', 'dust', 'humidity'] },
-            migraine: { icon: '🤕', triggers: ['pressure', 'humidity', 'temperature_change'] },
-            copd: { icon: '💨', triggers: ['pm2_5', 'pm10', 'no2', 'co', 'humidity'] },
-            cardiovascular: { icon: '❤️', triggers: ['pm2_5', 'temperature', 'pressure', 'ozone'] },
-            fatigue: { icon: '😴', triggers: ['pressure', 'humidity', 'uv'] }
-        };
-        
-        // === INITIALIZATION ===
+        // ==================== INIT ====================
         function init() {
-            // Load saved language
             const savedLang = localStorage.getItem('healthair_lang');
             if (savedLang) {
                 currentLang = savedLang;
                 document.getElementById('language').value = savedLang;
             }
             
-            // Load saved conditions
-            const savedConds = localStorage.getItem('healthair_conditions');
-            if (savedConds) {
-                selectedConditions = JSON.parse(savedConds);
+            const savedConditions = localStorage.getItem('healthair_conditions');
+            if (savedConditions) {
+                selectedConditions = JSON.parse(savedConditions);
+                document.querySelectorAll('.condition-btn').forEach(btn => {
+                    if (selectedConditions.includes(btn.dataset.condition)) {
+                        btn.classList.add('active');
+                    }
+                });
             }
             
-            renderConditionButtons();
             applyTranslations();
-        }
-        
-        function changeLanguage() {
-            currentLang = document.getElementById('language').value;
-            localStorage.setItem('healthair_lang', currentLang);
-            renderConditionButtons();
-            applyTranslations();
-            if (currentData) {
-                renderHealthAnalysis(currentData);
-            }
         }
         
         function applyTranslations() {
@@ -891,69 +1128,42 @@
             document.getElementById('location').placeholder = t('locationPlaceholder');
             document.getElementById('timeLabel').textContent = t('timeLabel');
             document.getElementById('btnAnalyze').textContent = t('btnAnalyze');
-            document.getElementById('initialMsg').textContent = t('initialMsg');
+            document.getElementById('initialText').textContent = t('initialText');
             
-            // Time range options
-            const timeSelect = document.getElementById('timeRange');
-            timeSelect.options[0].text = `6 ${t('hours')}`;
-            timeSelect.options[1].text = `12 ${t('hours')}`;
-            timeSelect.options[2].text = `24 ${t('hours')}`;
-            timeSelect.options[3].text = `48 ${t('hours')}`;
-            timeSelect.options[4].text = `3 ${t('days')}`;
+            // Condition names
+            document.querySelectorAll('.condition-btn').forEach(btn => {
+                const cond = btn.dataset.condition;
+                btn.querySelector('.condition-name').textContent = t(cond);
+            });
+            
+            // Time range
+            const ts = document.getElementById('timeRange');
+            ts.options[0].text = `6 ${t('hours')}`;
+            ts.options[1].text = `12 ${t('hours')}`;
+            ts.options[2].text = `24 ${t('hours')}`;
+            ts.options[3].text = `48 ${t('hours')}`;
+            ts.options[4].text = `3 ${t('days')}`;
         }
         
-        function renderConditionButtons() {
-            const container = document.getElementById('conditions');
-            container.innerHTML = Object.entries(conditionDefs).map(([key, def]) => `
-                <button class="condition-btn ${selectedConditions.includes(key) ? 'selected' : ''}" 
-                        data-condition="${key}" onclick="toggleCondition(this)">
-                    <span class="icon">${def.icon}</span>${t(key)}
-                </button>
-            `).join('');
+        function changeLanguage() {
+            currentLang = document.getElementById('language').value;
+            localStorage.setItem('healthair_lang', currentLang);
+            applyTranslations();
+            if (currentData) renderResults(currentData);
         }
         
         function toggleCondition(btn) {
+            btn.classList.toggle('active');
             const cond = btn.dataset.condition;
-            if (selectedConditions.includes(cond)) {
-                selectedConditions = selectedConditions.filter(c => c !== cond);
-                btn.classList.remove('selected');
+            if (btn.classList.contains('active')) {
+                if (!selectedConditions.includes(cond)) selectedConditions.push(cond);
             } else {
-                selectedConditions.push(cond);
-                btn.classList.add('selected');
+                selectedConditions = selectedConditions.filter(c => c !== cond);
             }
             localStorage.setItem('healthair_conditions', JSON.stringify(selectedConditions));
         }
         
-        // === GEOLOCATION ===
-        async function useGPS() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    async pos => {
-                        lat = pos.coords.latitude;
-                        lon = pos.coords.longitude;
-                        // Reverse geocode
-                        await reverseGeocode(lat, lon);
-                        analyze();
-                    },
-                    err => alert('GPS Error: ' + err.message)
-                );
-            }
-        }
-        
-        async function reverseGeocode(latitude, longitude) {
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=${currentLang}`);
-                const data = await res.json();
-                const city = data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || '';
-                const country = data.address?.country || '';
-                locationName = city && country ? `${city}, ${country}` : `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-                document.getElementById('location').value = locationName;
-            } catch (e) {
-                locationName = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-                document.getElementById('location').value = locationName;
-            }
-        }
-        
+        // ==================== GEOCODING ====================
         async function geocodeLocation(query) {
             try {
                 const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=${currentLang}`);
@@ -961,339 +1171,505 @@
                 if (data.length > 0) {
                     lat = parseFloat(data[0].lat);
                     lon = parseFloat(data[0].lon);
-                    locationName = data[0].display_name.split(',').slice(0, 2).join(',');
+                    locationName = data[0].display_name.split(',').slice(0, 2).join(', ');
                     return true;
                 }
-            } catch (e) {
-                console.error('Geocoding error:', e);
-            }
+            } catch (e) { console.error(e); }
             return false;
         }
         
-        // === ANALYSIS ===
+        async function reverseGeocode(latitude, longitude) {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=${currentLang}`);
+                const data = await res.json();
+                const city = data.address?.city || data.address?.town || data.address?.village || '';
+                const country = data.address?.country || '';
+                locationName = city && country ? `${city}, ${country}` : `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`;
+                document.getElementById('location').value = locationName;
+            } catch (e) {
+                locationName = `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`;
+            }
+        }
+        
+        function useGPS() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    async pos => {
+                        lat = pos.coords.latitude;
+                        lon = pos.coords.longitude;
+                        await reverseGeocode(lat, lon);
+                        analyze();
+                    },
+                    e => alert('GPS Error: ' + e.message)
+                );
+            }
+        }
+        
+        // ==================== ANALYSIS ====================
         async function analyze() {
             if (selectedConditions.length === 0) {
-                alert(currentLang === 'de' ? 'Bitte wähle mindestens eine Gesundheitsbedingung aus.' : 
-                      currentLang === 'fr' ? 'Veuillez sélectionner au moins une condition de santé.' :
-                      currentLang === 'it' ? 'Seleziona almeno una condizione di salute.' :
-                      'Please select at least one health condition.');
+                alert(currentLang === 'de' ? 'Bitte wähle mindestens eine Beschwerde aus.' : 'Please select at least one condition.');
                 return;
             }
             
-            // Geocode if location text changed
             const locInput = document.getElementById('location').value.trim();
             if (locInput && locInput !== locationName) {
                 const success = await geocodeLocation(locInput);
                 if (!success) {
-                    alert(currentLang === 'de' ? 'Ort nicht gefunden. Bitte überprüfen.' :
-                          currentLang === 'fr' ? 'Lieu non trouvé. Veuillez vérifier.' :
-                          currentLang === 'it' ? 'Luogo non trovato. Si prega di verificare.' :
-                          'Location not found. Please check.');
+                    alert(currentLang === 'de' ? 'Ort nicht gefunden.' : 'Location not found.');
                     return;
                 }
             }
             
-            document.getElementById('main-content').innerHTML = `
+            document.getElementById('results').innerHTML = `
                 <div class="loading">
                     <div class="loading-spinner"></div>
                     <p>${t('analyzing')}</p>
-                </div>`;
+                </div>
+            `;
             
             try {
                 const res = await fetch(`${API}/data/?lat=${lat}&lon=${lon}`);
                 const data = await res.json();
                 currentData = data;
-                renderHealthAnalysis(data);
+                renderResults(data);
+                fetchChat();
             } catch (e) {
-                document.getElementById('main-content').innerHTML = `
-                    <div class="loading">
-                        <p>❌ Error: ${e.message}</p>
-                        <button class="btn btn-primary" onclick="analyze()">${t('btnAnalyze')}</button>
-                    </div>`;
+                document.getElementById('results').innerHTML = `<div class="loading">❌ Error: ${e.message}</div>`;
             }
         }
         
-        function calculateHealthRisk(data) {
-            let riskScore = 0;
-            let riskFactors = [];
-            
+        // ==================== HEALTH IMPACT SCORE ====================
+        function calculateHealthScore(data) {
+            let score = 0;
+            const triggers = [];
             const air = data.air_quality || {};
             const weather = data.weather || {};
-            const pollen = data.pollen || {};
             
-            // PM2.5
-            if (air.pm2_5) {
-                if (air.pm2_5 > 35) { riskScore += 3; riskFactors.push(`PM2.5 ${t('high')} (${air.pm2_5.toFixed(0)} μg/m³)`); }
-                else if (air.pm2_5 > 15) { riskScore += 1; }
+            // PM2.5 (0-25 points)
+            const pm25 = air.pm2_5 || 0;
+            if (pm25 > 35) { score += 25; triggers.push({ name: 'PM2.5', value: pm25, unit: 'μg/m³', severity: 'high' }); }
+            else if (pm25 > 15) { score += 12; triggers.push({ name: 'PM2.5', value: pm25, unit: 'μg/m³', severity: 'medium' }); }
+            else if (pm25 > 10) { score += 5; }
+            
+            // NO2 (0-20 points)
+            const no2 = air.no2 || 0;
+            if (no2 > 100) { score += 20; triggers.push({ name: 'NO₂', value: no2, unit: 'μg/m³', severity: 'high' }); }
+            else if (no2 > 40) { score += 10; triggers.push({ name: 'NO₂', value: no2, unit: 'μg/m³', severity: 'medium' }); }
+            
+            // Ozone (0-15 points)
+            const ozone = air.ozone || 0;
+            if (ozone > 180) { score += 15; triggers.push({ name: 'Ozon', value: ozone, unit: 'μg/m³', severity: 'high' }); }
+            else if (ozone > 100) { score += 8; }
+            
+            // Humidity (0-15 points) - context-aware
+            const humidity = weather.humidity || 0;
+            if (humidity > 85) { score += 15; triggers.push({ name: t('humidity'), value: humidity, unit: '%', severity: 'high' }); }
+            else if (humidity > 70) { score += 8; }
+            else if (humidity < 30) { score += 10; triggers.push({ name: t('humidity'), value: humidity, unit: '%', severity: 'medium' }); }
+            
+            // Pressure (0-10 points)
+            const pressure = weather.pressure || 1013;
+            if (pressure < 1000 || pressure > 1030) { 
+                score += 10; 
+                triggers.push({ name: t('pressure'), value: pressure, unit: 'hPa', severity: 'medium' }); 
+            } else if (pressure < 1005 || pressure > 1025) { 
+                score += 5; 
             }
             
-            // NO2
-            if (air.no2) {
-                if (air.no2 > 100) { riskScore += 3; riskFactors.push(`NO₂ ${t('high')}`); }
-                else if (air.no2 > 40) { riskScore += 1; riskFactors.push(`NO₂ ${t('moderate')}`); }
-            }
+            // UV (0-15 points)
+            const uv = air.uv_index || 0;
+            if (uv >= 8) { score += 15; triggers.push({ name: 'UV', value: uv, unit: '', severity: 'high' }); }
+            else if (uv >= 6) { score += 8; }
+            else if (uv >= 3) { score += 3; }
             
-            // Ozone
-            if (air.ozone) {
-                if (air.ozone > 180) { riskScore += 3; riskFactors.push(`${t('ozone')} ${t('high')}`); }
-                else if (air.ozone > 100) { riskScore += 1; }
-            }
+            // Cap at 100
+            score = Math.min(100, score);
             
-            // Humidity
-            if (weather.humidity) {
-                if (weather.humidity > 85) { riskScore += 2; riskFactors.push(`${t('humidity')} ${t('high')} (${weather.humidity}%)`); }
-                else if (weather.humidity > 70) { riskScore += 1; }
-            }
+            // Determine level
+            let level, levelKey, riskClass;
+            if (score <= 20) { level = t('scoreVeryLow'); levelKey = 'low'; riskClass = 'risk-low'; }
+            else if (score <= 40) { level = t('scoreLow'); levelKey = 'low'; riskClass = 'risk-low'; }
+            else if (score <= 60) { level = t('scoreModerate'); levelKey = 'medium'; riskClass = 'risk-medium'; }
+            else if (score <= 80) { level = t('scoreHigh'); levelKey = 'high'; riskClass = 'risk-high'; }
+            else { level = t('scoreVeryHigh'); levelKey = 'critical'; riskClass = 'risk-critical'; }
             
-            // Pollen
-            if (pollen.high_pollen?.length > 0) {
-                riskScore += 2 * pollen.high_pollen.length;
-                riskFactors.push(`Pollen: ${pollen.high_pollen.join(', ')}`);
-            }
-            
-            // Pressure
-            if (weather.pressure && (weather.pressure < 1000 || weather.pressure > 1030)) {
-                riskScore += 2;
-                riskFactors.push(`${t('pressure')} (${weather.pressure} hPa)`);
-            }
-            
-            // UV
-            if (air.uv_index >= 8) {
-                riskScore += 2;
-                riskFactors.push(`${t('uvIndex')} ${t('high')} (${air.uv_index})`);
-            }
-            
-            let level = 'low';
-            if (riskScore >= 8) level = 'critical';
-            else if (riskScore >= 5) level = 'high';
-            else if (riskScore >= 2) level = 'medium';
-            
-            return { score: riskScore, level, factors: [...new Set(riskFactors)] };
+            return { score, level, levelKey, riskClass, triggers };
         }
         
-        function generateForecast(data, risk) {
-            const condNames = selectedConditions.map(c => t(c)).join(', ');
-            const air = data.air_quality || {};
-            
-            if (risk.level === 'low') {
-                return `<span class="forecast-good">${t('goodNews')}</span> ${t('conditions')} ${t('aqiGreen')}`;
-            } else if (risk.level === 'medium') {
-                return `<span class="forecast-highlight">${t('cautionRecommended')}</span> (${condNames}). ` +
-                       (risk.factors.length > 0 ? `${t('potentialTriggers')}: ${risk.factors.slice(0,2).join(', ')}. ` : '') +
-                       t('monitorSymptoms');
-            } else {
-                return `<span class="forecast-highlight">${t('elevatedRisk')}</span> (${condNames})! ` +
-                       `${t('activeTriggers')}: ${risk.factors.join(', ')}. ` +
-                       t('avoidOutdoor') + ' ' + t('keepMedication');
-            }
-        }
-        
-        function renderHealthAnalysis(data) {
-            const risk = calculateHealthRisk(data);
-            const forecast = generateForecast(data, risk);
+        // ==================== RENDER ====================
+        function renderResults(data) {
+            const health = calculateHealthScore(data);
             const air = data.air_quality || {};
             const weather = data.weather || {};
             const timeRange = parseInt(document.getElementById('timeRange').value);
             
-            const riskClass = { low: 'risk-low', medium: 'risk-medium', high: 'risk-high', critical: 'risk-critical' }[risk.level];
-            const riskLabel = { low: t('riskLow'), medium: t('riskMedium'), high: t('riskHigh'), critical: t('riskCritical') }[risk.level];
+            // Score color
+            const scoreColor = health.score <= 20 ? '#10b981' : 
+                              health.score <= 40 ? '#84cc16' :
+                              health.score <= 60 ? '#f59e0b' :
+                              health.score <= 80 ? '#f97316' : '#ef4444';
             
-            // Generate hourly forecast
-            const hours = [];
-            const now = new Date();
-            for (let i = 0; i < timeRange; i++) {
-                const h = new Date(now.getTime() + i * 3600000);
-                const hourRisk = Math.random() > 0.7 ? (Math.random() > 0.5 ? 'danger' : 'warning') : '';
-                hours.push({
-                    time: h.getHours().toString().padStart(2, '0') + ':00',
-                    date: h.getDate() !== now.getDate() ? h.toLocaleDateString(currentLang, { day: 'numeric', month: 'short' }) : '',
-                    risk: hourRisk,
-                    icon: hourRisk === 'danger' ? '⚠️' : hourRisk === 'warning' ? '⚡' : '✓',
-                    label: hourRisk === 'danger' ? t('high') : hourRisk === 'warning' ? t('moderate') : t('ok')
-                });
+            // Prognosis text
+            const conditionNames = selectedConditions.map(c => t(c)).join(', ');
+            const mainTrigger = health.triggers[0];
+            
+            let prognosisMain, prognosisRec;
+            if (health.levelKey === 'low') {
+                prognosisMain = currentLang === 'de' 
+                    ? `Gute Nachrichten! Die Umweltbedingungen sind heute günstig für ${conditionNames}.`
+                    : `Good news! Environmental conditions are favorable today for ${conditionNames}.`;
+                prognosisRec = currentLang === 'de'
+                    ? `Idealer Tag für Aktivitäten im Freien.`
+                    : `Ideal day for outdoor activities.`;
+            } else if (health.levelKey === 'medium') {
+                prognosisMain = currentLang === 'de'
+                    ? `Heute besteht ein moderates Risiko für ${conditionNames}.`
+                    : `There is a moderate risk today for ${conditionNames}.`;
+                prognosisRec = mainTrigger 
+                    ? (currentLang === 'de' 
+                        ? `Hauptfaktor: ${mainTrigger.name} (${mainTrigger.value}${mainTrigger.unit}). Beobachte deine Symptome.`
+                        : `Main factor: ${mainTrigger.name} (${mainTrigger.value}${mainTrigger.unit}). Monitor your symptoms.`)
+                    : '';
+            } else {
+                prognosisMain = currentLang === 'de'
+                    ? `Erhöhtes Risiko für ${conditionNames} heute!`
+                    : `Elevated risk for ${conditionNames} today!`;
+                prognosisRec = mainTrigger
+                    ? (currentLang === 'de'
+                        ? `Hauptfaktor: ${mainTrigger.name} (${mainTrigger.value}${mainTrigger.unit}). Vermeide intensive Aktivitäten im Freien.`
+                        : `Main factor: ${mainTrigger.name} (${mainTrigger.value}${mainTrigger.unit}). Avoid intense outdoor activities.`)
+                    : '';
             }
             
-            const getStatus = (val, th) => {
-                if (val == null) return { class: '', text: '' };
-                if (val <= th[0]) return { class: 'status-good', text: t('good') };
-                if (val <= th[1]) return { class: 'status-moderate', text: t('moderate') };
-                return { class: 'status-bad', text: t('high') };
-            };
-            
-            const pm25Status = getStatus(air.pm2_5, [15, 35]);
-            const no2Status = getStatus(air.no2, [40, 100]);
-            const o3Status = getStatus(air.ozone, [100, 180]);
-            const humStatus = getStatus(weather.humidity, [60, 80]);
-            
-            document.getElementById('main-content').innerHTML = `
-                <!-- Risk Summary -->
-                <div class="risk-card">
-                    <div class="risk-header">
-                        <div>
-                            <div class="risk-title">📊 ${t('dailyForecast')}</div>
-                            <div class="risk-subtitle">📍 ${locationName || `${lat.toFixed(2)}, ${lon.toFixed(2)}`}</div>
+            // Hourly forecast simulation
+            const now = new Date();
+            let hoursHtml = '';
+            for (let i = 0; i < timeRange; i++) {
+                const h = new Date(now.getTime() + i * 3600000);
+                const hourStr = h.getHours().toString().padStart(2, '0') + ':00';
+                const dateStr = h.getDate() !== now.getDate() ? h.toLocaleDateString(currentLang, { day: 'numeric', month: 'short' }) : '';
+                
+                // Simulate varying risk (based on time of day)
+                const hourOfDay = h.getHours();
+                let riskIcon, trend, trendClass;
+                const baseRisk = health.score;
+                let hourRisk = baseRisk;
+                
+                // Morning/evening typically better, afternoon worse
+                if (hourOfDay >= 6 && hourOfDay <= 9) hourRisk = Math.max(0, baseRisk - 15);
+                else if (hourOfDay >= 12 && hourOfDay <= 16) hourRisk = Math.min(100, baseRisk + 10);
+                else if (hourOfDay >= 20 || hourOfDay <= 5) hourRisk = Math.max(0, baseRisk - 10);
+                
+                if (hourRisk <= 30) riskIcon = '✓';
+                else if (hourRisk <= 60) riskIcon = '⚡';
+                else riskIcon = '⚠️';
+                
+                // Trend
+                if (i > 0) {
+                    const prevHour = (h.getHours() - 1 + 24) % 24;
+                    if (prevHour >= 6 && prevHour <= 8) { trend = '↓'; trendClass = 'trend-down'; }
+                    else if (prevHour >= 11 && prevHour <= 14) { trend = '↑'; trendClass = 'trend-up'; }
+                    else { trend = '→'; trendClass = 'trend-stable'; }
+                } else {
+                    trend = ''; trendClass = '';
+                }
+                
+                // Tooltip data
+                const tooltipHumidity = Math.round(weather.humidity + (Math.random() * 10 - 5));
+                const tooltipTemp = (weather.temperature + (Math.random() * 2 - 1)).toFixed(1);
+                
+                hoursHtml += `
+                    <div class="timeline-hour ${i === 0 ? 'now' : ''}">
+                        <div class="tooltip">
+                            ${t('humidity')}: ${tooltipHumidity}%<br>
+                            Temp: ${tooltipTemp}°C<br>
+                            ${t('ozone')}: ${Math.round(air.ozone || 0)} μg/m³
                         </div>
-                        <span class="risk-badge ${riskClass}">${riskLabel}</span>
+                        <div class="time">${hourStr}</div>
+                        ${dateStr ? `<div class="date">${dateStr}</div>` : ''}
+                        <div class="risk-indicator">${riskIcon}</div>
+                        ${trend ? `<div class="trend ${trendClass}">${trend}</div>` : ''}
                     </div>
-                    <div class="symptom-forecast">
-                        <div class="forecast-text">${forecast}</div>
+                `;
+            }
+            
+            // Micro recommendations
+            const microRecs = generateMicroRecs(data, health);
+            
+            document.getElementById('results').innerHTML = `
+                <!-- Health Impact Score -->
+                <div class="health-score-card">
+                    <div class="score-header">${t('healthScore')}</div>
+                    <div class="score-circle" style="--score-pct: ${health.score}; --score-color: ${scoreColor}">
+                        <div class="score-value" style="color: ${scoreColor}">${health.score}</div>
+                        <div class="score-max">/100</div>
                     </div>
-                    ${risk.factors.length > 0 ? `
-                        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;">
-                            ${risk.factors.map(f => `<span style="background:#fef3c7;color:#92400e;padding:4px 10px;border-radius:8px;font-size:0.8rem;">⚠️ ${f}</span>`).join('')}
+                    <div class="score-label" style="color: ${scoreColor}">${health.level}</div>
+                    <div class="score-location">📍 ${locationName || 'Zürich, Schweiz'}</div>
+                    
+                    <div class="health-bar">
+                        <div class="health-bar-marker" style="left: ${health.score}%"></div>
+                    </div>
+                    <div class="health-bar-labels">
+                        <span>0</span>
+                        <span>25</span>
+                        <span>50</span>
+                        <span>75</span>
+                        <span>100</span>
+                    </div>
+                </div>
+                
+                <!-- Prognosis Box -->
+                <div class="prognosis-card ${health.riskClass}">
+                    <div class="prognosis-header">
+                        <span class="prognosis-icon">${health.levelKey === 'low' ? '✅' : health.levelKey === 'medium' ? '⚠️' : '🔴'}</span>
+                        <span class="prognosis-title">${t('risk' + health.levelKey.charAt(0).toUpperCase() + health.levelKey.slice(1))}</span>
+                    </div>
+                    <div class="prognosis-main">${prognosisMain}</div>
+                    <div class="prognosis-recommendation">
+                        <strong>→</strong> ${prognosisRec}
+                    </div>
+                    ${health.triggers.length > 0 ? `
+                        <div class="prognosis-details">
+                            <div class="prognosis-toggle" onclick="toggleDetails(this)">
+                                <span>▶</span> ${t('showDetails')}
+                            </div>
+                            <div class="prognosis-expanded">
+                                <strong>${t('triggers')}:</strong>
+                                <div class="trigger-list">
+                                    ${health.triggers.map(tr => `
+                                        <span class="trigger-chip ${tr.severity === 'high' ? 'high' : ''}">
+                                            ${tr.name}: ${tr.value}${tr.unit}
+                                        </span>
+                                    `).join('')}
+                                </div>
+                            </div>
                         </div>
                     ` : ''}
                 </div>
                 
                 <!-- Hourly Timeline -->
                 <div class="timeline-card">
-                    <div class="timeline-title">⏰ ${t('hourlyForecast')} (${timeRange}h)</div>
-                    <div class="timeline-scroll">
-                        ${hours.map(h => `
-                            <div class="hour-block ${h.risk}">
-                                <div class="hour-time">${h.time}</div>
-                                ${h.date ? `<div class="hour-date">${h.date}</div>` : ''}
-                                <div class="hour-risk">${h.icon}</div>
-                                <div class="hour-label">${h.label}</div>
-                            </div>
-                        `).join('')}
+                    <div class="timeline-header">
+                        <span class="timeline-title">📊 ${t('hourlyForecast')}</span>
+                        <div class="timeline-nav">
+                            <button class="timeline-nav-btn" onclick="scrollTimeline(-1)">◀</button>
+                            <button class="timeline-nav-btn" onclick="scrollTimeline(1)">▶</button>
+                        </div>
+                    </div>
+                    <div class="timeline-scroll" id="timeline-scroll">
+                        ${hoursHtml}
                     </div>
                 </div>
                 
                 <!-- Trigger Cards -->
                 <div class="triggers-grid">
-                    <div class="trigger-card">
-                        <div class="trigger-header">
-                            <span class="trigger-icon">💨</span>
-                            <span class="trigger-title">${t('pm25')}</span>
-                        </div>
-                        <div class="trigger-value">${air.pm2_5?.toFixed(1) || 'N/A'} <span style="font-size:0.8rem;font-weight:400;">μg/m³</span>
-                            <span class="trigger-status ${pm25Status.class}">${pm25Status.text}</span>
-                        </div>
-                        <div class="trigger-detail">${t('whoLimit')}: 15 μg/m³</div>
-                    </div>
-                    
-                    <div class="trigger-card">
-                        <div class="trigger-header">
-                            <span class="trigger-icon">🚗</span>
-                            <span class="trigger-title">${t('no2')}</span>
-                        </div>
-                        <div class="trigger-value">${air.no2?.toFixed(1) || 'N/A'} <span style="font-size:0.8rem;font-weight:400;">μg/m³</span>
-                            <span class="trigger-status ${no2Status.class}">${no2Status.text}</span>
-                        </div>
-                        <div class="trigger-detail">${t('euLimit')}: 40 μg/m³</div>
-                    </div>
-                    
-                    <div class="trigger-card">
-                        <div class="trigger-header">
-                            <span class="trigger-icon">☀️</span>
-                            <span class="trigger-title">${t('ozone')}</span>
-                        </div>
-                        <div class="trigger-value">${air.ozone?.toFixed(0) || 'N/A'} <span style="font-size:0.8rem;font-weight:400;">μg/m³</span>
-                            <span class="trigger-status ${o3Status.class}">${o3Status.text}</span>
-                        </div>
-                        <div class="trigger-detail">${t('warningLevel')}: 180 μg/m³</div>
-                    </div>
-                    
-                    <div class="trigger-card">
-                        <div class="trigger-header">
-                            <span class="trigger-icon">💧</span>
-                            <span class="trigger-title">${t('humidity')}</span>
-                        </div>
-                        <div class="trigger-value">${weather.humidity || 'N/A'}<span style="font-size:0.8rem;font-weight:400;">%</span>
-                            <span class="trigger-status ${humStatus.class}">${humStatus.text}</span>
-                        </div>
-                        <div class="trigger-detail">${t('optimal')}: 40-60%</div>
-                    </div>
-                    
-                    <div class="trigger-card">
-                        <div class="trigger-header">
-                            <span class="trigger-icon">🌡️</span>
-                            <span class="trigger-title">${t('pressure')}</span>
-                        </div>
-                        <div class="trigger-value">${weather.pressure || 'N/A'} <span style="font-size:0.8rem;font-weight:400;">hPa</span></div>
-                        <div class="trigger-detail">${t('normal')}: 1013 hPa</div>
-                    </div>
-                    
-                    <div class="trigger-card">
-                        <div class="trigger-header">
-                            <span class="trigger-icon">☀️</span>
-                            <span class="trigger-title">${t('uvIndex')}</span>
-                        </div>
-                        <div class="trigger-value">${air.uv_index?.toFixed(1) || 'N/A'}
-                            <span class="trigger-status ${air.uv_index >= 6 ? 'status-bad' : air.uv_index >= 3 ? 'status-moderate' : 'status-good'}">${air.uv_index >= 6 ? t('high') : air.uv_index >= 3 ? t('moderate') : t('low')}</span>
-                        </div>
-                        <div class="trigger-detail">${t('sunProtection')}</div>
-                    </div>
+                    ${renderTriggerCard('pm25', '🌫️', air.pm2_5, 'μg/m³', 15, 35, t('whoLimit') + ': 15 μg/m³')}
+                    ${renderTriggerCard('no2', '🏭', air.no2, 'μg/m³', 40, 100, t('euLimit') + ': 40 μg/m³')}
+                    ${renderTriggerCard('ozone', '☀️', air.ozone, 'μg/m³', 100, 180, t('warningLevel') + ': 180 μg/m³')}
+                    ${renderTriggerCard('humidity', '💧', weather.humidity, '%', 60, 85, t('optimal') + ': 40-60%')}
+                    ${renderTriggerCard('pressure', '🌡️', weather.pressure, 'hPa', 1005, 1025, t('normal') + ': 1013 hPa', true)}
+                    ${renderTriggerCard('uvIndex', '🌞', air.uv_index, '', 3, 6, t('sunProtection'))}
                 </div>
                 
-                <!-- AI Chat -->
+                <!-- Micro Recommendations -->
+                <div class="micro-recs">
+                    <div class="micro-recs-title">💡 ${t('microRecs')}</div>
+                    ${microRecs.map(rec => `
+                        <div class="micro-rec-item">
+                            <span class="micro-rec-icon">${rec.icon}</span>
+                            <span class="micro-rec-text">${rec.text}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <!-- Chat -->
                 <div class="chat-card">
-                    <div class="chat-title">🤖 ${t('healthAssistant')}</div>
-                    <div class="quick-actions">
-                        <button class="quick-btn" onclick="askQuestion('${t('sportToday')}')">🏃 ${t('sportToday')}</button>
-                        <button class="quick-btn" onclick="askQuestion('${t('bestTime')}')">⏰ ${t('bestTime')}</button>
-                        <button class="quick-btn" onclick="askQuestion('${t('tips')}')">💊 ${t('tips')}</button>
+                    <div class="chat-header">
+                        <div class="chat-avatar">🤖</div>
+                        <div class="chat-header-text">
+                            <h3>${t('coachTitle')}</h3>
+                            <p>${t('coachSubtitle')}</p>
+                        </div>
+                    </div>
+                    <div class="chat-quick-btns">
+                        <button class="chat-quick-btn" onclick="askQuestion('${t('sportToday')}')">🏃 ${t('sportToday')}</button>
+                        <button class="chat-quick-btn" onclick="askQuestion('${t('bestTime')}')">⏰ ${t('bestTime')}</button>
+                        <button class="chat-quick-btn" onclick="askQuestion('${t('tips')}')">💡 ${t('tips')}</button>
                     </div>
                     <div class="chat-messages" id="chat-messages"></div>
                     <div class="chat-input-row">
-                        <input type="text" class="chat-input" id="chat-input" placeholder="${t('chatPlaceholder')}" onkeypress="if(event.key==='Enter')sendChat()">
-                        <button class="chat-send" onclick="sendChat()">${t('send')}</button>
+                        <input type="text" class="chat-input" id="chat-input" placeholder="Frage stellen..." onkeypress="if(event.key==='Enter')sendChat()">
+                        <button class="chat-send" onclick="sendChat()">→</button>
                     </div>
                 </div>
                 
-                <!-- Tips -->
-                <div class="tips-card">
-                    <div class="tips-title">💡 ${t('recommendations')}</div>
-                    ${generateTips(data, risk)}
+                <!-- Symptom Feedback -->
+                <div class="feedback-card">
+                    <div class="feedback-title">${t('feedbackTitle')}</div>
+                    <div class="feedback-btns">
+                        <button class="feedback-btn yes" onclick="submitFeedback(true)">${t('feedbackYes')}</button>
+                        <button class="feedback-btn no" onclick="submitFeedback(false)">${t('feedbackNo')}</button>
+                    </div>
                 </div>
                 
-                <!-- Premium Banner -->
+                <!-- Premium -->
                 <div class="premium-banner">
-                    <div class="premium-title">🚀 ${t('premiumTitle')}</div>
+                    <div class="premium-title">⭐ ${t('premiumTitle')}</div>
                     <div class="premium-features">${t('premiumFeatures')}</div>
-                    <button class="premium-btn">${t('premiumBtn')}</button>
+                    <a href="#" class="premium-btn">${t('premiumBtn')}</a>
                 </div>
             `;
             
-            fetchInitialChat();
+            renderChat();
         }
         
-        function generateTips(data, risk) {
-            const tips = [];
+        function renderTriggerCard(key, icon, value, unit, goodThreshold, badThreshold, limitText, invertLogic = false) {
+            const val = value ?? 0;
+            let badgeClass, badgeText;
+            
+            if (invertLogic) {
+                // For pressure: middle is good
+                const diff = Math.abs(val - 1013);
+                if (diff <= 10) { badgeClass = 'badge-good'; badgeText = t('good'); }
+                else if (diff <= 20) { badgeClass = 'badge-moderate'; badgeText = t('moderate'); }
+                else { badgeClass = 'badge-high'; badgeText = t('high'); }
+            } else {
+                if (val <= goodThreshold) { badgeClass = 'badge-good'; badgeText = t('good'); }
+                else if (val <= badThreshold) { badgeClass = 'badge-moderate'; badgeText = t('moderate'); }
+                else { badgeClass = 'badge-bad'; badgeText = t('high'); }
+            }
+            
+            return `
+                <div class="trigger-card">
+                    <div class="info-popup" id="info-${key}">
+                        ${t(key + 'Info')}
+                        <button class="info-popup-close" onclick="hideInfo('${key}')">✕</button>
+                    </div>
+                    <div class="trigger-card-header">
+                        <span class="trigger-card-title">${icon} ${t(key)}</span>
+                        <button class="info-btn" onclick="showInfo('${key}')">i</button>
+                    </div>
+                    <div class="trigger-card-value">${val.toFixed(1)}<span class="trigger-card-unit">${unit}</span></div>
+                    <span class="trigger-card-badge ${badgeClass}">${badgeText}</span>
+                    <div class="trigger-card-limit">${limitText}</div>
+                </div>
+            `;
+        }
+        
+        function generateMicroRecs(data, health) {
+            const recs = [];
+            const weather = data.weather || {};
             const air = data.air_quality || {};
+            const now = new Date();
+            const hour = now.getHours();
+            
+            // Based on conditions and data
+            if (selectedConditions.includes('fatigue')) {
+                if (weather.humidity > 80) {
+                    recs.push({
+                        icon: '💧',
+                        text: currentLang === 'de' 
+                            ? `Hohe Außenfeuchtigkeit (${weather.humidity}%) – <span class="micro-rec-highlight">trinke heute 2 Gläser mehr Wasser</span> zur Kreislaufunterstützung.`
+                            : `High outdoor humidity (${weather.humidity}%) – <span class="micro-rec-highlight">drink 2 extra glasses of water</span> to support circulation.`
+                    });
+                }
+                if (weather.pressure < 1005 || weather.pressure > 1025) {
+                    recs.push({
+                        icon: '🌡️',
+                        text: currentLang === 'de'
+                            ? `Luftdruckschwankung erkannt – <span class="micro-rec-highlight">plane Ruhepausen ein</span>.`
+                            : `Pressure fluctuation detected – <span class="micro-rec-highlight">plan rest breaks</span>.`
+                    });
+                }
+            }
             
             if (selectedConditions.includes('asthma') || selectedConditions.includes('copd')) {
-                if (air.pm2_5 > 25) tips.push({ icon: '🏠', text: t('stayIndoors') });
-                tips.push({ icon: '💊', text: t('keepInhaler') });
+                if (air.pm2_5 > 15) {
+                    recs.push({
+                        icon: '🫁',
+                        text: currentLang === 'de'
+                            ? `PM2.5 erhöht (${air.pm2_5} μg/m³) – <span class="micro-rec-highlight">Fenster geschlossen halten</span>, Notfall-Spray bereithalten.`
+                            : `PM2.5 elevated (${air.pm2_5} μg/m³) – <span class="micro-rec-highlight">keep windows closed</span>, have rescue inhaler ready.`
+                    });
+                }
             }
             
-            if (selectedConditions.includes('allergy')) {
-                tips.push({ icon: '🚿', text: t('showerAfter') });
-                tips.push({ icon: '👕', text: t('changeClothes') });
+            // Best time recommendation
+            if (hour >= 6 && hour <= 20) {
+                const bestStart = hour < 10 ? 'jetzt' : '20:00';
+                const bestEnd = hour < 10 ? '10:00' : '22:00';
+                recs.push({
+                    icon: '⏰',
+                    text: currentLang === 'de'
+                        ? `Beste Zeit für Aktivitäten: <span class="micro-rec-highlight">${bestStart} - ${bestEnd}</span> (niedrigere Ozon- und Feinstaubwerte).`
+                        : `Best time for activities: <span class="micro-rec-highlight">${bestStart} - ${bestEnd}</span> (lower ozone and PM levels).`
+                });
             }
             
-            if (selectedConditions.includes('migraine')) {
-                tips.push({ icon: '💧', text: t('drinkWater') });
-                tips.push({ icon: '😎', text: t('wearSunglasses') });
+            // UV warning
+            if (air.uv_index >= 3) {
+                recs.push({
+                    icon: '🧴',
+                    text: currentLang === 'de'
+                        ? `UV-Index ${air.uv_index} – <span class="micro-rec-highlight">Sonnenschutz LSF 30+</span> bei Aufenthalt im Freien.`
+                        : `UV Index ${air.uv_index} – <span class="micro-rec-highlight">use SPF 30+ sunscreen</span> when outdoors.`
+                });
             }
             
-            if (air.uv_index >= 6) {
-                tips.push({ icon: '🧴', text: t('useSunscreen') });
+            // Fallback positive message
+            if (recs.length === 0) {
+                recs.push({
+                    icon: '✨',
+                    text: currentLang === 'de'
+                        ? `Die Bedingungen sind heute günstig – <span class="micro-rec-highlight">ideal für Aktivitäten im Freien!</span>`
+                        : `Conditions are favorable today – <span class="micro-rec-highlight">ideal for outdoor activities!</span>`
+                });
             }
             
-            if (tips.length === 0) {
-                tips.push({ icon: '✨', text: t('enjoyDay') });
-            }
-            
-            return tips.map(tip => `<div class="tip-item"><span class="tip-icon">${tip.icon}</span><span>${tip.text}</span></div>`).join('');
+            return recs.slice(0, 4);
         }
         
-        // === CHAT ===
+        function toggleDetails(el) {
+            const expanded = el.parentElement.querySelector('.prognosis-expanded');
+            const isShown = expanded.classList.toggle('show');
+            el.innerHTML = isShown 
+                ? `<span>▼</span> ${t('hideDetails')}`
+                : `<span>▶</span> ${t('showDetails')}`;
+        }
         
-        // Map selected conditions to a profile string for the API
+        function scrollTimeline(dir) {
+            const scroll = document.getElementById('timeline-scroll');
+            scroll.scrollBy({ left: dir * 200, behavior: 'smooth' });
+        }
+        
+        function showInfo(key) {
+            document.getElementById('info-' + key).classList.add('show');
+        }
+        function hideInfo(key) {
+            document.getElementById('info-' + key).classList.remove('show');
+        }
+        
+        function submitFeedback(hadSymptoms) {
+            // Store for future ML
+            const feedback = {
+                date: new Date().toISOString(),
+                conditions: selectedConditions,
+                hadSymptoms,
+                score: currentData ? calculateHealthScore(currentData).score : null
+            };
+            const history = JSON.parse(localStorage.getItem('healthair_feedback') || '[]');
+            history.push(feedback);
+            localStorage.setItem('healthair_feedback', JSON.stringify(history.slice(-100)));
+            
+            alert(currentLang === 'de' 
+                ? 'Danke für dein Feedback! Dies hilft uns, die Vorhersagen zu verbessern.' 
+                : 'Thanks for your feedback! This helps us improve predictions.');
+        }
+        
+        // ==================== CHAT ====================
         function getHealthProfile() {
-            // Create a descriptive profile based on selected conditions
             const profileMap = {
                 asthma: 'Asthma',
                 allergy: 'Allergy',
@@ -1302,30 +1678,21 @@
                 cardiovascular: 'Cardiovascular',
                 fatigue: 'Fatigue/Sleep'
             };
-            const profiles = selectedConditions.map(c => profileMap[c] || c);
-            return profiles.join(', ') || 'General Health';
+            return selectedConditions.map(c => profileMap[c] || c).join(', ') || 'General Health';
         }
         
-        async function fetchInitialChat() {
+        async function fetchChat() {
             const condNames = selectedConditions.map(c => t(c)).join(', ');
-            const healthProfile = getHealthProfile();
-            
-            // IMPORTANT: Include explicit instruction about which conditions the user has
-            const langPrompt = {
-                de: `WICHTIG: Der Nutzer hat NUR folgende Gesundheitsbeschwerden ausgewählt: ${condNames}. Beziehe dich AUSSCHLIESSLICH auf diese Beschwerden, nicht auf andere! Gib eine kurze, persönliche Begrüssung und fasse zusammen, worauf der Nutzer heute mit diesen spezifischen Beschwerden achten sollte.`,
-                en: `IMPORTANT: The user has ONLY selected these health conditions: ${condNames}. Refer EXCLUSIVELY to these conditions, not others! Give a brief, personal greeting and summarize what the user should watch out for today with these specific conditions.`,
-                fr: `IMPORTANT: L'utilisateur a UNIQUEMENT sélectionné ces conditions de santé: ${condNames}. Référez-vous EXCLUSIVEMENT à ces conditions, pas à d'autres! Donnez une brève salutation personnelle et résumez ce à quoi l'utilisateur doit faire attention aujourd'hui avec ces conditions spécifiques.`,
-                it: `IMPORTANTE: L'utente ha selezionato SOLO queste condizioni di salute: ${condNames}. Riferisciti ESCLUSIVAMENTE a queste condizioni, non ad altre! Dai un breve saluto personale e riassumi a cosa l'utente dovrebbe fare attenzione oggi con queste condizioni specifiche.`
-            };
+            const prompt = currentLang === 'de'
+                ? `WICHTIG: Der Nutzer hat NUR diese Beschwerden: ${condNames}. Gib eine kurze, strukturierte Zusammenfassung. Format: 1) Beobachtung (Was ist der Hauptfaktor heute?) 2) Empfehlung (Was tun?) 3) Ausblick (Wann wird es besser?). Maximal 3 Sätze pro Punkt.`
+                : `IMPORTANT: The user ONLY has these conditions: ${condNames}. Give a brief, structured summary. Format: 1) Observation (What's the main factor today?) 2) Recommendation (What to do?) 3) Outlook (When will it improve?). Maximum 3 sentences per point.`;
             
             try {
-                const res = await fetch(`${API}/chat/?lat=${lat}&lon=${lon}&profile=${encodeURIComponent(healthProfile)}&language=${currentLang}&question=${encodeURIComponent(langPrompt[currentLang])}`, { method: 'POST' });
+                const res = await fetch(`${API}/chat/?lat=${lat}&lon=${lon}&profile=${encodeURIComponent(getHealthProfile())}&language=${currentLang}&question=${encodeURIComponent(prompt)}`, { method: 'POST' });
                 const data = await res.json();
                 chatHistory = [{ role: 'ai', text: data.answer }];
                 renderChat();
-            } catch (e) {
-                console.error(e);
-            }
+            } catch (e) { console.error(e); }
         }
         
         function renderChat() {
@@ -1354,23 +1721,16 @@
             input.value = '';
             
             const condNames = selectedConditions.map(c => t(c)).join(', ');
-            const healthProfile = getHealthProfile();
-            
-            // Strong context about selected conditions
-            const contextIntro = {
-                de: `WICHTIG: Ich habe NUR diese Gesundheitsbeschwerden: ${condNames}. Beantworte meine Frage nur in Bezug auf diese Beschwerden.`,
-                en: `IMPORTANT: I ONLY have these health conditions: ${condNames}. Answer my question only regarding these conditions.`,
-                fr: `IMPORTANT: J'ai UNIQUEMENT ces conditions de santé: ${condNames}. Répondez à ma question uniquement concernant ces conditions.`,
-                it: `IMPORTANTE: Ho SOLO queste condizioni di salute: ${condNames}. Rispondi alla mia domanda solo riguardo a queste condizioni.`
-            };
-            const context = contextIntro[currentLang] || contextIntro.en;
+            const context = currentLang === 'de'
+                ? `WICHTIG: Ich habe NUR diese Beschwerden: ${condNames}. Antworte kurz und strukturiert mit Bullet Points wenn sinnvoll.`
+                : `IMPORTANT: I ONLY have these conditions: ${condNames}. Answer briefly and structured with bullet points if useful.`;
             
             const el = document.getElementById('chat-messages');
             el.innerHTML += `<div class="chat-msg chat-ai" id="typing">💭 ...</div>`;
             el.scrollTop = el.scrollHeight;
             
             try {
-                const res = await fetch(`${API}/chat/?lat=${lat}&lon=${lon}&profile=${encodeURIComponent(healthProfile)}&language=${currentLang}&question=${encodeURIComponent(context + '\n\nMeine Frage: ' + q)}`, { method: 'POST' });
+                const res = await fetch(`${API}/chat/?lat=${lat}&lon=${lon}&profile=${encodeURIComponent(getHealthProfile())}&language=${currentLang}&question=${encodeURIComponent(context + '\n\n' + q)}`, { method: 'POST' });
                 const data = await res.json();
                 document.getElementById('typing')?.remove();
                 chatHistory.push({ role: 'ai', text: data.answer });
@@ -1382,7 +1742,6 @@
             }
         }
         
-        // Initialize on load
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
