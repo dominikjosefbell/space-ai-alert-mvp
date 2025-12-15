@@ -1320,6 +1320,10 @@ def generate_smart_recommendation(data: dict, profile: str, language: str, quest
     if question:
         q_lower = question.lower()
         
+        # Meta questions about the AI itself
+        if any(w in q_lower for w in ["welche ki", "which ai", "llm", "modell", "model", "wer bist", "who are you"]):
+            return "🤖 Ich bin der HealthAir Coach, powered by Swiss AI Apertus (ETH Zürich/EPFL). Falls ich gerade nicht über die KI antworte, nutze ich regelbasierte Logik. Du kannst /debug/ai/ aufrufen um den AI-Status zu prüfen."
+        
         # Jogging/Running questions
         if any(w in q_lower for w in ["joggen", "jogging", "laufen", "running", "run"]):
             if aqi > 80:
@@ -1780,6 +1784,22 @@ import pathlib
 # Get the directory where this script is located
 BASE_DIR = pathlib.Path(__file__).parent.parent
 
+# === DEBUG ENDPOINT ===
+@app.get("/debug/ai/")
+def debug_ai():
+    """Test AI API connection - shows which model responds"""
+    test_prompt = "Antworte mit genau einem Satz: Wer bist du und welches Sprachmodell verwendest du?"
+    response, debug_info = call_ai_api(test_prompt)
+    return {
+        "status": "success" if response else "failed",
+        "ai_response": response,
+        "debug_info": debug_info,
+        "config": {
+            "HF_API_KEY_set": bool(HF_API_KEY),
+            "key_prefix": HF_API_KEY[:15] + "..." if HF_API_KEY else None
+        }
+    }
+
 # Serve specific HTML files
 @app.get("/healthair")
 @app.get("/healthair.html")
@@ -1800,7 +1820,8 @@ async def serve_index():
     return {
         "name": "Environmental Monitor API",
         "version": "7.3.0",
-        "endpoints": ["/data/", "/alert/", "/chat/", "/space-weather/", "/healthair"],
+        "ai_model": "Swiss AI Apertus (ETH Zürich / EPFL)",
+        "endpoints": ["/data/", "/alert/", "/chat/", "/space-weather/", "/healthair", "/debug/ai/"],
         "docs": "/docs"
     }
 
