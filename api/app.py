@@ -1143,6 +1143,27 @@ CRITICO - NOTA:
     }
 
     if user_question:
+        # Check for meta questions about the AI itself
+        q_lower = user_question.lower()
+        is_meta_question = any(w in q_lower for w in [
+            "welche ki", "welches llm", "welches modell", "wer bist du", "was bist du",
+            "which ai", "which llm", "which model", "who are you", "what are you",
+            "quel modèle", "quale modello"
+        ])
+        
+        if is_meta_question:
+            return f"""Du bist der HealthAir Coach, ein Umwelt- und Gesundheitsberater.
+
+Der Nutzer fragt: {user_question}
+
+Beantworte diese Meta-Frage direkt und freundlich:
+- Du bist der HealthAir Coach
+- Du wirst von Swiss AI Apertus (8B) angetrieben - einem Open-Source LLM entwickelt von ETH Zürich und EPFL
+- Apertus ist ein mehrsprachiges, DSGVO-konformes Schweizer KI-Modell
+- Du analysierst Umweltdaten (Wetter, Luftqualität, Pollen, Weltraumwetter etc.) und gibst personalisierte Gesundheitsempfehlungen
+
+Antworte in 2-3 Sätzen auf {lang_instructions.get(language, 'Deutsch')}."""
+
         instruction = f"""Du bist ein intelligenter Umwelt- und Gesundheitsberater. Beantworte die Frage des Nutzers basierend auf den aktuellen Daten.
 
 PROFIL: {profile} ({profile_context})
