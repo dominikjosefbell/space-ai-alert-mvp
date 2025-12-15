@@ -1186,31 +1186,69 @@ Empfehlung:"""
 
 
 def call_ai_api(prompt: str) -> tuple[Optional[str], dict]:
-    """Call AI API with HuggingFace Inference Providers"""
+    """Call Swiss AI Apertus via HuggingFace Inference API
+    
+    Primary: Swiss AI Apertus (ETH Zürich / EPFL) - transparent, multilingual, GDPR-compliant
+    Fallback: Other open models if Apertus unavailable
+    """
     debug_info = {"api_key_set": bool(HF_API_KEY), "key_prefix": HF_API_KEY[:10] + "..." if HF_API_KEY else None, "attempts": []}
     
     if not HF_API_KEY:
         debug_info["error"] = "No API key configured"
         return None, debug_info
     
-    # Use the unified HuggingFace router endpoint (correct format!)
-    url = "https://router.huggingface.co/v1/chat/completions"
-    
-    # Models available on HF Inference Providers
-    models = [
-        "Qwen/Qwen2.5-72B-Instruct",
-        "meta-llama/Llama-3.3-70B-Instruct",
-        "mistralai/Mistral-7B-Instruct-v0.3",
-        "HuggingFaceH4/zephyr-7b-beta",
-    ]
-    
     headers = {
         "Authorization": f"Bearer {HF_API_KEY}",
         "Content-Type": "application/json"
     }
     
-    for model in models:
-        attempt = {"name": model.split("/")[-1]}
+    # === PRIORITY 1: Swiss AI Apertus (primary model) ===
+    apertus_url = "https://router.huggingface.co/hf-inference/models/swiss-ai/Apertus-8B-Instruct-2509/v1/chat/completions"
+    attempt = {"name": "Apertus-8B (Swiss AI)"}
+    try:
+        payload = {
+            "model": "swiss-ai/Apertus-8B-Instruct-2509",
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 300,
+            "temperature": 0.7
+        }
+        
+        response = requests.post(apertus_url, headers=headers, json=payload, timeout=30)
+        attempt["status"] = response.status_code
+        
+        if response.status_code == 200:
+            result = response.json()
+            if "choices" in result and result["choices"]:
+                text = result["choices"][0].get("message", {}).get("content", "")
+                text = text.strip()
+                if text and len(text) > 20:
+                    attempt["success"] = True
+                    debug_info["attempts"].append(attempt)
+                    debug_info["success_model"] = "Apertus-8B (Swiss AI)"
+                    return text, debug_info
+            attempt["error"] = "No choices in response"
+        else:
+            try:
+                err_json = response.json()
+                attempt["error"] = str(err_json.get("error", response.text[:200]))[:200]
+            except:
+                attempt["error"] = response.text[:200]
+    except requests.exceptions.Timeout:
+        attempt["error"] = "Timeout (30s)"
+    except Exception as e:
+        attempt["error"] = str(e)
+    
+    debug_info["attempts"].append(attempt)
+    
+    # === PRIORITY 2: Fallback models (only if Apertus fails) ===
+    fallback_url = "https://router.huggingface.co/v1/chat/completions"
+    fallback_models = [
+        "HuggingFaceH4/zephyr-7b-beta",
+        "mistralai/Mistral-7B-Instruct-v0.3",
+    ]
+    
+    for model in fallback_models:
+        attempt = {"name": f"{model.split('/')[-1]} (Fallback)"}
         try:
             payload = {
                 "model": model,
@@ -1220,7 +1258,7 @@ def call_ai_api(prompt: str) -> tuple[Optional[str], dict]:
                 "stream": False
             }
             
-            response = requests.post(url, headers=headers, json=payload, timeout=30)
+            response = requests.post(fallback_url, headers=headers, json=payload, timeout=30)
             attempt["status"] = response.status_code
             
             if response.status_code == 200:
@@ -1233,7 +1271,7 @@ def call_ai_api(prompt: str) -> tuple[Optional[str], dict]:
                     if text and len(text) > 20:
                         attempt["success"] = True
                         debug_info["attempts"].append(attempt)
-                        debug_info["success_model"] = model
+                        debug_info["success_model"] = f"{model} (Fallback)"
                         return text, debug_info
                 else:
                     attempt["error"] = "No choices in response"
