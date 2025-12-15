@@ -1186,7 +1186,10 @@ Empfehlung:"""
 
 
 def call_ai_api(prompt: str) -> tuple[Optional[str], dict]:
-    """Call Swiss AI Apertus via HuggingFace Inference API
+    """Call Swiss AI Apertus via HuggingFace Inference Providers (PublicAI)
+    
+    Uses the PublicAI inference provider which hosts Swiss AI models for free.
+    See: https://huggingface.co/blog/inference-providers-publicai
     
     Primary: Swiss AI Apertus (ETH Zürich / EPFL) - transparent, multilingual, GDPR-compliant
     Fallback: Other open models if Apertus unavailable
@@ -1202,9 +1205,10 @@ def call_ai_api(prompt: str) -> tuple[Optional[str], dict]:
         "Content-Type": "application/json"
     }
     
-    # === PRIORITY 1: Swiss AI Apertus (primary model) ===
-    apertus_url = "https://router.huggingface.co/hf-inference/models/swiss-ai/Apertus-8B-Instruct-2509/v1/chat/completions"
-    attempt = {"name": "Apertus-8B (Swiss AI)"}
+    # === PRIORITY 1: Swiss AI Apertus via PublicAI Provider ===
+    # Correct endpoint format for PublicAI provider
+    apertus_url = "https://router.huggingface.co/publicai/swiss-ai/Apertus-8B-Instruct-2509/v1/chat/completions"
+    attempt = {"name": "Apertus-8B (PublicAI)", "url": apertus_url}
     try:
         payload = {
             "model": "swiss-ai/Apertus-8B-Instruct-2509",
@@ -1215,6 +1219,7 @@ def call_ai_api(prompt: str) -> tuple[Optional[str], dict]:
         
         response = requests.post(apertus_url, headers=headers, json=payload, timeout=30)
         attempt["status"] = response.status_code
+        attempt["response_preview"] = response.text[:300] if response.text else "empty"
         
         if response.status_code == 200:
             result = response.json()
@@ -1224,7 +1229,7 @@ def call_ai_api(prompt: str) -> tuple[Optional[str], dict]:
                 if text and len(text) > 20:
                     attempt["success"] = True
                     debug_info["attempts"].append(attempt)
-                    debug_info["success_model"] = "Apertus-8B (Swiss AI)"
+                    debug_info["success_model"] = "Apertus-8B (Swiss AI via PublicAI)"
                     return text, debug_info
             attempt["error"] = "No choices in response"
         else:
@@ -1240,53 +1245,103 @@ def call_ai_api(prompt: str) -> tuple[Optional[str], dict]:
     
     debug_info["attempts"].append(attempt)
     
-    # === PRIORITY 2: Fallback models (only if Apertus fails) ===
-    fallback_url = "https://router.huggingface.co/v1/chat/completions"
-    fallback_models = [
-        "HuggingFaceH4/zephyr-7b-beta",
-        "mistralai/Mistral-7B-Instruct-v0.3",
+    # === PRIORITY 2: Try legacy HF Inference endpoint ===
+    legacy_url = "https://api-inference.huggingface.co/models/swiss-ai/Apertus-8B-Instruct-2509"
+    attempt2 = {"name": "Apertus-8B (HF Legacy)", "url": legacy_url}
+    try:
+        # Legacy format uses "inputs" instead of "messages"
+        payload = {
+            "inputs": prompt,
+            "parameters": {
+                "max_new_tokens": 300,
+                "temperature": 0.7,
+                "return_full_text": False
+            }
+        }
+        
+        response = requests.post(legacy_url, headers=headers, json=payload, timeout=30)
+        attempt2["status"] = response.status_code
+        attempt2["response_preview"] = response.text[:300] if response.text else "empty"
+        
+        if response.status_code == 200:
+            result = response.json()
+            # Legacy format returns list with generated_text
+            if isinstance(result, list) and len(result) > 0:
+                text = result[0].get("generated_text", "")
+                text = text.strip()
+                if text and len(text) > 20:
+                    attempt2["success"] = True
+                    debug_info["attempts"].append(attempt2)
+                    debug_info["success_model"] = "Apertus-8B (HF Legacy)"
+                    return text, debug_info
+            attempt2["error"] = f"Unexpected response format: {type(result)}"
+        else:
+            try:
+                err_json = response.json()
+                attempt2["error"] = str(err_json.get("error", response.text[:200]))[:200]
+            except:
+                attempt2["error"] = response.text[:200]
+    except requests.exceptions.Timeout:
+        attempt2["error"] = "Timeout (30s)"
+    except Exception as e:
+        attempt2["error"] = str(e)
+    
+    debug_info["attempts"].append(attempt2)
+    
+    # === PRIORITY 3: Fallback to other models ===
+    fallback_configs = [
+        {
+            "name": "Zephyr-7B",
+            "url": "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta",
+            "format": "legacy"
+        },
+        {
+            "name": "Mistral-7B", 
+            "url": "https://router.huggingface.co/v1/chat/completions",
+            "model": "mistralai/Mistral-7B-Instruct-v0.3",
+            "format": "openai"
+        }
     ]
     
-    for model in fallback_models:
-        attempt = {"name": f"{model.split('/')[-1]} (Fallback)"}
+    for config in fallback_configs:
+        attempt = {"name": f"{config['name']} (Fallback)", "url": config["url"]}
         try:
-            payload = {
-                "model": model,
-                "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 300,
-                "temperature": 0.7,
-                "stream": False
-            }
+            if config.get("format") == "legacy":
+                payload = {
+                    "inputs": prompt,
+                    "parameters": {"max_new_tokens": 300, "temperature": 0.7, "return_full_text": False}
+                }
+            else:
+                payload = {
+                    "model": config.get("model"),
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": 300,
+                    "temperature": 0.7
+                }
             
-            response = requests.post(fallback_url, headers=headers, json=payload, timeout=30)
+            response = requests.post(config["url"], headers=headers, json=payload, timeout=30)
             attempt["status"] = response.status_code
             
             if response.status_code == 200:
                 result = response.json()
                 
-                if "choices" in result and result["choices"]:
-                    text = result["choices"][0].get("message", {}).get("content", "")
-                    text = text.strip()
-                    
-                    if text and len(text) > 20:
-                        attempt["success"] = True
-                        debug_info["attempts"].append(attempt)
-                        debug_info["success_model"] = f"{model} (Fallback)"
-                        return text, debug_info
+                # Handle both formats
+                if config.get("format") == "legacy":
+                    if isinstance(result, list) and len(result) > 0:
+                        text = result[0].get("generated_text", "").strip()
                 else:
-                    attempt["error"] = "No choices in response"
-            else:
-                try:
-                    err_json = response.json()
-                    if isinstance(err_json.get("error"), dict):
-                        attempt["error"] = err_json["error"].get("message", str(err_json["error"]))[:200]
+                    if "choices" in result and result["choices"]:
+                        text = result["choices"][0].get("message", {}).get("content", "").strip()
                     else:
-                        attempt["error"] = str(err_json.get("error", response.text[:200]))
-                except:
-                    attempt["error"] = response.text[:200]
+                        text = ""
+                
+                if text and len(text) > 20:
+                    attempt["success"] = True
+                    debug_info["attempts"].append(attempt)
+                    debug_info["success_model"] = f"{config['name']} (Fallback)"
+                    return text, debug_info
                     
-        except requests.exceptions.Timeout:
-            attempt["error"] = "Timeout (30s)"
+            attempt["error"] = f"Status {response.status_code}: {response.text[:100]}"
         except Exception as e:
             attempt["error"] = str(e)
         
